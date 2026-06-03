@@ -1,0 +1,35 @@
+.wave-slider {
+  height: 18px;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.wave-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-control);
+}
+
+.wave-slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 22px;
+  margin-top: -8px;
+  appearance: none;
+  border: 1px solid var(--color-control);
+  background: var(--color-accent);
+}
+
+.wave-slider::-moz-range-track {
+  height: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-control);
+}
+
+.wave-slider::-moz-range-thumb {
+  width: 14px;
+  height: 22px;
+  border: 1px solid var(--color-control);
+  border-radius: 0;
+  background: var(--color-accent);
+}

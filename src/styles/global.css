@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --color-text: #e7e7d8;
+  --color-text-muted: #9d9d93;
+  --color-bg: #141414;
+  --color-panel: #1e1e1e;
+  --color-panel-raised: #292929;
+  --color-panel-chip: #252525;
+  --color-panel-hover: #333333;
+  --color-control: #e7e7d8;
+  --color-control-hover: #d4d4c5;
+  --color-accent: #ea4125;
+  --color-progress-meter: #ffffff;
+  --color-border: #303030;
+  --color-border-soft: #393939;
+  --color-border-strong: #505050;
+  --color-section-coral: #ef6f61;
+  --color-section-teal: #5fb3b3;
+  --color-section-gold: #f5b84b;
+  --color-section-violet: #8e7cc3;
+  --color-section-green: #72b36a;
+  --color-section-pink: #e583b7;
+
+  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font: 18px/145% var(--font-sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  height: 100%;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
