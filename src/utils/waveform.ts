@@ -42,14 +42,15 @@ function getFrequencyValue(data: Uint8Array, position: number, radius: number) {
 }
 
 export function drawWaveform(options: DrawWaveformOptions) {
-  const { backgroundColor, barWidth, canvas, color, context, frequencyData, intensities, position, smoothness } = options;
-  // Limits the analyser bins to the musical range that reads best in the dock.
+  const { backgroundColor, barWidth, canvas, color, context, frequencyData, intensities, position, smoothness } =
+    options;
+  // Limits the analyser bins to the musical range that reads best in the header.
   const FREQUENCY_RANGE = 0.5;
   // Keeps raw frequency response neutral before easing and smoothing.
   const RESPONSE_GAIN = 1;
   const pixelRatio = window.devicePixelRatio || 1;
   const normalizedSmoothness = Math.min(1, Math.max(0, smoothness / 100));
-  const frequencyRadius = Math.round(1 + normalizedSmoothness * 5);
+  const frequencyRadius = Math.round(1 + normalizedSmoothness * 1);
   const neighborWeight = 0.08 + normalizedSmoothness * 0.18;
   const centerWeight = 1 - neighborWeight * 2;
   const attack = 0.9 - normalizedSmoothness * 0.7;
@@ -98,14 +99,14 @@ export function drawWaveform(options: DrawWaveformOptions) {
       frequencyRadius,
     );
     const spatialValue = value * centerWeight + (leftValue + rightValue) * neighborWeight;
-    const easedValue = Math.min(1, Math.pow(spatialValue * RESPONSE_GAIN, 1.24));
+    const easedValue = Math.min(1, Math.pow(spatialValue * RESPONSE_GAIN, 3));
     const previous = intensities[index] ?? 0;
     const amount = easedValue > previous ? attack : release;
     const smoothed = previous + (easedValue - previous) * amount;
     intensities[index] = smoothed;
 
     const x = startX + index * (scaledBarWidth + gap);
-    const maxHeight = height * 0.47;
+    const maxHeight = height * 0.45;
     const barHeight = Math.max(3 * pixelRatio, smoothed * maxHeight);
     const radius = Math.min(scaledBarWidth * 0.5, 8 * pixelRatio);
 

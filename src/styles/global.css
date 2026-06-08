@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Unbounded";
+  src: url("/fonts/unbounded.ttf") format("truetype");
+  font-display: swap;
+}
+
 :root {
   --color-text: #e7e7d8;
   --color-text-muted: #9d9d93;
   --color-bg: #141414;
+  --color-pumpkin: #f59e0b;
   --color-panel: #1e1e1e;
   --color-panel-raised: #292929;
   --color-panel-chip: #252525;
@@ -11,18 +18,12 @@
   --color-control: #e7e7d8;
   --color-control-hover: #d4d4c5;
   --color-accent: #ea4125;
-  --color-progress-meter: #ffffff;
   --color-border: #303030;
   --color-border-soft: #393939;
   --color-border-strong: #505050;
-  --color-section-coral: #ef6f61;
-  --color-section-teal: #5fb3b3;
-  --color-section-gold: #f5b84b;
-  --color-section-violet: #8e7cc3;
-  --color-section-green: #72b36a;
-  --color-section-pink: #e583b7;
 
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-unbounded: "Unbounded", var(--font-sans);
 
   font: 18px/145% var(--font-sans);
   letter-spacing: 0.18px;
@@ -45,6 +46,24 @@ body,
   min-width: 320px;
   height: 100%;
   margin: 0;
+}
+
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*:focus,
+*:focus-visible {
+  outline: none;
 }
 
 button,

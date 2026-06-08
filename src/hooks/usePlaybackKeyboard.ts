@@ -2,19 +2,29 @@ import { useEffect } from "react";
 import { useSyncedRef } from "./useSyncedRef";
 
 type PlaybackKeyboardOptions = {
+  onSeekStep: (step: number) => void;
   onTogglePlayback: () => void;
   onVolumeStep: (step: number) => void;
 };
 
-export function usePlaybackKeyboard({ onTogglePlayback, onVolumeStep }: PlaybackKeyboardOptions) {
+const KEYBOARD_SEEK_STEP_MS = 1000;
+const KEYBOARD_VOLUME_STEP = 0.05;
+
+function blurActiveElement() {
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+}
+
+export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep }: PlaybackKeyboardOptions) {
+  const seekStepRef = useSyncedRef(onSeekStep);
   const togglePlaybackRef = useSyncedRef(onTogglePlayback);
   const volumeStepRef = useSyncedRef(onVolumeStep);
 
   useEffect(() => {
     function handlePlaybackKey(event: KeyboardEvent) {
-      if (event.repeat) return;
-
       if (event.code === "Space") {
+        if (event.repeat) return;
+
+        blurActiveElement();
         event.preventDefault();
         event.stopPropagation();
         togglePlaybackRef.current();
@@ -22,15 +32,19 @@ export function usePlaybackKeyboard({ onTogglePlayback, onVolumeStep }: Playback
       }
 
       if (event.code === "ArrowUp" || event.code === "ArrowDown") {
+        blurActiveElement();
         event.preventDefault();
         event.stopPropagation();
+        volumeStepRef.current(event.code === "ArrowUp" ? KEYBOARD_VOLUME_STEP : -KEYBOARD_VOLUME_STEP);
         return;
       }
 
       if (event.code === "ArrowLeft" || event.code === "ArrowRight") {
+        blurActiveElement();
         event.preventDefault();
         event.stopPropagation();
-        volumeStepRef.current(event.code === "ArrowRight" ? 0.05 : -0.05);
+        const seekStepSeconds = KEYBOARD_SEEK_STEP_MS / 1000;
+        seekStepRef.current(event.code === "ArrowRight" ? seekStepSeconds : -seekStepSeconds);
       }
     }
 
@@ -39,5 +53,5 @@ export function usePlaybackKeyboard({ onTogglePlayback, onVolumeStep }: Playback
     return () => {
       window.removeEventListener("keydown", handlePlaybackKey, { capture: true });
     };
-  }, [togglePlaybackRef, volumeStepRef]);
+  }, [seekStepRef, togglePlaybackRef, volumeStepRef]);
 }

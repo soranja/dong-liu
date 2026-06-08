@@ -17,6 +17,9 @@ type SyncToAudioOptions = {
   continuePlaybackScroll?: boolean;
 };
 
+const MANUAL_SCROLL_RESUME_DELAY = 0.65;
+const PLAYBACK_SCROLL_EPSILON_PX = 0.05;
+
 gsap.registerPlugin(useGSAP, ScrollToPlugin, ScrollTrigger);
 
 function clampProgress(value: number) {
@@ -33,6 +36,13 @@ function getMaxScroll() {
   return ScrollTrigger.maxScroll(window);
 }
 
+function getPageScrollProgress() {
+  const maxScroll = getMaxScroll();
+  if (!maxScroll) return 0;
+
+  return clampProgress(window.scrollY / maxScroll);
+}
+
 export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
   const { audioRef, isEnabled, onSeek, timelineRef } = options;
   const isEnabledRef = useSyncedRef(isEnabled);
@@ -42,17 +52,34 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
   const resumePlaybackScrollRef = useRef<gsap.core.Tween | null>(null);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
   const timelineRefInternal = useRef<gsap.core.Timeline | null>(null);
+  const playbackScrollSyncFrameRef = useRef<number | null>(null);
   const isAutoScrollingRef = useRef(false);
+  const isPlaybackScrollActiveRef = useRef(false);
   const isTickerActiveRef = useRef(false);
 
   const getIsEnabled = useCallback(() => isEnabledRef.current(), [isEnabledRef]);
 
+  const syncAudioToPageScroll = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio?.duration || !Number.isFinite(audio.duration)) return;
+
+    const progress = getPageScrollProgress();
+    audio.currentTime = progress * audio.duration;
+    timelineRefInternal.current?.progress(progress);
+    onSeekRef.current?.(progress * 100);
+  }, [audioRef, onSeekRef]);
+
   const releaseAutoScroll = useCallback(() => {
     releaseAutoScrollRef.current?.kill();
     releaseAutoScrollRef.current = gsap.delayedCall(0, () => {
-      isAutoScrollingRef.current = false;
       releaseAutoScrollRef.current = null;
+      if (isPlaybackScrollActiveRef.current) return;
+      isAutoScrollingRef.current = false;
     });
+  }, []);
+
+  const stopPlaybackScroll = useCallback(() => {
+    isPlaybackScrollActiveRef.current = false;
   }, []);
 
   const stopPageTween = useCallback(() => {
@@ -60,16 +87,40 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
     pageTweenRef.current = null;
     releaseAutoScrollRef.current?.kill();
     releaseAutoScrollRef.current = null;
+    stopPlaybackScroll();
     isAutoScrollingRef.current = false;
-  }, []);
+  }, [stopPlaybackScroll]);
 
   const syncVisualsToAudio = useCallback(() => {
     timelineRefInternal.current?.progress(getAudioProgress(audioRef.current));
   }, [audioRef]);
 
+  const syncPageScrollToAudio = useCallback(() => {
+    if (!getIsEnabled()) return;
+
+    const audio = audioRef.current;
+    if (!audio?.duration || !Number.isFinite(audio.duration) || audio.paused) {
+      stopPlaybackScroll();
+      releaseAutoScroll();
+      return;
+    }
+
+    const maxScroll = getMaxScroll();
+    if (!maxScroll) return;
+
+    const targetScroll = maxScroll * getAudioProgress(audio);
+    isAutoScrollingRef.current = true;
+
+    if (Math.abs(window.scrollY - targetScroll) <= PLAYBACK_SCROLL_EPSILON_PX) return;
+
+    window.scrollTo({ top: targetScroll });
+    scrollTriggerRef.current?.update();
+  }, [audioRef, getIsEnabled, releaseAutoScroll, stopPlaybackScroll]);
+
   const trackAudioProgress = useCallback(() => {
     syncVisualsToAudio();
-  }, [syncVisualsToAudio]);
+    if (isPlaybackScrollActiveRef.current) syncPageScrollToAudio();
+  }, [syncPageScrollToAudio, syncVisualsToAudio]);
 
   const stopAudioTicker = useCallback(() => {
     if (!isTickerActiveRef.current) return;
@@ -100,20 +151,24 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
       const maxScroll = getMaxScroll();
       if (!maxScroll) return;
 
+      const hasFiniteDuration = Boolean(audio.duration && Number.isFinite(audio.duration));
+      const shouldContinuePlaybackScroll = continuePlaybackScroll && !audio.paused && hasFiniteDuration;
       const progress = getAudioProgress(audio);
-      const targetScroll = continuePlaybackScroll && !audio.paused ? maxScroll : maxScroll * progress;
-      const duration =
-        continuePlaybackScroll && !audio.paused
-          ? Math.max(0.05, audio.duration - audio.currentTime)
-          : animatePage
-            ? 0.36
-            : 0;
+      const progressScroll = maxScroll * progress;
 
       stopPageTween();
       isAutoScrollingRef.current = true;
 
+      if (shouldContinuePlaybackScroll) {
+        isPlaybackScrollActiveRef.current = true;
+        syncPageScrollToAudio();
+        return;
+      }
+
+      const duration = animatePage ? 0.36 : 0;
+
       if (duration <= 0) {
-        window.scrollTo({ top: targetScroll });
+        window.scrollTo({ top: progressScroll });
         scrollTriggerRef.current?.update();
         releaseAutoScroll();
         return;
@@ -121,9 +176,9 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
 
       pageTweenRef.current = gsap.to(window, {
         duration,
-        ease: continuePlaybackScroll && !audio.paused ? "none" : "power2.out",
+        ease: "power2.out",
         overwrite: "auto",
-        scrollTo: { autoKill: false, y: targetScroll },
+        scrollTo: { autoKill: false, y: progressScroll },
         onUpdate: syncVisualsToAudio,
         onComplete: () => {
           pageTweenRef.current = null;
@@ -132,12 +187,22 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
         onInterrupt: releaseAutoScroll,
       });
     },
-    [audioRef, getIsEnabled, releaseAutoScroll, stopPageTween, syncVisualsToAudio],
+    [audioRef, getIsEnabled, releaseAutoScroll, stopPageTween, syncPageScrollToAudio, syncVisualsToAudio],
   );
+
+  const syncPlaybackScrollAfterLayout = useCallback(() => {
+    if (playbackScrollSyncFrameRef.current !== null) window.cancelAnimationFrame(playbackScrollSyncFrameRef.current);
+
+    playbackScrollSyncFrameRef.current = window.requestAnimationFrame(() => {
+      playbackScrollSyncFrameRef.current = null;
+      ScrollTrigger.refresh();
+      if (!audioRef.current?.paused) syncToAudio({ continuePlaybackScroll: true });
+    });
+  }, [audioRef, syncToAudio]);
 
   const resumePlaybackScrollSoon = useCallback(() => {
     resumePlaybackScrollRef.current?.kill();
-    resumePlaybackScrollRef.current = gsap.delayedCall(0.18, () => {
+    resumePlaybackScrollRef.current = gsap.delayedCall(MANUAL_SCROLL_RESUME_DELAY, () => {
       resumePlaybackScrollRef.current = null;
       if (!audioRef.current?.paused) syncToAudio({ continuePlaybackScroll: true });
     });
@@ -152,9 +217,10 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
       const contents = gsap.utils.toArray<HTMLElement>("[data-audio-content]", timelineRoot);
       const segment = sections.length ? 1 / sections.length : 1;
       const timeline = gsap.timeline({ defaults: { ease: "none" }, paused: true });
+      let refreshFrame: number | null = null;
 
       timeline.to({}, { duration: 1 });
-      gsap.set(contents, { autoAlpha: 0, y: 36, scale: 0.98 });
+      if (contents.length) gsap.set(contents, { autoAlpha: 0, y: 36, scale: 0.98 });
 
       sections.forEach((section, index) => {
         const start = index * segment;
@@ -163,36 +229,55 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
         timeline.addLabel(`section-${index + 1}`, start);
         timeline.fromTo(
           section,
-          { filter: "saturate(0.92) brightness(0.96)" },
-          { duration: segment * 0.55, filter: "saturate(1.12) brightness(1.04)" },
+          { filter: "saturate(1) brightness(1)" },
+          { duration: segment * 0.55, filter: "saturate(1) brightness(1)" },
           start,
         );
 
         if (!content) return;
 
-        timeline.to(content, { autoAlpha: 1, duration: segment * 0.18, scale: 1, y: 0, ease: "power2.out" }, start + segment * 0.08);
-        timeline.to(content, { autoAlpha: 0, duration: segment * 0.16, scale: 1.02, y: -28, ease: "power1.in" }, start + segment * 0.74);
+        timeline.to(
+          content,
+          { autoAlpha: 1, duration: segment * 0.18, scale: 1, y: 0, ease: "power2.out" },
+          start + segment * 0.08,
+        );
+        timeline.to(
+          content,
+          { autoAlpha: 0, duration: segment * 0.16, scale: 1.02, y: -28, ease: "power1.in" },
+          start + segment * 0.74,
+        );
       });
 
       timelineRefInternal.current = timeline;
 
       scrollTriggerRef.current = ScrollTrigger.create({
         id: "audio-page-scroll",
-        trigger: timelineRoot,
-        start: "top top",
+        trigger: document.documentElement,
+        start: 0,
         end: () => getMaxScroll(),
         invalidateOnRefresh: true,
-        onUpdate: (self) => {
+        onUpdate: () => {
           const audio = audioRef.current;
-          if (!audio || !getIsEnabled() || isAutoScrollingRef.current || !audio.duration || !Number.isFinite(audio.duration)) return;
+          if (!getIsEnabled() || isAutoScrollingRef.current || !audio?.duration || !Number.isFinite(audio.duration))
+            return;
 
-          const progress = clampProgress(self.progress);
-          audio.currentTime = progress * audio.duration;
-          timeline.progress(progress);
-          onSeekRef.current?.(progress * 100);
+          syncAudioToPageScroll();
           if (!audio.paused) resumePlaybackScrollSoon();
         },
       });
+
+      const scheduleRefresh = () => {
+        if (refreshFrame !== null) window.cancelAnimationFrame(refreshFrame);
+
+        refreshFrame = window.requestAnimationFrame(() => {
+          refreshFrame = null;
+          ScrollTrigger.refresh();
+          syncVisualsToAudio();
+        });
+      };
+
+      const resizeObserver = new ResizeObserver(scheduleRefresh);
+      resizeObserver.observe(timelineRoot);
 
       const observer = ScrollTrigger.observe({
         target: window,
@@ -201,6 +286,7 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
           if (!getIsEnabled() || !isAutoScrollingRef.current) return;
 
           stopPageTween();
+          syncAudioToPageScroll();
           resumePlaybackScrollSoon();
         },
       });
@@ -210,9 +296,15 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
       if (!getIsEnabled()) window.scrollTo({ top: 0 });
 
       return () => {
+        if (refreshFrame !== null) window.cancelAnimationFrame(refreshFrame);
+        resizeObserver.disconnect();
         observer.kill();
         stopAudioTicker();
         stopPageTween();
+        if (playbackScrollSyncFrameRef.current !== null) {
+          window.cancelAnimationFrame(playbackScrollSyncFrameRef.current);
+          playbackScrollSyncFrameRef.current = null;
+        }
         resumePlaybackScrollRef.current?.kill();
         timeline.kill();
         timelineRefInternal.current = null;
@@ -220,14 +312,29 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
         scrollTriggerRef.current = null;
       };
     },
-    { dependencies: [audioRef, getIsEnabled, onSeekRef, resumePlaybackScrollSoon, stopAudioTicker, stopPageTween, syncVisualsToAudio, timelineRef], scope: timelineRef },
+    {
+      dependencies: [
+        audioRef,
+        getIsEnabled,
+        onSeekRef,
+        resumePlaybackScrollSoon,
+        syncAudioToPageScroll,
+        stopAudioTicker,
+        stopPageTween,
+        syncVisualsToAudio,
+        timelineRef,
+      ],
+      scope: timelineRef,
+    },
   );
 
   return {
     refresh: () => ScrollTrigger.refresh(),
     startAudioSync: () => {
       startAudioTicker();
+      ScrollTrigger.refresh();
       syncToAudio({ continuePlaybackScroll: true });
+      syncPlaybackScrollAfterLayout();
     },
     stopAudioSync: () => {
       stopAudioTicker();

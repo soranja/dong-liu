@@ -1,35 +1,75 @@
 .wave-slider {
-  height: 18px;
+  height: 24px;
   appearance: none;
-  background: transparent;
   cursor: pointer;
+  background: transparent;
+  --slider-progress: 0%;
 }
 
 .wave-slider::-webkit-slider-runnable-track {
-  height: 8px;
-  border: 1px solid var(--color-border);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-control) 0%,
+    var(--color-control) var(--slider-progress),
+    var(--color-panel) var(--slider-progress),
+    var(--color-panel) 100%
+  );
+}
+
+.wave-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-panel);
+}
+
+.wave-slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
   background: var(--color-control);
 }
 
 .wave-slider::-webkit-slider-thumb {
   width: 14px;
-  height: 22px;
-  margin-top: -8px;
-  appearance: none;
-  border: 1px solid var(--color-control);
-  background: var(--color-accent);
-}
-
-.wave-slider::-moz-range-track {
-  height: 8px;
-  border: 1px solid var(--color-border);
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 999px;
   background: var(--color-control);
+  appearance: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
 }
 
 .wave-slider::-moz-range-thumb {
   width: 14px;
-  height: 22px;
-  border: 1px solid var(--color-control);
-  border-radius: 0;
-  background: var(--color-accent);
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-control);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.wave-slider:hover::-webkit-slider-thumb,
+.wave-slider:focus-visible::-webkit-slider-thumb,
+.wave-slider:active::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.wave-slider:hover::-moz-range-thumb,
+.wave-slider:focus-visible::-moz-range-thumb,
+.wave-slider:active::-moz-range-thumb {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 767px) {
+  .wave-slider::-webkit-slider-thumb {
+    opacity: 1;
+  }
+
+  .wave-slider::-moz-range-thumb {
+    opacity: 1;
+  }
 }

@@ -1,28 +1,49 @@
-import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useState, type RefObject } from "react";
 import { useSyncedRef } from "./useSyncedRef";
 
 type LayoutRefs = {
+  footerRef: RefObject<HTMLElement | null>;
   hasStarted: boolean;
   headerRef: RefObject<HTMLElement | null>;
-  playbackRef: RefObject<HTMLElement | null>;
   replayPromptVisible: boolean;
 };
 
-export function useLayoutHeights({ hasStarted, headerRef, playbackRef, replayPromptVisible }: LayoutRefs) {
+const DEFAULT_HEADER_HEIGHT = 72;
+const DEFAULT_FOOTER_HEIGHT = DEFAULT_HEADER_HEIGHT;
+
+function getInitialLayoutHeights() {
+  if (typeof window === "undefined") {
+    return { footer: DEFAULT_FOOTER_HEIGHT, header: DEFAULT_HEADER_HEIGHT, section: 616 };
+  }
+
+  return {
+    footer: DEFAULT_FOOTER_HEIGHT,
+    header: DEFAULT_HEADER_HEIGHT,
+    section: Math.max(320, window.innerHeight - DEFAULT_HEADER_HEIGHT - DEFAULT_FOOTER_HEIGHT),
+  };
+}
+
+function scrollPageToTop() {
+  window.scrollTo({ top: 0 });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+export function useLayoutHeights({ footerRef, hasStarted, headerRef, replayPromptVisible }: LayoutRefs) {
   const hasStartedRef = useSyncedRef(hasStarted);
-  const [layoutHeights, setLayoutHeights] = useState({ header: 64, playback: 148, section: 520 });
+  const [layoutHeights, setLayoutHeights] = useState(getInitialLayoutHeights);
 
   useLayoutEffect(() => {
     const previousScrollRestoration = history.scrollRestoration;
     history.scrollRestoration = "manual";
     document.body.style.overflow = "hidden";
-    window.scrollTo({ top: 0 });
+    scrollPageToTop();
     const scrollTopFrame = window.requestAnimationFrame(() => {
-      if (!hasStartedRef.current) window.scrollTo({ top: 0 });
+      if (!hasStartedRef.current) scrollPageToTop();
     });
 
     const handlePageShow = () => {
-      if (!hasStartedRef.current) window.scrollTo({ top: 0 });
+      if (!hasStartedRef.current) scrollPageToTop();
     };
 
     window.addEventListener("pageshow", handlePageShow);
@@ -35,24 +56,26 @@ export function useLayoutHeights({ hasStarted, headerRef, playbackRef, replayPro
     };
   }, [hasStartedRef]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updateLayoutHeights = () => {
-      const header = Math.round(headerRef.current?.getBoundingClientRect().height ?? 64);
-      const playback = Math.round(playbackRef.current?.getBoundingClientRect().height ?? 148);
-      const section = Math.max(320, window.innerHeight - header - playback);
+      const header = Math.round(headerRef.current?.getBoundingClientRect().height ?? DEFAULT_HEADER_HEIGHT);
+      const footer = Math.round(footerRef.current?.getBoundingClientRect().height ?? DEFAULT_FOOTER_HEIGHT);
+      const section = Math.max(320, window.innerHeight - header - footer);
 
       setLayoutHeights((current) => {
-        if (current.header === header && current.playback === playback && current.section === section) return current;
+        if (current.footer === footer && current.header === header && current.section === section) return current;
 
-        return { header, playback, section };
+        return { footer, header, section };
       });
+
+      if (!hasStartedRef.current) scrollPageToTop();
     };
 
     updateLayoutHeights();
 
     const resizeObserver = new ResizeObserver(updateLayoutHeights);
     if (headerRef.current) resizeObserver.observe(headerRef.current);
-    if (playbackRef.current) resizeObserver.observe(playbackRef.current);
+    if (footerRef.current) resizeObserver.observe(footerRef.current);
 
     window.addEventListener("resize", updateLayoutHeights);
 
@@ -60,15 +83,15 @@ export function useLayoutHeights({ hasStarted, headerRef, playbackRef, replayPro
       resizeObserver.disconnect();
       window.removeEventListener("resize", updateLayoutHeights);
     };
-  }, [headerRef, playbackRef]);
+  }, [footerRef, hasStartedRef, headerRef]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (hasStarted && !replayPromptVisible) {
       document.body.style.overflow = "";
       return;
     }
 
-    if (!hasStarted) window.scrollTo({ top: 0 });
+    if (!hasStarted) scrollPageToTop();
     document.body.style.overflow = "hidden";
 
     return () => {
