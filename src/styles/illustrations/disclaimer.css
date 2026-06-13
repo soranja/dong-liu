@@ -1,0 +1,31 @@
+.disclaimer-illustration {
+  opacity: 0;
+}
+
+[data-general-timeline][aria-hidden="false"] .group[data-active="true"] .disclaimer-illustration {
+  animation: disclaimer-fade-in 800ms ease-out both;
+}
+
+[data-general-timeline][aria-hidden="false"] .group[data-active="false"] .disclaimer-illustration {
+  animation: disclaimer-fade-out 500ms ease-in both;
+}
+
+@keyframes disclaimer-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes disclaimer-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

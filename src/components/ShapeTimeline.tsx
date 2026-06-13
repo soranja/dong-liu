@@ -1,4 +1,5 @@
-import { getActiveLyricCueIndex, LYRIC_CUES } from "../utils/lyrics";
+import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import { getActiveLyricsSectionIndex } from "../utils/lyrics";
 
 type ShapeTimelineProps = {
   currentTime: number;
@@ -49,8 +50,8 @@ function getShapeStyle(index: number) {
 }
 
 export const ShapeTimeline = ({ currentTime, isVisible }: ShapeTimelineProps) => {
-  const activeIndex = getActiveLyricCueIndex(currentTime);
-  const activeCue = LYRIC_CUES[activeIndex];
+  const activeIndex = getActiveLyricsSectionIndex(currentTime);
+  const activeSection = RAM_BOX_LYRICS[activeIndex];
   const shapeStyle = getShapeStyle(activeIndex);
 
   return (
@@ -61,9 +62,9 @@ export const ShapeTimeline = ({ currentTime, isVisible }: ShapeTimelineProps) =>
       style={{ opacity: isVisible ? 1 : 0 }}
     >
       <div
-        key={activeCue.timestamp}
+        key={activeSection.timestamp}
         className="absolute left-1/2 top-1/2 shadow-[0_30px_80px_rgb(0_0_0/0.35)]"
-        data-active-timestamp={activeCue.timestamp}
+        data-active-timestamp={activeSection.timestamp}
         data-shape-timeline-shape
         style={shapeStyle}
       />

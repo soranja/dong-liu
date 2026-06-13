@@ -8,7 +8,8 @@ Dong Liu is a Vite + React audio timeline experiment. The page locks at the top 
 src/
   DongLiuShell.tsx        App shell component and page composition
   main.tsx                React root, StrictMode, and global style imports
-  audio/                  Audio tracks and timestamped lyric data
+  audio/                  Audio tracks
+  lyrics/                 Typed lyric sections and media types
   components/             Presentational UI components
     playback/             Playback header, buttons, and masked icons
   hooks/                  Stateful browser/audio lifecycle logic
@@ -23,16 +24,14 @@ public/
 
 `src/DongLiuShell.tsx`
 
-Owns the top-level refs, playback/layout state wiring, and page composition. It imports the audio file, renders the hidden `<audio>` element, and wires the playback header, shape timeline, captions footer, and page timeline to the hooks. Put app-level coordination here when it is only used by this experience.
+Owns the top-level refs, playback/layout state wiring, and page composition. It imports the audio file, renders the hidden `<audio>` element, and wires the playback header, captions footer, and general timeline to the hooks. Put app-level coordination here when it is only used by this experience.
 
 `src/components/`
 
 Contains React UI components that receive playback data and callbacks through props.
 
 - `CaptionsFooter.tsx` renders the active lyric cue and fits all captions to the available footer space.
-- `ShapeTimeline.tsx` maps the active lyric cue to a deterministic central shape.
-- `PageTimeline.tsx` renders the scroll-height sections, locked-start message, and replay prompt.
-- `LyricsTimeline.tsx` contains an alternate full-screen lyric presentation that is not currently mounted.
+- `GeneralTimeline.tsx` maps lyric sections to the fixed visual track and owns the scroll spacer, locked-start message, and replay prompt.
 - `playback/PlaybackHeader.tsx` renders the fixed top bar, seek and volume controls, and waveform canvas.
 - `playback/PlaybackButtons.tsx` and `playback/PlaybackIcons.tsx` render the play/pause button and masked SVG icons.
 
@@ -44,6 +43,7 @@ Contains React lifecycle logic that needs state, refs, effects, or cleanup.
 
 - `usePlaybackController.ts` owns playback state and coordinates audio time, replay, seeking, keyboard input, waveform painting, and the GSAP audio timeline.
 - `useAudioGsapTimeline.ts` owns the paused GSAP timeline, ScrollTrigger page progress, manual-scroll seeking, and playback-driven scroll synchronization.
+- `useGeneralTimeline.ts` fits string illustrations and synchronizes the fixed visual track to audio time.
 - `useWaveformAudio.ts` owns the Web Audio graph plus active, decaying, and resting canvas waveform painting.
 - `useLayoutHeights.ts` measures the fixed header and footer, calculates section height, and manages scroll locking.
 - `usePlaybackKeyboard.ts` installs spacebar play/pause, arrow-key seek, and arrow-key volume controls.
@@ -56,7 +56,8 @@ Hooks should exist only when React lifecycle behavior is needed. Plain formattin
 
 Contains small helpers without React component state.
 
-- `lyrics.ts` loads and sorts lyric cues, selects the active cue, and parses italic caption segments.
+- `lyrics.ts` selects the active typed lyric section and parses italic caption segments.
+- `generalTimeline.ts` calculates visual track timing and position.
 - `playback.ts` formats playback time and blurs controls after pointer interaction.
 - `playbackScrollSeek.ts` installs wheel/touch seeking on the playback header.
 - `textFit.ts` calculates single-line lyric and caption font sizes.
@@ -83,7 +84,7 @@ All project colors should be defined as CSS variables in `global.css`. JSX shoul
 `DongLiuShell.tsx` consumes:
 
 - `audio/ram_box.mp3`
-- `CaptionsFooter`, `PageTimeline`, `ShapeTimeline`
+- `CaptionsFooter`, `GeneralTimeline`
 - `playback/PlaybackHeader`
 - `useLayoutHeights`, `usePlaybackController`
 
@@ -91,10 +92,6 @@ All project colors should be defined as CSS variables in `global.css`. JSX shoul
 
 - lyric selection and parsing from `utils/lyrics`
 - single-line fitting from `utils/textFit`
-
-`ShapeTimeline.tsx` consumes:
-
-- cue timing from `utils/lyrics`
 
 `playback/PlaybackHeader.tsx` consumes:
 
@@ -111,10 +108,10 @@ All project colors should be defined as CSS variables in `global.css`. JSX shoul
 - `useSyncedRef`
 - `useWaveformAudio`
 
-`utils/lyrics.ts` consumes:
+`lyrics/ram-box-lyrics.ts` is the canonical Ram Box section source. Each section directly exposes its timestamp,
+explicit enter/exit timing, slide behavior, and illustration content.
 
-- `audio/ram_box_lyrics.json`
-- the `TextSizeLevel` type from `utils/textFit`
+`audio/ram_box_lyrics.json` remains as the original reference data, but the application no longer imports it.
 
 `useWaveformAudio.ts` consumes:
 

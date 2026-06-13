@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { getActiveLyricCue, getLyricLineParts, getLyricPlainText, LYRIC_CUES } from "../utils/lyrics";
+import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import { getActiveLyricsSection, getLyricLineParts, getLyricPlainText } from "../utils/lyrics";
 import { getSingleLineFontSize } from "../utils/textFit";
 
 type CaptionsFooterProps = {
@@ -8,7 +9,7 @@ type CaptionsFooterProps = {
   isVisible: boolean;
 };
 
-const CAPTION_LINES = LYRIC_CUES.map((cue) => getLyricPlainText(cue.line));
+const CAPTION_LINES = RAM_BOX_LYRICS.map((section) => getLyricPlainText(section.line));
 const DEFAULT_FONT_SIZE = 18;
 const MAX_FONT_SIZE = 32;
 const MIN_FONT_SIZE = 6;
@@ -18,8 +19,8 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible }: CaptionsFo
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLParagraphElement | null>(null);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
-  const activeCue = getActiveLyricCue(currentTime);
-  const activeParts = useMemo(() => getLyricLineParts(activeCue.line), [activeCue.line]);
+  const activeSection = getActiveLyricsSection(currentTime);
+  const activeParts = useMemo(() => getLyricLineParts(activeSection.line), [activeSection.line]);
 
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current;

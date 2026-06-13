@@ -1,9 +1,11 @@
 import { useRef } from "react";
+
 import audioSrc from "./audio/ram_box.mp3";
+
 import { CaptionsFooter } from "./components/CaptionsFooter";
-import { PageTimeline } from "./components/PageTimeline";
+import { GeneralTimeline } from "./components/GeneralTimeline";
 import { PlaybackHeader } from "./components/playback/PlaybackHeader";
-import { ShapeTimeline } from "./components/ShapeTimeline";
+
 import { useLayoutHeights } from "./hooks/useLayoutHeights";
 import { usePlaybackController } from "./hooks/usePlaybackController";
 
@@ -23,7 +25,7 @@ export const DongLiuShell = () => {
 
   return (
     <main
-      className="min-h-screen bg-(--color-bg) text-(--color-panel)"
+      className="relative isolate min-h-screen overflow-x-clip bg-(--color-bg) text-(--color-panel)"
       style={{ paddingBottom: layoutHeights.footer, paddingTop: layoutHeights.header }}
     >
       <audio
@@ -46,16 +48,17 @@ export const DongLiuShell = () => {
         progress={playback.progress}
         volume={playback.volume}
       />
-      <ShapeTimeline
-        currentTime={playback.currentTime}
-        isVisible={playback.hasStarted && !playback.replayPromptVisible}
-      />
+
       <CaptionsFooter
         currentTime={playback.currentTime}
         footerRef={footerRef}
         isVisible={playback.hasStarted && !playback.replayPromptVisible}
       />
-      <PageTimeline
+
+      <GeneralTimeline
+        audioRef={audioRef}
+        currentTime={playback.currentTime}
+        duration={playback.duration}
         footerHeight={layoutHeights.footer}
         hasStarted={playback.hasStarted}
         headerHeight={layoutHeights.header}

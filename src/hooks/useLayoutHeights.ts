@@ -29,6 +29,10 @@ function scrollPageToTop() {
   document.body.scrollTop = 0;
 }
 
+function setPageScrollLocked(isLocked: boolean) {
+  document.documentElement.style.overflowY = isLocked ? "hidden" : "scroll";
+}
+
 export function useLayoutHeights({ footerRef, hasStarted, headerRef, replayPromptVisible }: LayoutRefs) {
   const hasStartedRef = useSyncedRef(hasStarted);
   const [layoutHeights, setLayoutHeights] = useState(getInitialLayoutHeights);
@@ -36,7 +40,7 @@ export function useLayoutHeights({ footerRef, hasStarted, headerRef, replayPromp
   useLayoutEffect(() => {
     const previousScrollRestoration = history.scrollRestoration;
     history.scrollRestoration = "manual";
-    document.body.style.overflow = "hidden";
+    setPageScrollLocked(true);
     scrollPageToTop();
     const scrollTopFrame = window.requestAnimationFrame(() => {
       if (!hasStartedRef.current) scrollPageToTop();
@@ -50,7 +54,7 @@ export function useLayoutHeights({ footerRef, hasStarted, headerRef, replayPromp
 
     return () => {
       history.scrollRestoration = previousScrollRestoration;
-      document.body.style.overflow = "";
+      document.documentElement.style.overflowY = "";
       window.cancelAnimationFrame(scrollTopFrame);
       window.removeEventListener("pageshow", handlePageShow);
     };
@@ -87,15 +91,15 @@ export function useLayoutHeights({ footerRef, hasStarted, headerRef, replayPromp
 
   useLayoutEffect(() => {
     if (hasStarted && !replayPromptVisible) {
-      document.body.style.overflow = "";
+      setPageScrollLocked(false);
       return;
     }
 
     if (!hasStarted) scrollPageToTop();
-    document.body.style.overflow = "hidden";
+    setPageScrollLocked(true);
 
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.style.overflowY = "";
     };
   }, [hasStarted, replayPromptVisible]);
 

@@ -1,40 +1,30 @@
-import lyrics from "../audio/ram_box_lyrics.json";
-import type { TextSizeLevel } from "./textFit";
-
-export type LyricCue = {
-  line: string;
-  sizeLevel?: TextSizeLevel;
-  time: number;
-  timestamp: string;
-};
+import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
 
 export type LyricLinePart = {
   isItalic: boolean;
   text: string;
 };
 
-export type LyricTimestamp = Pick<LyricCue, "time" | "timestamp">;
+const SECTION_START_TIMES = RAM_BOX_LYRICS.map(({ timestamp }) => {
+  const [minutes, seconds] = timestamp.split(":").map(Number);
 
-export const LYRIC_CUES = [...(lyrics as LyricCue[])].sort((first, second) => first.time - second.time);
+  return minutes * 60 + seconds;
+});
 
-export function extractLyricTimestamps(cues: readonly LyricCue[]): LyricTimestamp[] {
-  return cues.map(({ time, timestamp }) => ({ time, timestamp }));
+export function getLyricsSectionStart(index: number) {
+  return SECTION_START_TIMES[index];
 }
 
-export const LYRIC_TIMESTAMPS = extractLyricTimestamps(LYRIC_CUES);
-
-export function getActiveLyricCueIndex(currentTime: number) {
-  const safeTime = Number.isFinite(currentTime) ? Math.max(0, currentTime) : 0;
-
-  for (let index = LYRIC_CUES.length - 1; index >= 0; index -= 1) {
-    if (safeTime >= LYRIC_CUES[index].time) return index;
+export function getActiveLyricsSectionIndex(currentTime: number) {
+  for (let index = RAM_BOX_LYRICS.length - 1; index >= 0; index -= 1) {
+    if (currentTime >= SECTION_START_TIMES[index]) return index;
   }
 
   return 0;
 }
 
-export function getActiveLyricCue(currentTime: number) {
-  return LYRIC_CUES[getActiveLyricCueIndex(currentTime)];
+export function getActiveLyricsSection(currentTime: number) {
+  return RAM_BOX_LYRICS[getActiveLyricsSectionIndex(currentTime)];
 }
 
 export function getLyricLineParts(line: string) {
