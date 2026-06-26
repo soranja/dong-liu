@@ -1,0 +1,155 @@
+import { useRef, useState, type PointerEvent } from "react";
+import {
+  getAnimationLengthPercent,
+  getRangeAnimationEndPercent,
+} from "../../utils/tuning/illustrationAnimation";
+
+type DragTarget = "end" | "playhead" | "start";
+
+type TuningProgressBarProps = {
+  animationLengthPercent: number;
+  endPercent: number;
+  isRange: boolean;
+  isSelectedActive: boolean;
+  playheadPercent: number;
+  startPercent: number;
+  onPlayheadChange: (percent: number) => void;
+  onPlayheadRelease: () => void;
+  onRangeChange: (startPercent: number, endPercent: number) => void;
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+export const TuningProgressBar = ({
+  animationLengthPercent,
+  endPercent,
+  isRange,
+  isSelectedActive,
+  onPlayheadChange,
+  onPlayheadRelease,
+  onRangeChange,
+  playheadPercent,
+  startPercent,
+}: TuningProgressBarProps) => {
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const [dragTarget, setDragTarget] = useState<DragTarget | null>(null);
+
+  const getPercent = (clientX: number) => {
+    const rect = barRef.current?.getBoundingClientRect();
+    if (!rect?.width) return 0;
+
+    return clamp(Math.round(((clientX - rect.left) / rect.width) * 100), 0, 100);
+  };
+
+  const updateDrag = (target: DragTarget, percent: number) => {
+    if (target === "playhead") {
+      onPlayheadChange(percent);
+      return;
+    }
+    if (!isRange) return;
+    if (target === "start") onRangeChange(clamp(percent, 0, 50), endPercent);
+    if (target === "end") onRangeChange(startPercent, clamp(percent, 51, 100));
+  };
+
+  const startDrag = (target: DragTarget, event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    barRef.current?.setPointerCapture(event.pointerId);
+    setDragTarget(target);
+    updateDrag(target, getPercent(event.clientX));
+  };
+
+  const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!dragTarget) return;
+
+    updateDrag(dragTarget, getPercent(event.clientX));
+  };
+
+  const stopDrag = () => {
+    if (dragTarget === "playhead") onPlayheadRelease();
+    setDragTarget(null);
+  };
+  const firstSegmentEnd = Math.min(50, endPercent);
+  const secondSegmentStart = Math.max(50, startPercent);
+  const clampedAnimationLengthPercent = getAnimationLengthPercent(animationLengthPercent);
+  const animationEndPercent = getRangeAnimationEndPercent(startPercent, endPercent, clampedAnimationLengthPercent);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex justify-between font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+        <span>Start 0-50</span>
+        <span>End 51-100</span>
+      </div>
+      <div
+        ref={barRef}
+        className="relative pb-1 pt-1"
+        onPointerMove={moveDrag}
+        onPointerUp={stopDrag}
+        onPointerCancel={stopDrag}
+      >
+        <div className="relative mb-3 h-8">
+          <span className="absolute top-1/2 right-0 left-0 h-px -translate-y-1/2 bg-(--color-border-strong)" />
+          <button
+            type="button"
+            aria-label="Drag playback playhead"
+            className="absolute top-0 h-8 w-4 -translate-x-1/2 cursor-ew-resize"
+            style={{ left: `${playheadPercent}%`, opacity: isSelectedActive ? 1 : 0.55 }}
+            onPointerDown={(event) => startDrag("playhead", event)}
+          >
+            <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-tuner-playhead)" />
+          </button>
+        </div>
+
+        <div className="relative h-8 border border-(--color-border-strong) bg-(--color-tuner-cut)">
+          <span
+            className="absolute inset-y-0 bg-(--color-tuner-start)"
+            style={{ left: `${startPercent}%`, width: `${Math.max(0, firstSegmentEnd - startPercent)}%` }}
+          />
+          <span
+            className="absolute inset-y-0 bg-(--color-tuner-end)"
+            style={{ left: `${secondSegmentStart}%`, width: `${Math.max(0, endPercent - secondSegmentStart)}%` }}
+          />
+          {isRange ? (
+            <>
+              <span
+                className="absolute bottom-0 h-1 bg-(--color-tuner-length)"
+                style={{ left: `${startPercent}%`, width: `${Math.max(0, animationEndPercent - startPercent)}%` }}
+              />
+              <span
+                className="absolute top-[-0.25rem] bottom-[-0.25rem] border-l-2 border-(--color-tuner-length)"
+                style={{ left: `${animationEndPercent}%` }}
+              />
+              <button
+                type="button"
+                aria-label="Drag animation start"
+                className="absolute top-[-0.25rem] h-10 w-4 -translate-x-1/2 cursor-ew-resize"
+                style={{ left: `${startPercent}%` }}
+                onPointerDown={(event) => startDrag("start", event)}
+              >
+                <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-control)" />
+              </button>
+              <button
+                type="button"
+                aria-label="Drag animation end"
+                className="absolute top-[-0.25rem] h-10 w-4 -translate-x-1/2 cursor-ew-resize"
+                style={{ left: `${endPercent}%` }}
+                onPointerDown={(event) => startDrag("end", event)}
+              >
+                <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-accent)" />
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
+      <div className="flex justify-between font-mono text-[0.65rem] text-(--color-text-muted)">
+        <span>0%</span>
+        <span>
+          Playhead {Math.round(playheadPercent)}%
+          {isRange ? ` / Length ${clampedAnimationLengthPercent}%` : ""}
+        </span>
+        <span>100%</span>
+      </div>
+    </div>
+  );
+};

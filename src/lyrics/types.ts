@@ -15,10 +15,27 @@ export type LyricsMedia =
 
 export type LyricsIllustration = LyricsMedia | ReactNode;
 
+export type IllustrationAnimation =
+  | {
+      variant: "instant";
+    }
+  | {
+      animationLengthPercent?: number;
+      endPercent: number;
+      startPercent: number;
+      variant: "range";
+    };
+
+export type IllustrationVisibility = "adjacent" | "only-active" | "active-trailing";
+export type TextIllustrationKind = "kinetic-warp" | "word-cloud";
+
 export type LyricsSection = {
   enterDuration: number;
   exitDuration: number;
   illustrateWith: LyricsIllustration;
+  illustrationAnimation?: IllustrationAnimation;
+  illustrationKind?: TextIllustrationKind;
+  illustrationVisibility?: IllustrationVisibility;
   isOverlay?: boolean;
   line: string;
   offsetEnter: number;

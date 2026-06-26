@@ -9,6 +9,7 @@ import { useWaveformAudio } from "./useWaveformAudio";
 type PlaybackControllerOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
+  isReady: boolean;
   playbackRef: RefObject<HTMLElement | null>;
   timelineRef: RefObject<HTMLElement | null>;
 };
@@ -33,7 +34,13 @@ function isAtPlaybackEnd(audio: HTMLAudioElement) {
   );
 }
 
-export function usePlaybackController({ audioRef, canvasRef, playbackRef, timelineRef }: PlaybackControllerOptions) {
+export function usePlaybackController({
+  audioRef,
+  canvasRef,
+  isReady,
+  playbackRef,
+  timelineRef,
+}: PlaybackControllerOptions) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -48,12 +55,14 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
   const playbackUiUpdateTimeRef = useRef(0);
   const hasStartedRef = useSyncedRef(hasStarted);
   const isPlayingRef = useSyncedRef(isPlaying);
+  const isReadyRef = useSyncedRef(isReady);
   const replayPromptVisibleRef = useSyncedRef(replayPromptVisible);
   const replaySequence = useReplayCountdown(replayPromptVisible);
   const { getAudioGraph, startPainting, stopPainting } = useWaveformAudio({ audioRef, canvasRef, volume });
   const audioTimeline = useAudioGsapTimeline({
     audioRef,
-    isEnabled: () => hasStartedRef.current && !replayPromptVisibleRef.current,
+    isEnabled: () => isReadyRef.current && hasStartedRef.current && !replayPromptVisibleRef.current,
+    isTimelineReady: isReady,
     onSeek: (nextProgress) => {
       setProgress(nextProgress);
       setCurrentTime(audioRef.current?.currentTime ?? 0);
@@ -76,14 +85,14 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
 
     return installPlaybackScrollSeek({
       audio,
-      isEnabled: () => isPlayingRef.current,
+      isEnabled: () => isReadyRef.current && isPlayingRef.current,
       onSeek: (nextProgress) => {
         setProgress(nextProgress);
         setCurrentTime(audio.currentTime);
       },
       target: playback,
     });
-  }, [audioRef, isPlayingRef, playbackRef]);
+  }, [audioRef, isPlayingRef, isReadyRef, playbackRef]);
 
   useEffect(
     () => () => {
@@ -195,7 +204,7 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
 
   async function togglePlayback() {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !isReadyRef.current) return;
 
     if (keyboardSeekResumeActiveRef.current) {
       clearKeyboardSeekResume();
@@ -248,7 +257,7 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
 
   async function replayFromStart(autoplay: boolean) {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !isReadyRef.current) return;
 
     clearKeyboardSeekResume();
     audio.currentTime = 0;
@@ -284,7 +293,7 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
 
   function seek(value: number, options: SeekOptions = {}) {
     const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
+    if (!audio || !audio.duration || !isReadyRef.current) return;
 
     hasStartedRef.current = true;
     replayPromptVisibleRef.current = false;
@@ -303,7 +312,7 @@ export function usePlaybackController({ audioRef, canvasRef, playbackRef, timeli
 
   function seekBySeconds(seconds: number) {
     const audio = audioRef.current;
-    if (!audio || !audio.duration || !Number.isFinite(audio.duration)) return;
+    if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
 
     const shouldResumePlayback = !audio.paused || keyboardSeekResumeActiveRef.current;
     if (shouldResumePlayback) {

@@ -1,7 +1,8 @@
-import { useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
 import { getActiveLyricsSection, getLyricLineParts, getLyricPlainText } from "../utils/lyrics";
 import { getSingleLineFontSize } from "../utils/textFit";
+import { subscribeLyricTimingTuning } from "../utils/tuning/lyricTimingTuningStore";
 
 type CaptionsFooterProps = {
   currentTime: number;
@@ -19,8 +20,15 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible }: CaptionsFo
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLParagraphElement | null>(null);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
+  const [, setTimingVersion] = useState(0);
   const activeSection = getActiveLyricsSection(currentTime);
   const activeParts = useMemo(() => getLyricLineParts(activeSection.line), [activeSection.line]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    return subscribeLyricTimingTuning(() => setTimingVersion((version) => version + 1));
+  }, []);
 
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current;
@@ -89,7 +97,7 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible }: CaptionsFo
   return (
     <footer
       ref={footerRef}
-      className="fixed inset-x-0 bottom-0 z-20 flex h-16 items-center bg-(--color-bg) px-3 text-(--color-text) sm:px-4 shadow-[0_-25px_50px_-12px_var(--tw-shadow-color,rgb(0_0_0/0.25))]"
+      className="fixed inset-x-0 bottom-0 z-20 flex h-16 items-center bg-(--color-bg) px-3 text-(--color-text) sm:px-4 shadow-[0_-25px_50px_-12px_var(--color-footer-shadow)]"
     >
       <div
         ref={wrapperRef}

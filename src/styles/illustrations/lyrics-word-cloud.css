@@ -1,0 +1,35 @@
+.lyrics-word-cloud {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lyrics-word-cloud__room {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: var(--room-inset);
+}
+
+.lyrics-word-cloud__word {
+  display: block;
+  color: var(--color-text);
+  font-style: normal;
+  letter-spacing: 0;
+  line-height: 0.88;
+  opacity: 0;
+  transform: rotate(var(--word-rotation)) scale(var(--word-scale-x), var(--word-scale-y));
+  transform-origin: center;
+  white-space: nowrap;
+}
+
+.lyrics-word-cloud__word[data-word-revealed="true"] {
+  opacity: 1;
+}
+
+[data-general-timeline][data-prewarming="true"] .group[data-active="true"] .lyrics-word-cloud__word {
+  opacity: 1;
+}

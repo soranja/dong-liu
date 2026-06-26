@@ -21,6 +21,12 @@
   --color-border: #000000;
   --color-border-soft: #393939;
   --color-border-strong: #505050;
+  --color-footer-shadow: rgb(0 0 0 / 0.25);
+  --color-tuner-cut: #3a3a37;
+  --color-tuner-start: color-mix(in srgb, var(--color-control) 36%, var(--color-panel-chip));
+  --color-tuner-end: color-mix(in srgb, var(--color-accent) 46%, var(--color-panel-chip));
+  --color-tuner-length: var(--color-pumpkin);
+  --color-tuner-playhead: var(--color-pumpkin);
 
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
   --font-unbounded: "Unbounded", var(--font-sans);
@@ -91,6 +97,14 @@ html {
 
 .general-timeline-track {
   transform: translate3d(var(--timeline-track-x), 0, 0);
+}
+
+[data-timeline-section] {
+  contain: layout paint style;
+}
+
+[data-timeline-content][data-illustration-kind="generic"] {
+  opacity: var(--illustration-progress, 0);
 }
 
 @media (max-width: 639px) {

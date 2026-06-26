@@ -9,6 +9,7 @@ type PlaybackHeaderProps = {
   duration: number;
   headerRef: RefObject<HTMLElement | null>;
   isPlaying: boolean;
+  isReady: boolean;
   progress: number;
   volume: number;
   onSeek: (value: number) => void;
@@ -21,8 +22,18 @@ function getSliderStyle(value: number): CSSProperties {
 }
 
 export const PlaybackHeader = (props: PlaybackHeaderProps) => {
-  const { canvasRef, duration, headerRef, isPlaying, onSeek, onTogglePlayback, onVolumeChange, progress, volume } =
-    props;
+  const {
+    canvasRef,
+    duration,
+    headerRef,
+    isPlaying,
+    isReady,
+    onSeek,
+    onTogglePlayback,
+    onVolumeChange,
+    progress,
+    volume,
+  } = props;
   const volumeBeforeMuteRef = useRef(volume > 0 ? volume : 0.5);
 
   useEffect(() => {
@@ -45,7 +56,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
       className="fixed inset-x-0 top-0 z-20 flex h-16 items-center bg-(--color-bg) text-(--color-text) pr-10 lg:pr-0 shadow-2xl"
     >
       <div className="flex h-full w-full max-w-7xl items-center gap-10 mx-auto">
-        <PlaybackButtons isPlaying={isPlaying} onTogglePlayback={onTogglePlayback} />
+        <PlaybackButtons isPlaying={isPlaying} isReady={isReady} onTogglePlayback={onTogglePlayback} />
 
         <div className="w-full flex items-center gap-8 text-[12px] text-(--color-text-muted) font-mono">
           <div className="flex w-full items-center gap-2">
@@ -57,6 +68,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
               max="100"
               step="any"
               value={progress}
+              disabled={!isReady}
               style={getSliderStyle(progress)}
               onChange={(event) => onSeek(Number(event.target.value))}
               onPointerUp={(event) => blurControl(event.currentTarget)}
@@ -69,6 +81,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
             <button
               type="button"
               aria-label={volume === 0 ? "Restore volume" : "Mute"}
+              disabled={!isReady}
               onMouseDown={(event) => event.preventDefault()}
               onClick={handleToggleVolume}
               className="flex h-7 w-7 shrink-0 items-center justify-center text-(--color-text-muted) transition hover:text-(--color-accent)"
@@ -82,6 +95,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
               max="1"
               step="0.01"
               value={volume}
+              disabled={!isReady}
               style={getSliderStyle(volume * 100)}
               onChange={(event) => onVolumeChange(Number(event.target.value))}
               onPointerUp={(event) => blurControl(event.currentTarget)}

@@ -5,6 +5,7 @@ import type { LyricsSection } from "./types";
 export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   {
     sectionId: 1,
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 10 },
     timestamp: "00:00.00",
     line: "*instrumental*",
     offsetEnter: -500,
@@ -14,6 +15,9 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 2,
+    illustrationVisibility: "only-active",
+    illustrationKind: "word-cloud",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 13 },
     timestamp: "00:14.25",
     line: "[Voice] Are You Ready?",
     offsetEnter: -500,
@@ -23,6 +27,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 3,
+    illustrationVisibility: "only-active",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 60 },
     timestamp: "00:23.00",
     line: "[Voice] Let's get ready to rumble!",
     offsetEnter: -500,
@@ -41,7 +47,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 5,
-    timestamp: "00:28.35",
+    timestamp: "00:28.450",
     line: "БОКС",
     offsetEnter: -100,
     enterDuration: 100,
@@ -50,7 +56,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 6,
-    timestamp: "00:29.05",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 40 },
+    timestamp: "00:29.160",
     line: "Затяжной, мучительный",
     offsetEnter: -300,
     enterDuration: 300,
@@ -59,7 +66,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 7,
-    timestamp: "00:30.20",
+    timestamp: "00:30.280",
     line: "БОКС",
     offsetEnter: -100,
     enterDuration: 100,
@@ -68,7 +75,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 8,
-    timestamp: "00:30.85",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 55 },
+    timestamp: "00:31.000",
     line: "Агрессивный, жертвенный",
     offsetEnter: -300,
     enterDuration: 300,
@@ -77,7 +85,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 9,
-    timestamp: "00:32.00",
+    timestamp: "00:32.000",
     line: "БОКС",
     offsetEnter: -100,
     enterDuration: 100,
@@ -86,7 +94,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 10,
-    timestamp: "00:32.55",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 100 },
+    timestamp: "00:33.000",
     line: "И не раз переломанный нос,",
     offsetEnter: -500,
     enterDuration: 300,
@@ -95,7 +104,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 11,
-    timestamp: "00:33.70",
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 75 },
+    timestamp: "00:34.260",
     line: "Это лишь минимум, что может дать тебе",
     offsetEnter: -300,
     enterDuration: 300,
@@ -104,7 +114,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 12,
-    timestamp: "00:35.50",
+    timestamp: "00:35.600",
     line: "БОКС",
     offsetEnter: -100,
     enterDuration: 100,
@@ -412,6 +422,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 44,
+    illustrationAnimation: { variant: "range", startPercent: 0, endPercent: 100, animationLengthPercent: 70 },
     timestamp: "01:04.45",
     line: "Лица в перекосы и путь тупиковый",
     offsetEnter: -300,
@@ -421,7 +432,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 45,
-    timestamp: "01:06.15",
+    timestamp: "01:06.460",
     line: "Биться нелегко, но в этом есть повод",
     offsetEnter: -300,
     enterDuration: 300,
@@ -439,6 +450,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 47,
+    illustrationVisibility: "only-active",
     timestamp: "01:09.00",
     line: "Бодряком на комбо побед",
     offsetEnter: -300,
@@ -448,6 +460,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 48,
+    illustrationVisibility: "only-active",
     timestamp: "01:10.45",
     line: "Резонные муки",
     offsetEnter: -300,
@@ -530,6 +543,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 57,
+    illustrationVisibility: "only-active",
     timestamp: "01:25.70",
     line: "Подобно кабелю прятался в кавере, путался с мразями",
     offsetEnter: -500,
@@ -539,6 +553,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 58,
+    illustrationVisibility: "only-active",
     timestamp: "01:28.45",
     line: "Воу-воу",
     offsetEnter: -100,
@@ -549,6 +564,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 59,
+    illustrationVisibility: "only-active",
     timestamp: "01:29.25",
     line: "Казался каменным, делал все правильно, ведь падал по пути",
     offsetEnter: -500,
@@ -558,6 +574,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 60,
+    illustrationVisibility: "only-active",
     timestamp: "01:31.95",
     line: "Воу-воу",
     offsetEnter: -100,
@@ -568,7 +585,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 61,
-    timestamp: "01:32.85",
+    timestamp: "01:32.835",
     line: "Страхи запрятаны, мечты загаданы, нервы закалены",
     offsetEnter: -500,
     enterDuration: 500,
@@ -595,9 +612,11 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 64,
+    illustrationVisibility: "only-active",
     timestamp: "01:38.20",
     line: "Воу-воу",
     offsetEnter: -100,
+
     enterDuration: 100,
     exitDuration: 175,
     illustrateWith: "Воу-воу",
@@ -723,6 +742,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   },
   {
     sectionId: 78,
+    illustrationKind: "kinetic-warp",
     timestamp: "01:54.20",
     line: "БОКС",
     offsetEnter: -50,

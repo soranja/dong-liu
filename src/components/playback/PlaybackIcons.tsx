@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-export type PlaybackIconName = "mute" | "pause" | "play" | "volume";
+type PlaybackIconName = "mute" | "pause" | "play" | "volume";
 
 const playbackIconSources: Record<PlaybackIconName, string> = {
   mute: "/icons/mute.svg",

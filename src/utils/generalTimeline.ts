@@ -6,13 +6,47 @@ const HIGHLIGHT_END_POSITION = 0.25;
 const HIGHLIGHT_START_POSITION = -0.25;
 const SLOW_END_POSITION = 0.1;
 const SLOW_START_POSITION = -0.1;
+const SECTION_BOUNDARY_EPSILON_SECONDS = 0.001;
 
-const FLOW_SECTION_INDEXES = RAM_BOX_LYRICS.map((section, index) =>
-  RAM_BOX_LYRICS.slice(0, index).filter((candidate) => !candidate.isOverlay).length,
+const FLOW_SECTION_INDEXES = RAM_BOX_LYRICS.map(
+  (_, index) => RAM_BOX_LYRICS.slice(0, index).filter((candidate) => !candidate.isOverlay).length,
 );
 
 function getVisualSectionStart(index: number) {
   return getLyricsSectionStart(index) + RAM_BOX_LYRICS[index].offsetEnter / 1000;
+}
+
+function getPlayableSectionBounds(index: number, duration: number) {
+  const visualStart = getVisualSectionStart(index);
+  const visualEnd = index < RAM_BOX_LYRICS.length - 1 ? getVisualSectionStart(index + 1) : duration;
+  const start = Math.min(duration, Math.max(0, visualStart));
+  const end = Math.min(duration, Math.max(start, visualEnd));
+
+  return { end, start };
+}
+
+export function getTimelineSectionProgress(index: number, currentTime: number, duration: number) {
+  if (!duration || !Number.isFinite(duration)) return 0;
+
+  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(index, duration);
+  const sectionDuration = Math.max(0, sectionEnd - sectionStart);
+  if (!sectionDuration) return currentTime >= sectionStart ? 1 : 0;
+
+  return Math.min(1, Math.max(0, (currentTime - sectionStart) / sectionDuration));
+}
+
+export function getTimelineSectionTime(index: number, progress: number, duration: number) {
+  if (!duration || !Number.isFinite(duration)) return 0;
+
+  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(index, duration);
+  const sectionDuration = Math.max(0, sectionEnd - sectionStart);
+  const sectionTime = sectionStart + sectionDuration * Math.min(1, Math.max(0, progress));
+  const boundedSectionTime =
+    index < RAM_BOX_LYRICS.length - 1 && progress >= 1
+      ? Math.max(sectionStart, sectionEnd - SECTION_BOUNDARY_EPSILON_SECONDS)
+      : sectionTime;
+
+  return Math.min(duration, Math.max(0, boundedSectionTime));
 }
 
 function getFlowSectionIndex(index: number) {
@@ -122,8 +156,7 @@ function getOverlayTrackPosition(activeIndex: number, currentTime: number, durat
       : nextFlowIndex < RAM_BOX_LYRICS.length
         ? getFlowSectionIndex(nextFlowIndex)
         : 0;
-  const endPosition =
-    nextFlowIndex < RAM_BOX_LYRICS.length ? getFlowSectionIndex(nextFlowIndex) : startPosition;
+  const endPosition = nextFlowIndex < RAM_BOX_LYRICS.length ? getFlowSectionIndex(nextFlowIndex) : startPosition;
   const overlayStart = getVisualSectionStart(overlayStartIndex);
   const overlayEnd = nextFlowIndex < RAM_BOX_LYRICS.length ? getVisualSectionStart(nextFlowIndex) : duration;
   const overlayDuration = Math.max(0, overlayEnd - overlayStart);
@@ -153,8 +186,7 @@ export function getTimelineTrackState(currentTime: number, duration: number) {
 
     return {
       activeIndex,
-      isHighlighted:
-        position >= flowIndex + HIGHLIGHT_START_POSITION && position <= flowIndex + HIGHLIGHT_END_POSITION,
+      isHighlighted: position >= flowIndex + HIGHLIGHT_START_POSITION && position <= flowIndex + HIGHLIGHT_END_POSITION,
       position,
     };
   }
@@ -189,8 +221,7 @@ export function getTimelineTrackState(currentTime: number, duration: number) {
 
     return {
       activeIndex,
-      isHighlighted:
-        position >= flowIndex + HIGHLIGHT_START_POSITION && position <= flowIndex + HIGHLIGHT_END_POSITION,
+      isHighlighted: position >= flowIndex + HIGHLIGHT_START_POSITION && position <= flowIndex + HIGHLIGHT_END_POSITION,
       position,
     };
   }
