@@ -1,12 +1,8 @@
 import { memo, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
-import { DEFAULT_SECTION_WIDTH_PERCENT } from "../../../entities/track/model/layout";
-import { resolveIllustrationKind, type TrackTuningAdapter } from "../../../entities/track/model/tuning";
-import type {
-  CustomIllustrationRenderer,
-  LyricsIllustration,
-  LyricsSection,
-} from "../../../entities/track/model/types";
-import { TextIllustration } from "../../../shared/ui/illustration-animations/TextIllustration";
+import { DEFAULT_SECTION_WIDTH_PERCENT } from "@entities/track/model/layout";
+import { resolveIllustrationKind, type TrackTuningAdapter } from "@entities/track/model/tuning";
+import type { CustomIllustrationRenderer, LyricsIllustration, LyricsSection } from "@entities/track/model/types";
+import { TextIllustration } from "@shared/ui/illustration-animations/TextIllustration";
 
 type GeneralTimelineSectionProps = {
   index: number;

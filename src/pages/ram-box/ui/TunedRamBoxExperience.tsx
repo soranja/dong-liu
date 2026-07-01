@@ -1,5 +1,5 @@
-import { IllustrationTuningProvider } from "../../../features/illustration-tuning/ui/IllustrationTuningProvider";
-import { TrackExperience, type TrackExperienceProps } from "../../../widgets/track-experience/ui/TrackExperience";
+import { IllustrationTuningProvider } from "@features/illustration-tuning/ui/IllustrationTuningProvider";
+import { TrackExperience, type TrackExperienceProps } from "@widgets/track-experience/ui/TrackExperience";
 import type { RamBoxIllustrationDescriptor } from "../model/types";
 
 type TunedRamBoxExperienceProps = TrackExperienceProps<RamBoxIllustrationDescriptor>;

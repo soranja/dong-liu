@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
-import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
-import type { LyricsSection } from "../../../entities/track/model/types";
-import { getActiveLyricsSection, getLyricLineParts, getLyricPlainText } from "../../../utils/lyrics";
-import { getSingleLineFontSize } from "../../../utils/textFit";
+import { getActiveLyricsSection, getLyricLineParts, getLyricPlainText } from "@entities/track/lib/lyrics";
+import type { TrackTuningAdapter } from "@entities/track/model/tuning";
+import type { LyricsSection } from "@entities/track/model/types";
+import { getSingleLineFontSize } from "@shared/lib/textFit";
 
 type CaptionsFooterProps = {
   currentTime: number;

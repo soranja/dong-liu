@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent } from "react";
-import { getAnimationLengthPercent, getRangeAnimationEndPercent } from "../../../entities/track/model/animation";
+import { getAnimationLengthPercent, getRangeAnimationEndPercent } from "@entities/track/model/animation";
 
 type DragTarget = "end" | "playhead" | "start";
 

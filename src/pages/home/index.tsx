@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { TRACKS } from "../../entities/track/model/catalog";
+import { TRACKS } from "@entities/track/model/catalog";
 
 export const meta = () => [{ title: "Dong Liu — Interactive tracks" }];
 

@@ -1,0 +1,109 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "oxc", "react", "typescript", "unicorn"],
+  "rules": {
+    "import/no-cycle": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/pages/**/*.ts", "src/pages/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@(app|pages)/",
+                "message": "Pages may not import the app layer or another page slice."
+              },
+              {
+                "regex": "^(\\.\\./){2,}",
+                "message": "Use a layer alias for imports outside the current slice."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/widgets/**/*.ts", "src/widgets/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@(app|pages|widgets)/",
+                "message": "Widgets may only depend on features, entities, and shared code; use relative imports within a widget slice."
+              },
+              {
+                "regex": "^(\\.\\./){2,}",
+                "message": "Use a layer alias for imports outside the current slice."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/features/**/*.ts", "src/features/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@(app|pages|widgets|features)/",
+                "message": "Features may only depend on entities and shared code; use relative imports within a feature slice."
+              },
+              {
+                "regex": "^(\\.\\./){2,}",
+                "message": "Use a layer alias for imports outside the current slice."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/entities/**/*.ts", "src/entities/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@(app|pages|widgets|features|entities)/",
+                "message": "Entities may only depend on shared code; use relative imports within an entity slice."
+              },
+              {
+                "regex": "^(\\.\\./){2,}",
+                "message": "Use a layer alias for imports outside the current slice."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/shared/**/*.ts", "src/shared/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "regex": "^@(app|pages|widgets|features|entities|shared)/",
+                "message": "Shared code may not import higher layers; use relative imports within a shared slice."
+              },
+              {
+                "regex": "^(\\.\\./){2,}",
+                "message": "Use a layer alias for imports outside the current slice."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

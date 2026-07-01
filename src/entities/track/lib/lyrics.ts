@@ -1,5 +1,5 @@
-import type { LyricsSection } from "../entities/track/model/types";
-import { resolveSectionStart, type TrackTuningAdapter } from "../entities/track/model/tuning";
+import type { LyricsSection } from "../model/types";
+import { resolveSectionStart, type TrackTuningAdapter } from "../model/tuning";
 
 type LyricLinePart = {
   isItalic: boolean;

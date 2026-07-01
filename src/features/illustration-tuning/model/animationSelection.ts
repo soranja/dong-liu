@@ -1,5 +1,5 @@
-import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "../../../entities/track/model/animation";
-import type { IllustrationAnimation, LyricsSection } from "../../../entities/track/model/types";
+import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "@entities/track/model/animation";
+import type { IllustrationAnimation, LyricsSection } from "@entities/track/model/types";
 
 export type DirtyAnimation = IllustrationAnimation | null;
 export type DirtyAnimations = Record<number, DirtyAnimation>;

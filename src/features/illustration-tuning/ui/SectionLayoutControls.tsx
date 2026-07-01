@@ -2,7 +2,7 @@ import {
   SECTION_WIDTH_STEP_PERCENT,
   SLIDE_MOTION_DURATION_MAX_MS,
   SLIDE_MOTION_DURATION_STEP_MS,
-} from "../../../entities/track/model/layout";
+} from "@entities/track/model/layout";
 
 type SectionLayoutControlsProps = {
   enterDurationMs: number;

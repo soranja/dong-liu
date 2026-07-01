@@ -1,8 +1,8 @@
 import { useLayoutEffect, type ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, useLocation } from "react-router";
 
-import "./styles/global.css";
-import "./styles/wave.css";
+import "@shared/styles/global.css";
+import "@shared/styles/wave.css";
 
 type LayoutProps = {
   children: ReactNode;

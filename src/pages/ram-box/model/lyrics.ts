@@ -1,4 +1,4 @@
-import type { LyricsSection } from "../../../entities/track/model/types";
+import type { LyricsSection } from "@entities/track/model/types";
 import type { RamBoxIllustrationDescriptor } from "./types";
 
 export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor>[] = [

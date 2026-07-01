@@ -5,8 +5,8 @@ import { ExperienceLoadingScreen } from "./ExperienceLoadingScreen";
 import { GeneralTimeline } from "./GeneralTimeline";
 import { PlaybackHeader } from "./playback/PlaybackHeader";
 
-import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
-import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
+import type { TrackTuningAdapter } from "@entities/track/model/tuning";
+import type { CustomIllustrationRenderer, LyricsSection } from "@entities/track/model/types";
 import { useLayoutHeights } from "../model/useLayoutHeights";
 import { usePlaybackController } from "../model/usePlaybackController";
 import { usePreloadedAudio } from "../model/usePreloadedAudio";

@@ -3,7 +3,7 @@ import {
   parseLyricsTimestamp,
   type TimelineProgressDetail,
   type TrackTuningAdapter,
-} from "../../../entities/track/model/tuning";
+} from "@entities/track/model/tuning";
 import {
   clampSectionWidthPercent,
   clampSlideMotionDurationMs,
@@ -11,9 +11,9 @@ import {
   getSavedExitDurationMs,
   getSavedNoSlideBy,
   getSavedSectionWidthPercent,
-} from "../../../entities/track/model/layout";
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "../../../entities/track/model/types";
-import type { TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
+} from "@entities/track/model/layout";
+import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "@entities/track/model/types";
+import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 
 type DraftAnimation = IllustrationAnimation | null;
 type SessionListener = () => void;

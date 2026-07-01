@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import type { TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
+import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 
 export type TrackSummary = {
   id: string;

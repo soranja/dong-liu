@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { clampSectionWidthPercent, clampSlideMotionDurationMs } from "../../../entities/track/model/layout";
-import type { IllustrationVisibility } from "../../../entities/track/model/types";
-import type { TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
+import { clampSectionWidthPercent, clampSlideMotionDurationMs } from "@entities/track/model/layout";
+import type { IllustrationVisibility } from "@entities/track/model/types";
+import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 import { usePendingTunerAutosave } from "./usePendingTunerAutosave";
 import {
   areDirtyAnimationsEqual,

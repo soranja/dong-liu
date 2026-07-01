@@ -1,7 +1,7 @@
-import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from "../../../entities/track/model/tuning";
-import type { IllustrationVisibility } from "../../../entities/track/model/types";
-import type { TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
-import { formatLyricsTimestamp, parseLyricsTimestamp } from "../../../utils/lyrics";
+import { formatLyricsTimestamp, parseLyricsTimestamp } from "@entities/track/lib/lyrics";
+import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from "@entities/track/model/tuning";
+import type { IllustrationVisibility } from "@entities/track/model/types";
+import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 import {
   areDirtyAnimationsEqual,
   getDirtyAnimation,
@@ -17,7 +17,7 @@ import {
   getSavedExitDurationMs as getSavedExitDurationMsForSection,
   getSavedNoSlideBy as getSavedNoSlideByForSection,
   getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection,
-} from "../../../entities/track/model/layout";
+} from "@entities/track/model/layout";
 import type { IllustrationTuningSession } from "./session";
 
 export { getSavedAnimation } from "./animationSelection";

@@ -3,9 +3,9 @@ import {
   resolveSectionOverlay,
   resolveSectionWidthPercent,
   type TrackTuningAdapter,
-} from "../../../entities/track/model/tuning";
-import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
-import { isContinuedSection } from "../../../utils/continuing";
+} from "@entities/track/model/tuning";
+import type { CustomIllustrationRenderer, LyricsSection } from "@entities/track/model/types";
+import { isContinuedSection } from "@entities/track/lib/continuing";
 import { useGeneralTimeline } from "../model/useGeneralTimeline";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
 

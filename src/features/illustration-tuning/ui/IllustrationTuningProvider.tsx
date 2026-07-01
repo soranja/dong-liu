@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 
-import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
-import type { LyricsSection } from "../../../entities/track/model/types";
+import type { TrackTuningAdapter } from "@entities/track/model/tuning";
+import type { LyricsSection } from "@entities/track/model/types";
 import { createIllustrationTuningSession } from "../model/session";
 import { IllustrationAnimationTuner } from "./IllustrationAnimationTuner";
 

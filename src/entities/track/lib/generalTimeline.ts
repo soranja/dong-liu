@@ -1,11 +1,11 @@
-import type { LyricsSection } from "../entities/track/model/types";
+import type { LyricsSection } from "../model/types";
 import {
   resolveSectionEnterDurationMs,
   resolveSectionExitDurationMs,
   resolveSectionNoSlideBy,
   resolveSectionOverlay,
   type TrackTuningAdapter,
-} from "../entities/track/model/tuning";
+} from "../model/tuning";
 import { getNextVisualSectionIndex, getVisualSectionIndex, isContinuedSection } from "./continuing";
 import { getLyricsSectionStart } from "./lyrics";
 

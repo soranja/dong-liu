@@ -1,6 +1,6 @@
-import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
-import type { LyricsSection } from "../../../entities/track/model/types";
-import { getTimelineSectionTime } from "../../../utils/generalTimeline";
+import { getTimelineSectionTime } from "@entities/track/lib/generalTimeline";
+import type { TrackTuningAdapter } from "@entities/track/model/tuning";
+import type { LyricsSection } from "@entities/track/model/types";
 
 export type TuningLoopMode = 0 | 1 | 3 | 5;
 

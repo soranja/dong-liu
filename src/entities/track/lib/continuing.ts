@@ -1,5 +1,5 @@
-import type { LyricsSection } from "../entities/track/model/types";
-import { resolveSectionContinuing, type TrackTuningAdapter } from "../entities/track/model/tuning";
+import type { LyricsSection } from "../model/types";
+import { resolveSectionContinuing, type TrackTuningAdapter } from "../model/tuning";
 
 export function getVisualSectionIndex(
   lyrics: readonly LyricsSection[],

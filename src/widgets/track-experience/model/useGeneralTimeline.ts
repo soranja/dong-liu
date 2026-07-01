@@ -4,25 +4,25 @@ import {
   SINGLE_WORD_REVEAL_END_PERCENT,
   WORD_CLOUD_REVEAL_END_PERCENT,
   resolveIllustrationAnimation,
-} from "../../../entities/track/model/animation";
+} from "@entities/track/model/animation";
 import {
   resolveIllustrationAnimation as resolveTunedIllustrationAnimation,
   resolveIllustrationFadeInMs,
   resolveIllustrationFadeOutMs,
   resolveIllustrationVisibility,
   type TrackTuningAdapter,
-} from "../../../entities/track/model/tuning";
-import type { LyricsSection } from "../../../entities/track/model/types";
-import { setKineticWarpProgress } from "../../../shared/ui/illustration-animations/lib/kineticWarp";
+} from "@entities/track/model/tuning";
+import type { LyricsSection } from "@entities/track/model/types";
+import { isContinuedSection } from "@entities/track/lib/continuing";
 import {
   getTimelineSectionDuration,
   getTimelineSectionProgress,
   getTimelineTrackState,
   getTimelineVisualSectionDuration,
   getTimelineVisualSectionProgress,
-} from "../../../utils/generalTimeline";
-import { isContinuedSection } from "../../../utils/continuing";
-import { pauseSyncedVideos, syncSyncedVideos } from "../../../utils/timelineSyncedVideo";
+} from "@entities/track/lib/generalTimeline";
+import { pauseSyncedVideos, syncSyncedVideos } from "@shared/lib/timelineSyncedVideo";
+import { setKineticWarpProgress } from "@shared/ui/illustration-animations/lib/kineticWarp";
 
 type GeneralTimelineOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;

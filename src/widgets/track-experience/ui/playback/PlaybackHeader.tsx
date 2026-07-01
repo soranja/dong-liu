@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import { blurControl, formatTime } from "../../../../utils/playback";
+import { blurControl, formatTime } from "@shared/lib/playback";
 import { PlaybackButtons } from "./PlaybackButtons";
 import { PlaybackIcons } from "./PlaybackIcons";
 

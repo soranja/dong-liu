@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router";
 
-import { TrackExperience } from "../../widgets/track-experience/ui/TrackExperience";
+import { TrackExperience } from "@widgets/track-experience/ui/TrackExperience";
 import { RAM_BOX_TRACK } from "./model/track";
 import type { RamBoxIllustrationDescriptor } from "./model/types";
 import { RamBoxIllustration } from "./ui/RamBoxIllustration";

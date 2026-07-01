@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_ANIMATION_LENGTH_PERCENT, getRangeAnimation } from "../../../entities/track/model/animation";
-import type { TimelineProgressDetail } from "../../../entities/track/model/tuning";
-import { getTimelineSectionTime } from "../../../utils/generalTimeline";
+import { getTimelineSectionTime } from "@entities/track/lib/generalTimeline";
+import { DEFAULT_ANIMATION_LENGTH_PERCENT, getRangeAnimation } from "@entities/track/model/animation";
+import type { TimelineProgressDetail } from "@entities/track/model/tuning";
 import { getRangeValues } from "./animationSelection";
 import { getTuningLoopBounds, type TuningLoopMode } from "./looping";
 import type { IllustrationTuningSession } from "./session";

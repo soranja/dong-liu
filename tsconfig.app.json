@@ -14,6 +14,14 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      "@app/*": ["./src/*"],
+      "@entities/*": ["./src/entities/*"],
+      "@features/*": ["./src/features/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@widgets/*": ["./src/widgets/*"]
+    },
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,

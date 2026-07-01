@@ -1,6 +1,6 @@
-import type { TimelineIllustrationKind } from "../../../entities/track/model/tuning";
-import type { LyricsSection } from "../../../entities/track/model/types";
-import { TEXT_ILLUSTRATION_KINDS, type TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
+import type { TimelineIllustrationKind } from "@entities/track/model/tuning";
+import type { LyricsSection } from "@entities/track/model/types";
+import { TEXT_ILLUSTRATION_KINDS, type TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 
 type TunerSectionSelectorProps = {
   followActive: boolean;

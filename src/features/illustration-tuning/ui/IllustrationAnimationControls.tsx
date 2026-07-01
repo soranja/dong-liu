@@ -1,5 +1,5 @@
-import { getRangeAnimation } from "../../../entities/track/model/animation";
-import type { IllustrationAnimation, IllustrationVisibility } from "../../../entities/track/model/types";
+import { getRangeAnimation } from "@entities/track/model/animation";
+import type { IllustrationAnimation, IllustrationVisibility } from "@entities/track/model/types";
 import { SectionLayoutControls } from "./SectionLayoutControls";
 
 type DirtyAnimation = IllustrationAnimation | null;
