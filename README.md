@@ -170,6 +170,7 @@ All project colors should be defined as CSS variables in `global.css`. JSX shoul
 
 - `{ variant: "instant" }` uses the full `0-100%` appearance span at full speed and completes as soon as the section is observed.
 - `{ variant: "range", startPercent, endPercent, animationLengthPercent }` maps visual section progress into illustration progress. `startPercent` is `0-50`; `endPercent` is `51-100`; `animationLengthPercent` defaults to `100` and runs inside the selected appearance range.
+
 `illustrationVisibility` controls inactive section visibility. `"adjacent"` is the default and keeps all non-active section edges visible; `"only-active"` clears the illustration until its section is active; `"start-active"` keeps upcoming sections visible until they are active; `"active-end"` keeps completed sections visible after they are pushed left. Overlay sections always resolve to `"only-active"` at runtime.
 
 `sectionWidthPercent` controls a flow section's horizontal width and defaults to `90`. Non-overlay sections slide in to the 40% section position, slowly progress to the 60% section position, then slide out. `noSlideBy` replaces that slow 40-60 slide with a centered hold between slide in and slide out. Animation shells default to `noSlideBy` when the property is omitted; set or tune it to `false` to restore normal slide-by motion. `enterDuration` and `exitDuration` control the slide-in and slide-out portions for every illustration type, including animation shells.
@@ -178,7 +179,9 @@ In dev, press `F4` to open the fixed-position illustration animation tuner. The 
 
 ## Maintenance Rules
 
-- Keep components under 200 lines.
+- Prefer cohesive modules over arbitrary line limits. Treat long modules as a review signal: split code when it combines
+  distinct responsibilities, but keep cohesive feature logic together when separation would obscure its data flow.
+  Configuration, generated content, lyrics, and other data-heavy modules are not size-limited.
 - Keep modules grouped by their main function: presentational UI in `components/`, React lifecycle logic in `hooks/`, framework-light helpers and installers in `utils/`.
 - Write React components as exported const arrow functions.
 - Avoid excessive prop drilling. If state is not shared, move it to the direct consumer.

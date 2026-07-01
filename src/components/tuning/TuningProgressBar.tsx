@@ -1,8 +1,5 @@
 import { useRef, useState, type PointerEvent } from "react";
-import {
-  getAnimationLengthPercent,
-  getRangeAnimationEndPercent,
-} from "../../utils/tuning/illustrationAnimation";
+import { getAnimationLengthPercent, getRangeAnimationEndPercent } from "../../utils/tuning/illustrationAnimation";
 
 type DragTarget = "end" | "playhead" | "start";
 
@@ -145,8 +142,7 @@ export const TuningProgressBar = ({
       <div className="flex justify-between font-mono text-[0.65rem] text-(--color-text-muted)">
         <span>0%</span>
         <span>
-          Playhead {Math.round(playheadPercent)}%
-          {isRange ? ` / Length ${clampedAnimationLengthPercent}%` : ""}
+          Playhead {Math.round(playheadPercent)}%{isRange ? ` / Length ${clampedAnimationLengthPercent}%` : ""}
         </span>
         <span>100%</span>
       </div>

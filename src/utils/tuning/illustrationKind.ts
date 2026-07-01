@@ -3,9 +3,10 @@ import type { LyricsSection, TextIllustrationKind } from "../../lyrics/types";
 
 export type TimelineIllustrationKind = TextIllustrationKind | "generic";
 
-export const TEXT_ILLUSTRATION_KINDS = ["word-cloud", "kinetic-warp"] as const satisfies ReadonlyArray<
-  TextIllustrationKind
->;
+export const TEXT_ILLUSTRATION_KINDS = [
+  "word-cloud",
+  "kinetic-warp",
+] as const satisfies ReadonlyArray<TextIllustrationKind>;
 
 const KINETIC_WARP_SECTION_IDS = new Set<number>();
 const draftIllustrationKinds = new Map<number, TextIllustrationKind>();
@@ -40,7 +41,8 @@ export function getSavedTimelineIllustrationKind(section: LyricsSection): Timeli
 
 export function getEffectiveTimelineIllustrationKind(section: LyricsSection): TimelineIllustrationKind {
   if (typeof section.illustrateWith !== "string") return "generic";
-  if (draftIllustrationKinds.has(section.sectionId)) return draftIllustrationKinds.get(section.sectionId) ?? "word-cloud";
+  if (draftIllustrationKinds.has(section.sectionId))
+    return draftIllustrationKinds.get(section.sectionId) ?? "word-cloud";
 
   return getSavedTimelineIllustrationKind(section);
 }
