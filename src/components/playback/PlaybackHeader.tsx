@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { CSSProperties, RefObject } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
 import { blurControl, formatTime } from "../../utils/playback";
 import { PlaybackButtons } from "./PlaybackButtons";
 import { PlaybackIcons } from "./PlaybackIcons";
@@ -11,6 +11,7 @@ type PlaybackHeaderProps = {
   isPlaying: boolean;
   isReady: boolean;
   progress: number;
+  trailingContent?: ReactNode;
   volume: number;
   onSeek: (value: number) => void;
   onTogglePlayback: () => void;
@@ -32,6 +33,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
     onTogglePlayback,
     onVolumeChange,
     progress,
+    trailingContent,
     volume,
   } = props;
   const volumeBeforeMuteRef = useRef(volume > 0 ? volume : 0.5);
@@ -108,6 +110,8 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
         <div className="hidden h-full w-54 shrink-0 overflow-hidden bg-(--color-panel) lg:block">
           <canvas ref={canvasRef} className="h-full w-full" />
         </div>
+
+        {trailingContent}
       </div>
     </header>
   );

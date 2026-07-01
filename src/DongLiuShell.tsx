@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import audioSrc from "./audio/ram_box.mp3";
 
@@ -29,7 +29,11 @@ const IllustrationAnimationTuner = import.meta.env.DEV
     )
   : null;
 
-export const DongLiuShell = () => {
+type DongLiuShellProps = {
+  headerTrailingContent?: ReactNode;
+};
+
+export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
@@ -128,6 +132,7 @@ export const DongLiuShell = () => {
       <PlaybackHeader
         canvasRef={canvasRef}
         duration={playback.duration}
+        trailingContent={headerTrailingContent}
         headerRef={headerRef}
         isPlaying={playback.isPlaying}
         isReady={isReady}
