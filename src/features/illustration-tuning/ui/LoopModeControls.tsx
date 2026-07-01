@@ -1,4 +1,4 @@
-import { TUNING_LOOP_MODES, type TuningLoopMode } from "../../utils/tuning/looping";
+import { TUNING_LOOP_MODES, type TuningLoopMode } from "../model/looping";
 
 type LoopModeControlsProps = {
   loopMode: TuningLoopMode;

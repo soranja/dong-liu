@@ -1,0 +1,7 @@
+[data-illustration-tuner] {
+  --color-tuner-cut: #3a3a37;
+  --color-tuner-start: color-mix(in srgb, var(--color-control) 36%, var(--color-panel-chip));
+  --color-tuner-end: color-mix(in srgb, var(--color-accent) 46%, var(--color-panel-chip));
+  --color-tuner-length: var(--color-pumpkin);
+  --color-tuner-playhead: var(--color-pumpkin);
+}

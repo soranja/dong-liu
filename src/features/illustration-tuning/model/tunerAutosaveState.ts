@@ -1,7 +1,7 @@
-import type { IllustrationVisibility } from "../../entities/track/model/types";
-import { RAM_BOX_LYRICS } from "../../pages/ram-box/model/lyrics";
-import type { TextIllustrationKind } from "../../shared/ui/illustration-animations/types";
-import { formatLyricsTimestamp, parseLyricsTimestamp } from "../lyrics";
+import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from "../../../entities/track/model/tuning";
+import type { IllustrationVisibility } from "../../../entities/track/model/types";
+import type { TextIllustrationKind } from "../../../shared/ui/illustration-animations/types";
+import { formatLyricsTimestamp, parseLyricsTimestamp } from "../../../utils/lyrics";
 import {
   areDirtyAnimationsEqual,
   getDirtyAnimation,
@@ -9,7 +9,6 @@ import {
   type DirtyAnimation,
   type DirtyAnimations,
 } from "./animationSelection";
-import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from "./illustrationKind";
 import {
   clampSectionWidthPercent,
   clampSlideMotionDurationMs,
@@ -18,7 +17,8 @@ import {
   getSavedExitDurationMs as getSavedExitDurationMsForSection,
   getSavedNoSlideBy as getSavedNoSlideByForSection,
   getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection,
-} from "./sectionLayout";
+} from "../../../entities/track/model/layout";
+import type { IllustrationTuningSession } from "./session";
 
 export { getSavedAnimation } from "./animationSelection";
 
@@ -95,137 +95,177 @@ export function clampFadeDuration(durationMs: number) {
   return Math.min(FADE_TIMING_MAX_MS, Math.max(0, Math.round(durationMs)));
 }
 
-export function getSavedStartTime(sectionId: number) {
-  const timestamp = RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.timestamp;
+export function getSavedStartTime(session: IllustrationTuningSession, sectionId: number) {
+  const timestamp = session.lyrics.find((section) => section.sectionId === sectionId)?.timestamp;
 
   return timestamp ? parseLyricsTimestamp(timestamp) : 0;
 }
 
-export function getSavedIllustrationKind(sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getSavedIllustrationKind(session: IllustrationTuningSession, sectionId: number) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
-  return section ? getSavedTimelineIllustrationKind(RAM_BOX_LYRICS, section) : "generic";
+  return section ? getSavedTimelineIllustrationKind(session.lyrics, section) : "generic";
 }
 
-export function getSavedContinuing(sectionId: number) {
-  return Boolean(RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.continuing);
+export function getSavedContinuing(session: IllustrationTuningSession, sectionId: number) {
+  return Boolean(session.lyrics.find((section) => section.sectionId === sectionId)?.continuing);
 }
 
-export function getSavedIllustrationVisibility(sectionId: number): IllustrationVisibility {
-  return RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.illustrationVisibility ?? "adjacent";
+export function getSavedIllustrationVisibility(
+  session: IllustrationTuningSession,
+  sectionId: number,
+): IllustrationVisibility {
+  return session.lyrics.find((section) => section.sectionId === sectionId)?.illustrationVisibility ?? "adjacent";
 }
 
-export function getSavedOverlay(sectionId: number) {
-  return Boolean(RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.isOverlay);
+export function getSavedOverlay(session: IllustrationTuningSession, sectionId: number) {
+  return Boolean(session.lyrics.find((section) => section.sectionId === sectionId)?.isOverlay);
 }
 
-export function getSavedNoSlideBy(sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getSavedNoSlideBy(session: IllustrationTuningSession, sectionId: number) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
   return section ? getSavedNoSlideByForSection(section) : false;
 }
 
-export function getSavedFadeInMs(sectionId: number) {
+export function getSavedFadeInMs(session: IllustrationTuningSession, sectionId: number) {
   return clampFadeDuration(
-    RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.illustrationFadeInMs ?? 0,
+    session.lyrics.find((section) => section.sectionId === sectionId)?.illustrationFadeInMs ?? 0,
   );
 }
 
-export function getSavedFadeOutMs(sectionId: number) {
+export function getSavedFadeOutMs(session: IllustrationTuningSession, sectionId: number) {
   return clampFadeDuration(
-    RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.illustrationFadeOutMs ?? 0,
+    session.lyrics.find((section) => section.sectionId === sectionId)?.illustrationFadeOutMs ?? 0,
   );
 }
 
-export function getSavedEnterDurationMs(sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getSavedEnterDurationMs(session: IllustrationTuningSession, sectionId: number) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
   return section ? getSavedEnterDurationMsForSection(section) : DEFAULT_SLIDE_MOTION_DURATION_MS;
 }
 
-export function getSavedExitDurationMs(sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getSavedExitDurationMs(session: IllustrationTuningSession, sectionId: number) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
   return section ? getSavedExitDurationMsForSection(section) : DEFAULT_SLIDE_MOTION_DURATION_MS;
 }
 
-export function getSavedSectionWidthPercent(sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getSavedSectionWidthPercent(session: IllustrationTuningSession, sectionId: number) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
   return section ? getSavedSectionWidthPercentForSection(section) : 90;
 }
 
-export function getCurrentAnimation(draftAnimations: DirtyAnimations, sectionId: number) {
+export function getCurrentAnimation(
+  session: IllustrationTuningSession,
+  draftAnimations: DirtyAnimations,
+  sectionId: number,
+) {
   const draftAnimation = getDirtyAnimation(draftAnimations, sectionId);
 
-  return draftAnimation !== undefined ? draftAnimation : getSavedAnimation(sectionId);
+  return draftAnimation !== undefined ? draftAnimation : getSavedAnimation(session.lyrics, sectionId);
 }
 
-export function getCurrentContinuing(draftContinuings: DraftContinuings, sectionId: number) {
-  return draftContinuings[sectionId] ?? getSavedContinuing(sectionId);
+export function getCurrentContinuing(
+  session: IllustrationTuningSession,
+  draftContinuings: DraftContinuings,
+  sectionId: number,
+) {
+  return draftContinuings[sectionId] ?? getSavedContinuing(session, sectionId);
 }
 
 export function getCurrentIllustrationVisibility(
+  session: IllustrationTuningSession,
   draftIllustrationVisibilities: DraftIllustrationVisibilities,
   sectionId: number,
 ) {
-  return draftIllustrationVisibilities[sectionId] ?? getSavedIllustrationVisibility(sectionId);
+  return draftIllustrationVisibilities[sectionId] ?? getSavedIllustrationVisibility(session, sectionId);
 }
 
-export function getCurrentIllustrationKind(draftIllustrationKinds: DraftIllustrationKinds, sectionId: number) {
-  const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
+export function getCurrentIllustrationKind(
+  session: IllustrationTuningSession,
+  draftIllustrationKinds: DraftIllustrationKinds,
+  sectionId: number,
+) {
+  const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
   if (!section || typeof section.illustrateWith !== "string") return "generic";
 
-  return draftIllustrationKinds[sectionId] ?? getSavedTimelineIllustrationKind(RAM_BOX_LYRICS, section);
+  return draftIllustrationKinds[sectionId] ?? getSavedTimelineIllustrationKind(session.lyrics, section);
 }
 
-export function getCurrentOverlay(draftOverlays: DraftOverlays, sectionId: number) {
-  return draftOverlays[sectionId] ?? getSavedOverlay(sectionId);
+export function getCurrentOverlay(session: IllustrationTuningSession, draftOverlays: DraftOverlays, sectionId: number) {
+  return draftOverlays[sectionId] ?? getSavedOverlay(session, sectionId);
 }
 
-export function getCurrentNoSlideBy(draftNoSlideBys: DraftNoSlideBys, sectionId: number) {
-  return draftNoSlideBys[sectionId] ?? getSavedNoSlideBy(sectionId);
+export function getCurrentNoSlideBy(
+  session: IllustrationTuningSession,
+  draftNoSlideBys: DraftNoSlideBys,
+  sectionId: number,
+) {
+  return draftNoSlideBys[sectionId] ?? getSavedNoSlideBy(session, sectionId);
 }
 
-export function getCurrentEnterDurationMs(draftEnterDurationMs: DraftMotionDurations, sectionId: number) {
-  return draftEnterDurationMs[sectionId] ?? getSavedEnterDurationMs(sectionId);
+export function getCurrentEnterDurationMs(
+  session: IllustrationTuningSession,
+  draftEnterDurationMs: DraftMotionDurations,
+  sectionId: number,
+) {
+  return draftEnterDurationMs[sectionId] ?? getSavedEnterDurationMs(session, sectionId);
 }
 
-export function getCurrentExitDurationMs(draftExitDurationMs: DraftMotionDurations, sectionId: number) {
-  return draftExitDurationMs[sectionId] ?? getSavedExitDurationMs(sectionId);
+export function getCurrentExitDurationMs(
+  session: IllustrationTuningSession,
+  draftExitDurationMs: DraftMotionDurations,
+  sectionId: number,
+) {
+  return draftExitDurationMs[sectionId] ?? getSavedExitDurationMs(session, sectionId);
 }
 
-export function getCurrentSectionWidthPercent(draftSectionWidthPercents: DraftSectionWidthPercents, sectionId: number) {
-  return draftSectionWidthPercents[sectionId] ?? getSavedSectionWidthPercent(sectionId);
+export function getCurrentSectionWidthPercent(
+  session: IllustrationTuningSession,
+  draftSectionWidthPercents: DraftSectionWidthPercents,
+  sectionId: number,
+) {
+  return draftSectionWidthPercents[sectionId] ?? getSavedSectionWidthPercent(session, sectionId);
 }
 
-export function getCurrentFadeInMs(draftFadeInMs: DraftFadeDurations, sectionId: number) {
-  return draftFadeInMs[sectionId] ?? getSavedFadeInMs(sectionId);
+export function getCurrentFadeInMs(
+  session: IllustrationTuningSession,
+  draftFadeInMs: DraftFadeDurations,
+  sectionId: number,
+) {
+  return draftFadeInMs[sectionId] ?? getSavedFadeInMs(session, sectionId);
 }
 
-export function getCurrentFadeOutMs(draftFadeOutMs: DraftFadeDurations, sectionId: number) {
-  return draftFadeOutMs[sectionId] ?? getSavedFadeOutMs(sectionId);
+export function getCurrentFadeOutMs(
+  session: IllustrationTuningSession,
+  draftFadeOutMs: DraftFadeDurations,
+  sectionId: number,
+) {
+  return draftFadeOutMs[sectionId] ?? getSavedFadeOutMs(session, sectionId);
 }
 
-export function getDraftStartTime(draftStartTimes: DraftStartTimes, index: number) {
-  const sectionId = RAM_BOX_LYRICS[index]?.sectionId;
+export function getDraftStartTime(session: IllustrationTuningSession, draftStartTimes: DraftStartTimes, index: number) {
+  const sectionId = session.lyrics[index]?.sectionId;
   if (!sectionId) return 0;
 
-  return draftStartTimes[sectionId] ?? getSavedStartTime(sectionId);
+  return draftStartTimes[sectionId] ?? getSavedStartTime(session, sectionId);
 }
 
-export function readCachedSnapshots() {
+export function readCachedSnapshots(trackId: string) {
   if (typeof window === "undefined") return {};
 
   try {
-    return JSON.parse(window.sessionStorage.getItem(CACHED_SNAPSHOTS_STORAGE_KEY) ?? "{}") as Snapshots;
+    return JSON.parse(window.sessionStorage.getItem(`${CACHED_SNAPSHOTS_STORAGE_KEY}:${trackId}`) ?? "{}") as Snapshots;
   } catch {
     return {};
   }
 }
 
-export function writeCachedSnapshots(snapshots: Snapshots) {
-  window.sessionStorage.setItem(CACHED_SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
+export function writeCachedSnapshots(trackId: string, snapshots: Snapshots) {
+  window.sessionStorage.setItem(`${CACHED_SNAPSHOTS_STORAGE_KEY}:${trackId}`, JSON.stringify(snapshots));
 }
 
 function normalizeCachedAnimation(animation: DirtyAnimation) {
@@ -243,26 +283,30 @@ function normalizeIllustrationVisibility(value: unknown): IllustrationVisibility
   return "adjacent";
 }
 
-export function normalizeCachedSnapshot(sectionId: number, cachedSnapshot: Snapshot): Snapshot {
+export function normalizeCachedSnapshot(
+  session: IllustrationTuningSession,
+  sectionId: number,
+  cachedSnapshot: Snapshot,
+): Snapshot {
   const snapshot = cachedSnapshot as Partial<Snapshot> & { illustrationVisibility?: unknown };
-  const animation = normalizeCachedAnimation(snapshot.animation ?? getSavedAnimation(sectionId));
+  const animation = normalizeCachedAnimation(snapshot.animation ?? getSavedAnimation(session.lyrics, sectionId));
 
   return {
     animation,
-    continuing: typeof snapshot.continuing === "boolean" ? snapshot.continuing : getSavedContinuing(sectionId),
+    continuing: typeof snapshot.continuing === "boolean" ? snapshot.continuing : getSavedContinuing(session, sectionId),
     endTime: typeof snapshot.endTime === "number" ? snapshot.endTime : null,
-    enterDuration: clampSlideMotionDurationMs(snapshot.enterDuration ?? getSavedEnterDurationMs(sectionId)),
-    exitDuration: clampSlideMotionDurationMs(snapshot.exitDuration ?? getSavedExitDurationMs(sectionId)),
-    fadeInMs: clampFadeDuration(snapshot.fadeInMs ?? getSavedFadeInMs(sectionId)),
-    fadeOutMs: clampFadeDuration(snapshot.fadeOutMs ?? getSavedFadeOutMs(sectionId)),
-    illustrationKind: snapshot.illustrationKind ?? getSavedIllustrationKind(sectionId),
+    enterDuration: clampSlideMotionDurationMs(snapshot.enterDuration ?? getSavedEnterDurationMs(session, sectionId)),
+    exitDuration: clampSlideMotionDurationMs(snapshot.exitDuration ?? getSavedExitDurationMs(session, sectionId)),
+    fadeInMs: clampFadeDuration(snapshot.fadeInMs ?? getSavedFadeInMs(session, sectionId)),
+    fadeOutMs: clampFadeDuration(snapshot.fadeOutMs ?? getSavedFadeOutMs(session, sectionId)),
+    illustrationKind: snapshot.illustrationKind ?? getSavedIllustrationKind(session, sectionId),
     illustrationVisibility: normalizeIllustrationVisibility(snapshot.illustrationVisibility),
-    isOverlay: typeof snapshot.isOverlay === "boolean" ? snapshot.isOverlay : getSavedOverlay(sectionId),
-    noSlideBy: typeof snapshot.noSlideBy === "boolean" ? snapshot.noSlideBy : getSavedNoSlideBy(sectionId),
+    isOverlay: typeof snapshot.isOverlay === "boolean" ? snapshot.isOverlay : getSavedOverlay(session, sectionId),
+    noSlideBy: typeof snapshot.noSlideBy === "boolean" ? snapshot.noSlideBy : getSavedNoSlideBy(session, sectionId),
     sectionWidthPercent: clampSectionWidthPercent(
-      snapshot.sectionWidthPercent ?? getSavedSectionWidthPercent(sectionId),
+      snapshot.sectionWidthPercent ?? getSavedSectionWidthPercent(session, sectionId),
     ),
-    startTime: typeof snapshot.startTime === "number" ? snapshot.startTime : getSavedStartTime(sectionId),
+    startTime: typeof snapshot.startTime === "number" ? snapshot.startTime : getSavedStartTime(session, sectionId),
   };
 }
 
@@ -303,7 +347,7 @@ export function arePendingChangesEqual(left: PendingChange | undefined, right: P
   return areDirtyAnimationsEqual(left.animation, right.animation);
 }
 
-export function createSaveBody(changes: Array<[string, PendingChange]>) {
+export function createSaveBody(trackId: string, changes: Array<[string, PendingChange]>) {
   return JSON.stringify({
     changes: changes.map(([sectionId, change]) => ({
       ...(change.hasAnimation ? { illustrationAnimation: change.animation } : {}),
@@ -320,5 +364,6 @@ export function createSaveBody(changes: Array<[string, PendingChange]>) {
       ...(change.timestamp !== undefined ? { timestamp: formatLyricsTimestamp(change.timestamp) } : {}),
       sectionId: Number(sectionId),
     })),
+    trackId,
   });
 }

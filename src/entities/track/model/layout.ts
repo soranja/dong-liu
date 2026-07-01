@@ -1,4 +1,4 @@
-import type { LyricsSection } from "../../entities/track/model/types";
+import type { LyricsSection } from "./types";
 
 export const DEFAULT_SECTION_WIDTH_PERCENT = 90;
 export const SECTION_WIDTH_STEP_PERCENT = 5;

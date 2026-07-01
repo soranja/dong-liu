@@ -50,9 +50,23 @@ type TextEdit = {
   text: string;
 };
 
+type IllustrationAnimationTuningPluginOptions = {
+  tracks: Record<
+    string,
+    {
+      lyricsExport: string;
+      lyricsFile: string;
+    }
+  >;
+};
+
+type TuningTarget = {
+  lyricsExport: string;
+  lyricsFile: string;
+  normalizedLyricsFile: string;
+};
+
 const TUNING_ENDPOINT = "/__dong-liu/illustration-animation-settings";
-const LYRICS_FILE = resolve("src/pages/ram-box/model/lyrics.ts");
-const NORMALIZED_LYRICS_FILE = normalizePath(LYRICS_FILE);
 const FADE_TIMING_MAX_MS = 1000;
 const DEFAULT_SECTION_WIDTH_PERCENT = 90;
 const SLIDE_MOTION_DURATION_MAX_MS = 1000;
@@ -142,10 +156,11 @@ function parseTimestamp(value: unknown) {
   return value;
 }
 
-function parseChanges(value: unknown): AnimationChange[] {
+function parseRequest(value: unknown) {
   if (!isRecord(value) || !Array.isArray(value.changes)) throw new Error("Expected changes array");
+  if (typeof value.trackId !== "string" || !value.trackId) throw new Error("Expected trackId");
 
-  return value.changes.map((entry) => {
+  const changes = value.changes.map((entry) => {
     if (!isRecord(entry)) throw new Error("Invalid change");
 
     const sectionId = Number(entry.sectionId);
@@ -215,6 +230,8 @@ function parseChanges(value: unknown): AnimationChange[] {
       timestamp: hasTimestamp ? parseTimestamp(entry.timestamp) : undefined,
     };
   });
+
+  return { changes, trackId: value.trackId };
 }
 
 function getPropertyName(property: ts.ObjectLiteralElementLike) {
@@ -225,7 +242,7 @@ function getPropertyName(property: ts.ObjectLiteralElementLike) {
   return null;
 }
 
-function findLyricsArray(sourceFile: ts.SourceFile) {
+function findLyricsArray(sourceFile: ts.SourceFile, lyricsExport: string) {
   let lyricsArray: ts.ArrayLiteralExpression | undefined;
 
   const visit = (node: ts.Node) => {
@@ -233,7 +250,7 @@ function findLyricsArray(sourceFile: ts.SourceFile) {
     if (
       ts.isVariableDeclaration(node) &&
       ts.isIdentifier(node.name) &&
-      node.name.text === "RAM_BOX_LYRICS" &&
+      node.name.text === lyricsExport &&
       node.initializer &&
       ts.isArrayLiteralExpression(node.initializer)
     ) {
@@ -246,7 +263,7 @@ function findLyricsArray(sourceFile: ts.SourceFile) {
 
   visit(sourceFile);
   const foundLyricsArray = lyricsArray;
-  if (!foundLyricsArray) throw new Error("RAM_BOX_LYRICS array not found");
+  if (!foundLyricsArray) throw new Error(`${lyricsExport} array not found`);
 
   return foundLyricsArray;
 }
@@ -510,9 +527,9 @@ function updateTimestamp(
   });
 }
 
-function updateLyricsSource(text: string, changes: AnimationChange[]) {
-  const sourceFile = ts.createSourceFile(LYRICS_FILE, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  const lyricsArray = findLyricsArray(sourceFile);
+function updateLyricsSource(text: string, changes: AnimationChange[], target: TuningTarget) {
+  const sourceFile = ts.createSourceFile(target.lyricsFile, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const lyricsArray = findLyricsArray(sourceFile, target.lyricsExport);
   const edits: TextEdit[] = [];
 
   changes.forEach((change) => {
@@ -654,7 +671,22 @@ function updateLyricsSource(text: string, changes: AnimationChange[]) {
     .reduce((current, edit) => current.slice(0, edit.start) + edit.text + current.slice(edit.end), text);
 }
 
-export function illustrationAnimationTuningPlugin(): Plugin {
+export function illustrationAnimationTuningPlugin(options: IllustrationAnimationTuningPluginOptions): Plugin {
+  const targets = new Map<string, TuningTarget>(
+    Object.entries(options.tracks).map(([trackId, target]) => {
+      const lyricsFile = resolve(target.lyricsFile);
+
+      return [
+        trackId,
+        {
+          lyricsExport: target.lyricsExport,
+          lyricsFile,
+          normalizedLyricsFile: normalizePath(lyricsFile),
+        },
+      ];
+    }),
+  );
+
   return {
     apply: "serve",
     configureServer(server) {
@@ -671,9 +703,12 @@ export function illustrationAnimationTuningPlugin(): Plugin {
         });
         request.on("end", () => {
           try {
-            const changes = parseChanges(JSON.parse(body));
-            const source = readFileSync(LYRICS_FILE, "utf8");
-            writeFileSync(LYRICS_FILE, updateLyricsSource(source, changes));
+            const { changes, trackId } = parseRequest(JSON.parse(body));
+            const target = targets.get(trackId);
+            if (!target) throw new Error(`Track "${trackId}" is not enabled for tuning`);
+
+            const source = readFileSync(target.lyricsFile, "utf8");
+            writeFileSync(target.lyricsFile, updateLyricsSource(source, changes, target));
             response.setHeader("Content-Type", "application/json");
             response.end(JSON.stringify({ ok: true }));
           } catch (error) {
@@ -685,7 +720,8 @@ export function illustrationAnimationTuningPlugin(): Plugin {
       });
     },
     handleHotUpdate(context) {
-      if (normalizePath(context.file) === NORMALIZED_LYRICS_FILE) return [];
+      const normalizedFile = normalizePath(context.file);
+      if ([...targets.values()].some((target) => target.normalizedLyricsFile === normalizedFile)) return [];
     },
     name: "dong-liu-illustration-animation-tuning",
   };

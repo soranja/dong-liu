@@ -1,14 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from "react";
+import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
 import type { LyricsSection } from "../../../entities/track/model/types";
 import { getActiveLyricsSection, getLyricLineParts, getLyricPlainText } from "../../../utils/lyrics";
 import { getSingleLineFontSize } from "../../../utils/textFit";
-import { subscribeLyricTimingTuning } from "../../../utils/tuning/lyricTimingTuningStore";
 
 type CaptionsFooterProps = {
   currentTime: number;
   footerRef: RefObject<HTMLElement | null>;
   isVisible: boolean;
   lyrics: readonly LyricsSection[];
+  tuningAdapter?: TrackTuningAdapter;
 };
 
 const DEFAULT_FONT_SIZE = 18;
@@ -16,20 +17,18 @@ const MAX_FONT_SIZE = 32;
 const MIN_FONT_SIZE = 6;
 const LINE_HEIGHT = 1.2;
 
-export const CaptionsFooter = ({ currentTime, footerRef, isVisible, lyrics }: CaptionsFooterProps) => {
+export const CaptionsFooter = ({ currentTime, footerRef, isVisible, lyrics, tuningAdapter }: CaptionsFooterProps) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const lineRef = useRef<HTMLParagraphElement | null>(null);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [, setTimingVersion] = useState(0);
-  const activeSection = getActiveLyricsSection(lyrics, currentTime);
+  const activeSection = getActiveLyricsSection(lyrics, currentTime, tuningAdapter);
   const captionLines = useMemo(() => lyrics.map((section) => getLyricPlainText(section.line)), [lyrics]);
   const activeParts = useMemo(() => getLyricLineParts(activeSection.line), [activeSection.line]);
 
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
-
-    return subscribeLyricTimingTuning(() => setTimingVersion((version) => version + 1));
-  }, []);
+    return tuningAdapter?.subscribe(() => setTimingVersion((version) => version + 1));
+  }, [tuningAdapter]);
 
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current;

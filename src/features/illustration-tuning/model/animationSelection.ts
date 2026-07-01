@@ -1,6 +1,5 @@
-import type { IllustrationAnimation } from "../../entities/track/model/types";
-import { RAM_BOX_LYRICS } from "../../pages/ram-box/model/lyrics";
-import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "./illustrationAnimation";
+import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "../../../entities/track/model/animation";
+import type { IllustrationAnimation, LyricsSection } from "../../../entities/track/model/types";
 
 export type DirtyAnimation = IllustrationAnimation | null;
 export type DirtyAnimations = Record<number, DirtyAnimation>;
@@ -16,15 +15,19 @@ export function getDirtyAnimation(dirtyAnimations: DirtyAnimations, sectionId: n
   return Object.hasOwn(dirtyAnimations, sectionId) ? dirtyAnimations[sectionId] : undefined;
 }
 
-export function getSavedAnimation(sectionId: number): DirtyAnimation {
-  return RAM_BOX_LYRICS.find((section) => section.sectionId === sectionId)?.illustrationAnimation ?? null;
+export function getSavedAnimation(lyrics: readonly LyricsSection[], sectionId: number): DirtyAnimation {
+  return lyrics.find((section) => section.sectionId === sectionId)?.illustrationAnimation ?? null;
 }
 
-export function getEffectiveAnimation(dirtyAnimations: DirtyAnimations, sectionId: number) {
+export function getEffectiveAnimation(
+  lyrics: readonly LyricsSection[],
+  dirtyAnimations: DirtyAnimations,
+  sectionId: number,
+) {
   const dirtyAnimation = getDirtyAnimation(dirtyAnimations, sectionId);
   if (dirtyAnimation !== undefined) return dirtyAnimation ?? undefined;
 
-  return getSavedAnimation(sectionId) ?? undefined;
+  return getSavedAnimation(lyrics, sectionId) ?? undefined;
 }
 
 export function getRangeValues(animation: IllustrationAnimation | undefined) {

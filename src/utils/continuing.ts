@@ -1,26 +1,38 @@
 import type { LyricsSection } from "../entities/track/model/types";
-import { getEffectiveSectionContinuing } from "./tuning/illustrationAnimationTuningStore";
+import { resolveSectionContinuing, type TrackTuningAdapter } from "../entities/track/model/tuning";
 
-export function getVisualSectionIndex(lyrics: readonly LyricsSection[], index: number) {
+export function getVisualSectionIndex(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
   let visualIndex = index;
 
-  while (visualIndex > 0 && getEffectiveSectionContinuing(lyrics[visualIndex - 1])) {
+  while (visualIndex > 0 && resolveSectionContinuing(lyrics[visualIndex - 1], tuningAdapter)) {
     visualIndex -= 1;
   }
 
   return visualIndex;
 }
 
-export function getNextVisualSectionIndex(lyrics: readonly LyricsSection[], index: number) {
-  let nextIndex = getVisualSectionIndex(lyrics, index) + 1;
+export function getNextVisualSectionIndex(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
+  let nextIndex = getVisualSectionIndex(lyrics, index, tuningAdapter) + 1;
 
-  while (nextIndex < lyrics.length && getEffectiveSectionContinuing(lyrics[nextIndex - 1])) {
+  while (nextIndex < lyrics.length && resolveSectionContinuing(lyrics[nextIndex - 1], tuningAdapter)) {
     nextIndex += 1;
   }
 
   return nextIndex;
 }
 
-export function isContinuedSection(lyrics: readonly LyricsSection[], index: number) {
-  return getVisualSectionIndex(lyrics, index) !== index;
+export function isContinuedSection(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
+  return getVisualSectionIndex(lyrics, index, tuningAdapter) !== index;
 }

@@ -1,4 +1,4 @@
-import { FADE_TIMING_MAX_MS } from "../../utils/tuning/tunerAutosaveState";
+import { FADE_TIMING_MAX_MS } from "../model/tunerAutosaveState";
 
 type FadeTimingControlsProps = {
   fadeInMs: number;

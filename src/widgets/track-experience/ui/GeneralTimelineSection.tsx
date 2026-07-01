@@ -1,15 +1,12 @@
 import { memo, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { DEFAULT_SECTION_WIDTH_PERCENT } from "../../../entities/track/model/layout";
+import { resolveIllustrationKind, type TrackTuningAdapter } from "../../../entities/track/model/tuning";
 import type {
   CustomIllustrationRenderer,
   LyricsIllustration,
   LyricsSection,
 } from "../../../entities/track/model/types";
 import { TextIllustration } from "../../../shared/ui/illustration-animations/TextIllustration";
-import { DEFAULT_SECTION_WIDTH_PERCENT } from "../../../utils/tuning/sectionLayout";
-import {
-  getEffectiveTimelineIllustrationKind,
-  subscribeIllustrationKindTuning,
-} from "../../../utils/tuning/illustrationKind";
 
 type GeneralTimelineSectionProps = {
   index: number;
@@ -20,6 +17,7 @@ type GeneralTimelineSectionProps = {
   section: LyricsSection;
   sectionWidthPercent?: number;
   slideRefs: RefObject<Array<HTMLElement | null>>;
+  tuningAdapter?: TrackTuningAdapter;
 };
 
 type StructuredLyricsIllustration = Exclude<LyricsIllustration, string>;
@@ -65,12 +63,13 @@ export const GeneralTimelineSection = memo(
     section,
     sectionWidthPercent = DEFAULT_SECTION_WIDTH_PERCENT,
     slideRefs,
+    tuningAdapter,
   }: GeneralTimelineSectionProps) => {
     const text = typeof section.illustrateWith === "string" ? section.illustrateWith : null;
     const isText = text !== null;
     const isFullBleed = Boolean(section.fullBleedIllustration);
     const [illustrationKind, setIllustrationKind] = useState(() =>
-      getEffectiveTimelineIllustrationKind(lyrics, section),
+      resolveIllustrationKind(lyrics, section, tuningAdapter),
     );
     const contentClassName = isFullBleed
       ? "h-full w-full overflow-hidden"
@@ -80,10 +79,10 @@ export const GeneralTimelineSection = memo(
 
     useEffect(
       () =>
-        subscribeIllustrationKindTuning(() => {
-          setIllustrationKind(getEffectiveTimelineIllustrationKind(lyrics, section));
+        tuningAdapter?.subscribe(() => {
+          setIllustrationKind(resolveIllustrationKind(lyrics, section, tuningAdapter));
         }),
-      [lyrics, section],
+      [lyrics, section, tuningAdapter],
     );
 
     return (

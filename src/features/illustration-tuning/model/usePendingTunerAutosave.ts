@@ -6,18 +6,20 @@ import {
   createSaveBody,
   type PendingChanges,
   type StatusState,
-} from "../utils/tuning/tunerAutosaveState";
+} from "./tunerAutosaveState";
 
 type UsePendingTunerAutosaveOptions = {
   pendingChanges: PendingChanges;
   selectedSectionId: number;
   setPendingChanges: Dispatch<SetStateAction<PendingChanges>>;
+  trackId: string;
 };
 
 export function usePendingTunerAutosave({
   pendingChanges,
   selectedSectionId,
   setPendingChanges,
+  trackId,
 }: UsePendingTunerAutosaveOptions) {
   const isSavingRef = useRef(false);
   const [resetPending, setResetPending] = useState(false);
@@ -37,7 +39,7 @@ export function usePendingTunerAutosave({
         const savedChanges = Object.fromEntries(changes) as PendingChanges;
         try {
           const response = await fetch(SAVE_ENDPOINT, {
-            body: createSaveBody(changes),
+            body: createSaveBody(trackId, changes),
             headers: { "Content-Type": "application/json" },
             method: "POST",
           });
@@ -68,7 +70,7 @@ export function usePendingTunerAutosave({
     }, AUTOSAVE_DELAY_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [pendingChanges, resetPending, saveTick, selectedSectionId, setPendingChanges]);
+  }, [pendingChanges, resetPending, saveTick, selectedSectionId, setPendingChanges, trackId]);
 
   return {
     markResetPending: () => setResetPending(true),

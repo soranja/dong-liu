@@ -1,4 +1,4 @@
-import { LINE_TIMING_STEP_SECONDS } from "../../hooks/useTunerAutosave";
+import { LINE_TIMING_STEP_SECONDS } from "../model/useTunerAutosave";
 
 type LineTimingControlsProps = {
   hasNextSection: boolean;

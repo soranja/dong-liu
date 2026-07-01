@@ -1,11 +1,11 @@
 import { memo, useEffect, useState, type CSSProperties, type RefObject } from "react";
+import {
+  resolveSectionOverlay,
+  resolveSectionWidthPercent,
+  type TrackTuningAdapter,
+} from "../../../entities/track/model/tuning";
 import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
 import { isContinuedSection } from "../../../utils/continuing";
-import {
-  getEffectiveSectionOverlay,
-  getEffectiveSectionWidthPercent,
-  subscribeIllustrationAnimationTuning,
-} from "../../../utils/tuning/illustrationAnimationTuningStore";
 import { useGeneralTimeline } from "../model/useGeneralTimeline";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
 
@@ -27,6 +27,7 @@ type GeneralTimelineProps = {
   onWordCloudReady: (sectionId: number) => void;
   renderCustomIllustration: CustomIllustrationRenderer<unknown>;
   lyrics: readonly LyricsSection[];
+  tuningAdapter?: TrackTuningAdapter;
 };
 
 function getHorizontalTravelVw(sectionWidthPercents: number[]) {
@@ -56,6 +57,7 @@ export const GeneralTimeline = memo(
     sectionHeight,
     shouldPrewarm,
     timelineRef,
+    tuningAdapter,
   }: GeneralTimelineProps) => {
     const isVisible = !replayPromptVisible;
     const [, setTuningVersion] = useState(0);
@@ -67,13 +69,14 @@ export const GeneralTimeline = memo(
       onPrewarmProgress,
       onTimelinePrepared,
       shouldPrewarm,
+      tuningAdapter,
     });
     const sectionRows = lyrics.map((section, index) => ({
       index,
-      isContinued: isContinuedSection(lyrics, index),
-      isOverlay: getEffectiveSectionOverlay(section),
+      isContinued: isContinuedSection(lyrics, index, tuningAdapter),
+      isOverlay: resolveSectionOverlay(section, tuningAdapter),
       section,
-      sectionWidthPercent: getEffectiveSectionWidthPercent(section),
+      sectionWidthPercent: resolveSectionWidthPercent(section, tuningAdapter),
     }));
     const flowSectionWidthPercents = sectionRows
       .filter(({ isContinued, isOverlay }) => !isContinued && !isOverlay)
@@ -82,10 +85,8 @@ export const GeneralTimeline = memo(
     const overlaySections = sectionRows.filter(({ isContinued, isOverlay }) => !isContinued && isOverlay);
 
     useEffect(() => {
-      if (!import.meta.env.DEV) return;
-
-      return subscribeIllustrationAnimationTuning(() => setTuningVersion((version) => version + 1));
-    }, []);
+      return tuningAdapter?.subscribe(() => setTuningVersion((version) => version + 1));
+    }, [tuningAdapter]);
 
     return (
       <div
@@ -124,6 +125,7 @@ export const GeneralTimeline = memo(
                   section={section}
                   sectionWidthPercent={sectionWidthPercent}
                   slideRefs={slideRefs}
+                  tuningAdapter={tuningAdapter}
                 />
               ),
             )}
@@ -139,6 +141,7 @@ export const GeneralTimeline = memo(
               renderCustomIllustration={renderCustomIllustration}
               section={section}
               slideRefs={slideRefs}
+              tuningAdapter={tuningAdapter}
             />
           ))}
         </div>
@@ -209,5 +212,6 @@ export const GeneralTimeline = memo(
     previous.replayPromptVisible === next.replayPromptVisible &&
     previous.replaySequence === next.replaySequence &&
     previous.sectionHeight === next.sectionHeight &&
-    previous.shouldPrewarm === next.shouldPrewarm,
+    previous.shouldPrewarm === next.shouldPrewarm &&
+    previous.tuningAdapter === next.tuningAdapter,
 );

@@ -1,49 +1,58 @@
-import { useEffect, useState } from "react";
-import { RAM_BOX_LYRICS } from "../pages/ram-box/model/lyrics";
-import { getTimelineSectionTime } from "../utils/generalTimeline";
-import { getRangeValues } from "../utils/tuning/animationSelection";
-import { DEFAULT_ANIMATION_LENGTH_PERCENT, getRangeAnimation } from "../utils/tuning/illustrationAnimation";
-import { getTuningLoopBounds, type TuningLoopMode } from "../utils/tuning/looping";
-import { TIMELINE_PROGRESS_EVENT, type TimelineProgressDetail } from "../utils/tuning/timelineProgressEvent";
+import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_ANIMATION_LENGTH_PERCENT, getRangeAnimation } from "../../../entities/track/model/animation";
+import type { TimelineProgressDetail } from "../../../entities/track/model/tuning";
+import { getTimelineSectionTime } from "../../../utils/generalTimeline";
+import { getRangeValues } from "./animationSelection";
+import { getTuningLoopBounds, type TuningLoopMode } from "./looping";
+import type { IllustrationTuningSession } from "./session";
 import { useTunerAutosave } from "./useTunerAutosave";
 
 type UseIllustrationAnimationTunerPanelOptions = {
   duration: number;
   isLoading: boolean;
   onSeek: (progress: number) => void;
+  session: IllustrationTuningSession;
 };
 
 const LOOP_SEEK_EPSILON_SECONDS = 0.05;
 const TUNER_OPEN_STORAGE_KEY = "dong-liu:illustration-animation-tuner-open";
-const INITIAL_ACTIVE_PROGRESS = {
-  activeIndex: 0,
-  currentTime: 0,
-  duration: 0,
-  progress: 0,
-  sectionId: RAM_BOX_LYRICS[0].sectionId,
-} satisfies TimelineProgressDetail;
 
-function getInitialTunerOpen() {
-  return typeof window !== "undefined" && window.sessionStorage.getItem(TUNER_OPEN_STORAGE_KEY) === "true";
+function getTunerOpenStorageKey(trackId: string) {
+  return `${TUNER_OPEN_STORAGE_KEY}:${trackId}`;
 }
 
-function writeTunerOpen(isOpen: boolean) {
-  window.sessionStorage.setItem(TUNER_OPEN_STORAGE_KEY, String(isOpen));
+function getInitialTunerOpen(trackId: string) {
+  return typeof window !== "undefined" && window.sessionStorage.getItem(getTunerOpenStorageKey(trackId)) === "true";
+}
+
+function writeTunerOpen(trackId: string, isOpen: boolean) {
+  window.sessionStorage.setItem(getTunerOpenStorageKey(trackId), String(isOpen));
+}
+
+function getInitialActiveProgress(session: IllustrationTuningSession): TimelineProgressDetail {
+  return {
+    activeIndex: 0,
+    currentTime: 0,
+    duration: 0,
+    progress: 0,
+    sectionId: session.lyrics[0]?.sectionId ?? 0,
+  };
 }
 
 export function useIllustrationAnimationTunerPanel({
   duration,
   isLoading,
   onSeek,
+  session,
 }: UseIllustrationAnimationTunerPanelOptions) {
-  const [activeProgress, setActiveProgress] = useState<TimelineProgressDetail>(INITIAL_ACTIVE_PROGRESS);
+  const [activeProgress, setActiveProgress] = useState<TimelineProgressDetail>(() => getInitialActiveProgress(session));
   const [followActive, setFollowActive] = useState(true);
-  const [isOpen, setIsOpen] = useState(getInitialTunerOpen);
+  const [isOpen, setIsOpen] = useState(() => getInitialTunerOpen(session.trackId));
   const [loopMode, setLoopMode] = useState<TuningLoopMode>(0);
   const [playheadPreviewPercent, setPlayheadPreviewPercent] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const selectedSection = RAM_BOX_LYRICS[selectedIndex];
-  const tunerState = useTunerAutosave(selectedIndex, duration);
+  const selectedSection = session.lyrics[selectedIndex];
+  const tunerState = useTunerAutosave(session, selectedIndex, duration);
   const selectedAnimation = tunerState.selectedAnimation;
   const selectedRange = getRangeValues(selectedAnimation);
   const selectedAnimationLengthPercent = selectedRange.animationLengthPercent ?? DEFAULT_ANIMATION_LENGTH_PERCENT;
@@ -51,26 +60,29 @@ export function useIllustrationAnimationTunerPanel({
   const liveProgressPercent = isSelectedActive ? activeProgress.progress * 100 : 0;
   const playheadPercent = playheadPreviewPercent ?? liveProgressPercent;
 
-  const setTunerOpen = (nextOpen: boolean | ((currentOpen: boolean) => boolean)) => {
-    setIsOpen((currentOpen) => {
-      const resolvedOpen = typeof nextOpen === "function" ? nextOpen(currentOpen) : nextOpen;
-      writeTunerOpen(resolvedOpen);
+  const setTunerOpen = useCallback(
+    (nextOpen: boolean | ((currentOpen: boolean) => boolean)) => {
+      setIsOpen((currentOpen) => {
+        const resolvedOpen = typeof nextOpen === "function" ? nextOpen(currentOpen) : nextOpen;
+        writeTunerOpen(session.trackId, resolvedOpen);
 
-      return resolvedOpen;
-    });
-  };
+        return resolvedOpen;
+      });
+    },
+    [session.trackId],
+  );
 
   useEffect(() => {
     if (!isLoading) return;
 
-    setActiveProgress(INITIAL_ACTIVE_PROGRESS);
+    setActiveProgress(getInitialActiveProgress(session));
     setFollowActive(true);
     setIsOpen(false);
     setLoopMode(0);
     setPlayheadPreviewPercent(null);
     setSelectedIndex(0);
-    writeTunerOpen(false);
-  }, [isLoading]);
+    writeTunerOpen(session.trackId, false);
+  }, [isLoading, session]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,13 +94,12 @@ export function useIllustrationAnimationTunerPanel({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLoading]);
+  }, [isLoading, setTunerOpen]);
 
   useEffect(() => {
     if (isLoading) return;
 
-    const handleProgress = (event: Event) => {
-      const detail = (event as CustomEvent<TimelineProgressDetail>).detail;
+    const handleProgress = (detail: TimelineProgressDetail) => {
       setActiveProgress((previous) => {
         if (previous.activeIndex !== detail.activeIndex) setPlayheadPreviewPercent(null);
 
@@ -97,20 +108,19 @@ export function useIllustrationAnimationTunerPanel({
       if (followActive) setSelectedIndex(detail.activeIndex);
     };
 
-    window.addEventListener(TIMELINE_PROGRESS_EVENT, handleProgress);
-    return () => window.removeEventListener(TIMELINE_PROGRESS_EVENT, handleProgress);
-  }, [followActive, isLoading]);
+    return session.subscribeProgress(handleProgress);
+  }, [followActive, isLoading, session]);
 
   useEffect(() => {
     if (isLoading || !isOpen || loopMode === 0) return;
 
-    const bounds = getTuningLoopBounds(selectedIndex, loopMode, duration);
+    const bounds = getTuningLoopBounds(session.lyrics, selectedIndex, loopMode, duration, session);
     if (!bounds) return;
 
     const isPastLoopEnd = activeProgress.currentTime >= bounds.endTime - LOOP_SEEK_EPSILON_SECONDS;
     const isBeforeLoopStart = activeProgress.currentTime < bounds.startTime - LOOP_SEEK_EPSILON_SECONDS;
     if (isPastLoopEnd || isBeforeLoopStart) onSeek((bounds.startTime / duration) * 100);
-  }, [activeProgress.currentTime, duration, isLoading, isOpen, loopMode, onSeek, selectedIndex]);
+  }, [activeProgress.currentTime, duration, isLoading, isOpen, loopMode, onSeek, selectedIndex, session]);
 
   const setRangeAnimation = (startPercent: number, endPercent: number) => {
     tunerState.setAnimation(getRangeAnimation(startPercent, endPercent, selectedAnimationLengthPercent));
@@ -145,7 +155,7 @@ export function useIllustrationAnimationTunerPanel({
     setSelectedIndex(nextIndex);
     if (!duration || !Number.isFinite(duration)) return;
 
-    const nextTime = getTimelineSectionTime(RAM_BOX_LYRICS, nextIndex, 0, duration);
+    const nextTime = getTimelineSectionTime(session.lyrics, nextIndex, 0, duration, session);
     onSeek((nextTime / duration) * 100);
   };
 
@@ -153,7 +163,7 @@ export function useIllustrationAnimationTunerPanel({
     setPlayheadPreviewPercent(percent);
     if (!duration || !Number.isFinite(duration)) return;
 
-    const nextTime = getTimelineSectionTime(RAM_BOX_LYRICS, selectedIndex, percent / 100, duration);
+    const nextTime = getTimelineSectionTime(session.lyrics, selectedIndex, percent / 100, duration, session);
     onSeek((nextTime / duration) * 100);
   };
 
@@ -174,7 +184,7 @@ export function useIllustrationAnimationTunerPanel({
     setRangeAnimation,
     setTunerOpen,
     seekSelectedSection,
-    selectNextSection: () => selectSection(Math.min(RAM_BOX_LYRICS.length - 1, selectedIndex + 1)),
+    selectNextSection: () => selectSection(Math.min(session.lyrics.length - 1, selectedIndex + 1)),
     selectPreviousSection: () => selectSection(Math.max(0, selectedIndex - 1)),
     tunerState,
   };

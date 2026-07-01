@@ -1,10 +1,11 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { CaptionsFooter } from "./CaptionsFooter";
 import { ExperienceLoadingScreen } from "./ExperienceLoadingScreen";
 import { GeneralTimeline } from "./GeneralTimeline";
 import { PlaybackHeader } from "./playback/PlaybackHeader";
 
+import type { TrackTuningAdapter } from "../../../entities/track/model/tuning";
 import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
 import { useLayoutHeights } from "../model/useLayoutHeights";
 import { usePlaybackController } from "../model/usePlaybackController";
@@ -14,20 +15,13 @@ const AUDIO_PROGRESS_WEIGHT = 10;
 const CLOUD_PROGRESS_WEIGHT = 35;
 const FONT_PROGRESS_WEIGHT = 5;
 const PREWARM_PROGRESS_WEIGHT = 50;
-const IllustrationAnimationTuner = import.meta.env.DEV
-  ? lazy(() =>
-      import("../../../components/tuning/IllustrationAnimationTuner").then((module) => ({
-        default: module.IllustrationAnimationTuner,
-      })),
-    )
-  : null;
-
 export type TrackExperienceProps<TCustomIllustration> = {
   audioSrc: string;
   headerTrailingContent?: ReactNode;
   lyrics: readonly LyricsSection<TCustomIllustration>[];
   renderCustomIllustration: CustomIllustrationRenderer<TCustomIllustration>;
   trackId: string;
+  tuningAdapter?: TrackTuningAdapter;
 };
 
 export const TrackExperience = <TCustomIllustration,>({
@@ -36,6 +30,7 @@ export const TrackExperience = <TCustomIllustration,>({
   lyrics,
   renderCustomIllustration,
   trackId,
+  tuningAdapter,
 }: TrackExperienceProps<TCustomIllustration>) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -162,6 +157,7 @@ export const TrackExperience = <TCustomIllustration,>({
         footerRef={footerRef}
         isVisible={playback.hasStarted && !playback.replayPromptVisible}
         lyrics={lyrics}
+        tuningAdapter={tuningAdapter}
       />
 
       <Suspense fallback={null}>
@@ -183,21 +179,17 @@ export const TrackExperience = <TCustomIllustration,>({
           sectionHeight={layoutHeights.section}
           shouldPrewarm={shouldPrewarm}
           timelineRef={timelineRef}
+          tuningAdapter={tuningAdapter}
         />
       </Suspense>
 
       {!isReady ? <ExperienceLoadingScreen progress={loadingProgress} /> : null}
-      {IllustrationAnimationTuner ? (
-        <Suspense fallback={null}>
-          <IllustrationAnimationTuner
-            key={isReady ? "ready" : "loading"}
-            duration={playback.duration}
-            isLoading={!isReady}
-            isPlaying={playback.isPlaying}
-            onSeek={(progress) => playback.seek(progress, { animatePage: false, continuePlaybackScroll: false })}
-          />
-        </Suspense>
-      ) : null}
+      {tuningAdapter?.renderPanel?.({
+        duration: playback.duration,
+        isLoading: !isReady,
+        isPlaying: playback.isPlaying,
+        onSeek: (progress) => playback.seek(progress, { animatePage: false, continuePlaybackScroll: false }),
+      })}
     </main>
   );
 };

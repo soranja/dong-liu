@@ -1,5 +1,5 @@
 import type { LyricsSection } from "../entities/track/model/types";
-import { getDraftLyricSectionStart } from "./tuning/lyricTimingTuningStore";
+import { resolveSectionStart, type TrackTuningAdapter } from "../entities/track/model/tuning";
 
 type LyricLinePart = {
   isItalic: boolean;
@@ -20,23 +20,35 @@ export function formatLyricsTimestamp(time: number) {
   return `${String(minutes).padStart(2, "0")}:${seconds.toFixed(3).padStart(6, "0")}`;
 }
 
-export function getLyricsSectionStart(lyrics: readonly LyricsSection[], index: number) {
+export function getLyricsSectionStart(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
   const section = lyrics[index];
   if (!section) return 0;
 
-  return getDraftLyricSectionStart(section.sectionId) ?? parseLyricsTimestamp(section.timestamp);
+  return resolveSectionStart(section, tuningAdapter);
 }
 
-function getActiveLyricsSectionIndex(lyrics: readonly LyricsSection[], currentTime: number) {
+function getActiveLyricsSectionIndex(
+  lyrics: readonly LyricsSection[],
+  currentTime: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
   for (let index = lyrics.length - 1; index >= 0; index -= 1) {
-    if (currentTime >= getLyricsSectionStart(lyrics, index)) return index;
+    if (currentTime >= getLyricsSectionStart(lyrics, index, tuningAdapter)) return index;
   }
 
   return 0;
 }
 
-export function getActiveLyricsSection(lyrics: readonly LyricsSection[], currentTime: number) {
-  return lyrics[getActiveLyricsSectionIndex(lyrics, currentTime)];
+export function getActiveLyricsSection(
+  lyrics: readonly LyricsSection[],
+  currentTime: number,
+  tuningAdapter?: TrackTuningAdapter,
+) {
+  return lyrics[getActiveLyricsSectionIndex(lyrics, currentTime, tuningAdapter)];
 }
 
 export function getLyricLineParts(line: string) {

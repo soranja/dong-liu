@@ -10,7 +10,14 @@ export default defineConfig({
     reactRouter(),
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
-    illustrationAnimationTuningPlugin(),
+    illustrationAnimationTuningPlugin({
+      tracks: {
+        "ram-box": {
+          lyricsExport: "RAM_BOX_LYRICS",
+          lyricsFile: "src/pages/ram-box/model/lyrics.ts",
+        },
+      },
+    }),
   ],
   server: {
     host: true,
