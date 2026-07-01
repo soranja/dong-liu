@@ -14,17 +14,33 @@ type AnimationSetting =
       variant: "range";
     };
 
-type IllustrationVisibility = "adjacent" | "only-active";
+type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
 type TextIllustrationKind = "kinetic-warp" | "word-cloud";
 
 type AnimationChange = {
+  continuing?: boolean;
+  enterDuration?: number;
+  exitDuration?: number;
   hasIllustrationAnimation: boolean;
+  hasContinuing: boolean;
+  hasEnterDuration: boolean;
+  hasExitDuration: boolean;
+  hasIllustrationFadeIn: boolean;
+  hasIllustrationFadeOut: boolean;
   hasIllustrationKind: boolean;
   hasIllustrationVisibility: boolean;
+  hasNoSlideBy: boolean;
+  hasOverlay: boolean;
+  hasSectionWidth: boolean;
   illustrationAnimation: AnimationSetting | null;
+  illustrationFadeInMs?: number;
+  illustrationFadeOutMs?: number;
   illustrationKind?: TextIllustrationKind;
   illustrationVisibility?: IllustrationVisibility;
+  isOverlay?: boolean;
+  noSlideBy?: boolean;
   sectionId: number;
+  sectionWidthPercent?: number;
   timestamp?: string;
 };
 
@@ -37,6 +53,9 @@ type TextEdit = {
 const TUNING_ENDPOINT = "/__dong-liu/illustration-animation-settings";
 const LYRICS_FILE = resolve("src/lyrics/ram-box-lyrics.ts");
 const NORMALIZED_LYRICS_FILE = normalizePath(LYRICS_FILE);
+const FADE_TIMING_MAX_MS = 1000;
+const DEFAULT_SECTION_WIDTH_PERCENT = 90;
+const SLIDE_MOTION_DURATION_MAX_MS = 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -50,7 +69,8 @@ function parseAnimation(value: unknown): AnimationSetting | null {
 
   const startPercent = Number(value.startPercent);
   const endPercent = Number(value.endPercent);
-  const animationLengthPercent = value.animationLengthPercent === undefined ? 100 : Number(value.animationLengthPercent);
+  const animationLengthPercent =
+    value.animationLengthPercent === undefined ? 100 : Number(value.animationLengthPercent);
   if (!Number.isFinite(startPercent) || startPercent < 0 || startPercent > 50) {
     throw new Error("startPercent must be 0-50");
   }
@@ -65,9 +85,44 @@ function parseAnimation(value: unknown): AnimationSetting | null {
 }
 
 function parseIllustrationVisibility(value: unknown): IllustrationVisibility {
-  if (value === "adjacent" || value === "only-active") return value;
+  if (value === "adjacent" || value === "only-active" || value === "start-active" || value === "active-end") {
+    return value;
+  }
 
   throw new Error("Invalid illustration visibility");
+}
+
+function parseFadeDuration(value: unknown, propertyName: string) {
+  const duration = Number(value);
+  if (!Number.isInteger(duration) || duration < 0 || duration > FADE_TIMING_MAX_MS) {
+    throw new Error(`${propertyName} must be 0-${FADE_TIMING_MAX_MS}`);
+  }
+
+  return duration;
+}
+
+function parseSlideMotionDuration(value: unknown, propertyName: string) {
+  const duration = Number(value);
+  if (!Number.isInteger(duration) || duration < 0 || duration > SLIDE_MOTION_DURATION_MAX_MS) {
+    throw new Error(`${propertyName} must be 0-${SLIDE_MOTION_DURATION_MAX_MS}`);
+  }
+
+  return duration;
+}
+
+function parsePercent(value: unknown, propertyName: string, min: number, max: number, step = 1) {
+  const percent = Number(value);
+  if (!Number.isInteger(percent) || percent < min || percent > max || percent % step !== 0) {
+    throw new Error(`${propertyName} must be ${min}-${max}${step > 1 ? ` in ${step}% steps` : ""}`);
+  }
+
+  return percent;
+}
+
+function parseBoolean(value: unknown, propertyName: string) {
+  if (typeof value === "boolean") return value;
+
+  throw new Error(`${propertyName} must be a boolean`);
 }
 
 function parseIllustrationKind(value: unknown): TextIllustrationKind {
@@ -97,23 +152,66 @@ function parseChanges(value: unknown): AnimationChange[] {
     if (!Number.isInteger(sectionId) || sectionId <= 0) throw new Error("Invalid sectionId");
 
     const hasIllustrationAnimation = Object.hasOwn(entry, "illustrationAnimation");
+    const hasContinuing = Object.hasOwn(entry, "continuing");
+    const hasEnterDuration = Object.hasOwn(entry, "enterDuration");
+    const hasExitDuration = Object.hasOwn(entry, "exitDuration");
+    const hasIllustrationFadeIn = Object.hasOwn(entry, "illustrationFadeInMs");
+    const hasIllustrationFadeOut = Object.hasOwn(entry, "illustrationFadeOutMs");
     const hasIllustrationKind = Object.hasOwn(entry, "illustrationKind");
     const hasIllustrationVisibility = Object.hasOwn(entry, "illustrationVisibility");
+    const hasNoSlideBy = Object.hasOwn(entry, "noSlideBy");
+    const hasOverlay = Object.hasOwn(entry, "isOverlay");
+    const hasSectionWidth = Object.hasOwn(entry, "sectionWidthPercent");
     const hasTimestamp = Object.hasOwn(entry, "timestamp");
-    if (!hasIllustrationAnimation && !hasIllustrationKind && !hasIllustrationVisibility && !hasTimestamp) {
+    if (
+      !hasIllustrationAnimation &&
+      !hasContinuing &&
+      !hasEnterDuration &&
+      !hasExitDuration &&
+      !hasIllustrationFadeIn &&
+      !hasIllustrationFadeOut &&
+      !hasIllustrationKind &&
+      !hasIllustrationVisibility &&
+      !hasNoSlideBy &&
+      !hasOverlay &&
+      !hasSectionWidth &&
+      !hasTimestamp
+    ) {
       throw new Error("Change must include a tuning value");
     }
 
     return {
+      continuing: hasContinuing ? parseBoolean(entry.continuing, "continuing") : undefined,
+      enterDuration: hasEnterDuration ? parseSlideMotionDuration(entry.enterDuration, "enterDuration") : undefined,
+      exitDuration: hasExitDuration ? parseSlideMotionDuration(entry.exitDuration, "exitDuration") : undefined,
       hasIllustrationAnimation,
+      hasContinuing,
+      hasEnterDuration,
+      hasExitDuration,
+      hasIllustrationFadeIn,
+      hasIllustrationFadeOut,
       hasIllustrationKind,
       hasIllustrationVisibility,
+      hasNoSlideBy,
+      hasOverlay,
+      hasSectionWidth,
       illustrationAnimation: hasIllustrationAnimation ? parseAnimation(entry.illustrationAnimation) : null,
+      illustrationFadeInMs: hasIllustrationFadeIn
+        ? parseFadeDuration(entry.illustrationFadeInMs, "illustrationFadeInMs")
+        : undefined,
+      illustrationFadeOutMs: hasIllustrationFadeOut
+        ? parseFadeDuration(entry.illustrationFadeOutMs, "illustrationFadeOutMs")
+        : undefined,
       illustrationKind: hasIllustrationKind ? parseIllustrationKind(entry.illustrationKind) : undefined,
       illustrationVisibility: hasIllustrationVisibility
         ? parseIllustrationVisibility(entry.illustrationVisibility)
         : undefined,
+      isOverlay: hasOverlay ? parseBoolean(entry.isOverlay, "isOverlay") : undefined,
+      noSlideBy: hasNoSlideBy ? parseBoolean(entry.noSlideBy, "noSlideBy") : undefined,
       sectionId,
+      sectionWidthPercent: hasSectionWidth
+        ? parsePercent(entry.sectionWidthPercent, "sectionWidthPercent", 0, 100, 5)
+        : undefined,
       timestamp: hasTimestamp ? parseTimestamp(entry.timestamp) : undefined,
     };
   });
@@ -221,6 +319,76 @@ function updateStringProperty(
   });
 }
 
+function updateOptionalNumberProperty(
+  sourceFile: ts.SourceFile,
+  text: string,
+  sectionObject: ts.ObjectLiteralExpression,
+  sectionId: number,
+  propertyName: string,
+  value: number,
+  defaultValue: number,
+  edits: TextEdit[],
+) {
+  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
+  if (existing && value === defaultValue) {
+    const start = getLineStart(text, existing.getStart(sourceFile));
+    const end = getLineEndIncludingNewline(text, getEndIncludingComma(text, existing.end));
+    edits.push({ end, start, text: "" });
+    return;
+  }
+  if (!existing && value === defaultValue) return;
+  if (existing) {
+    edits.push({
+      end: getEndIncludingComma(text, existing.end),
+      start: existing.getStart(sourceFile),
+      text: `${propertyName}: ${value},`,
+    });
+    return;
+  }
+
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
+
+  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
+  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
+  edits.push({
+    end: insertAt,
+    start: insertAt,
+    text: `${indent}${propertyName}: ${value},\n`,
+  });
+}
+
+function updateNumberProperty(
+  sourceFile: ts.SourceFile,
+  text: string,
+  sectionObject: ts.ObjectLiteralExpression,
+  sectionId: number,
+  propertyName: string,
+  value: number,
+  edits: TextEdit[],
+) {
+  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
+  if (existing) {
+    edits.push({
+      end: getEndIncludingComma(text, existing.end),
+      start: existing.getStart(sourceFile),
+      text: `${propertyName}: ${value},`,
+    });
+    return;
+  }
+
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
+
+  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
+  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
+  edits.push({
+    end: insertAt,
+    start: insertAt,
+    text: `${indent}${propertyName}: ${value},\n`,
+  });
+}
+
 function updateIllustrationKind(
   sourceFile: ts.SourceFile,
   text: string,
@@ -251,6 +419,78 @@ function updateIllustrationVisibility(
   );
 }
 
+function updateOptionalTrueBooleanProperty(
+  sourceFile: ts.SourceFile,
+  text: string,
+  sectionObject: ts.ObjectLiteralExpression,
+  sectionId: number,
+  propertyName: string,
+  value: boolean,
+  edits: TextEdit[],
+) {
+  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
+  if (!value && existing) {
+    const start = getLineStart(text, existing.getStart(sourceFile));
+    const end = getLineEndIncludingNewline(text, getEndIncludingComma(text, existing.end));
+    edits.push({ end, start, text: "" });
+    return;
+  }
+  if (!value) return;
+  if (existing) {
+    edits.push({
+      end: getEndIncludingComma(text, existing.end),
+      start: existing.getStart(sourceFile),
+      text: `${propertyName}: true,`,
+    });
+    return;
+  }
+
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
+
+  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
+  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
+  edits.push({ end: insertAt, start: insertAt, text: `${indent}${propertyName}: true,\n` });
+}
+
+function updateBooleanProperty(
+  sourceFile: ts.SourceFile,
+  text: string,
+  sectionObject: ts.ObjectLiteralExpression,
+  sectionId: number,
+  propertyName: string,
+  value: boolean,
+  edits: TextEdit[],
+) {
+  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
+  if (existing) {
+    edits.push({
+      end: getEndIncludingComma(text, existing.end),
+      start: existing.getStart(sourceFile),
+      text: `${propertyName}: ${value},`,
+    });
+    return;
+  }
+
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
+
+  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
+  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
+  edits.push({ end: insertAt, start: insertAt, text: `${indent}${propertyName}: ${value},\n` });
+}
+
+function updateOverlay(
+  sourceFile: ts.SourceFile,
+  text: string,
+  sectionObject: ts.ObjectLiteralExpression,
+  sectionId: number,
+  isOverlay: boolean,
+  edits: TextEdit[],
+) {
+  updateOptionalTrueBooleanProperty(sourceFile, text, sectionObject, sectionId, "isOverlay", isOverlay, edits);
+}
+
 function updateTimestamp(
   sourceFile: ts.SourceFile,
   sectionObject: ts.ObjectLiteralExpression,
@@ -277,13 +517,29 @@ function updateLyricsSource(text: string, changes: AnimationChange[]) {
 
   changes.forEach((change) => {
     const {
+      continuing,
+      enterDuration,
+      exitDuration,
+      hasEnterDuration,
+      hasExitDuration,
       hasIllustrationAnimation,
+      hasContinuing,
+      hasIllustrationFadeIn,
+      hasIllustrationFadeOut,
       hasIllustrationKind,
       hasIllustrationVisibility,
+      hasNoSlideBy,
+      hasOverlay,
+      hasSectionWidth,
       illustrationAnimation,
+      illustrationFadeInMs,
+      illustrationFadeOutMs,
       illustrationKind,
       illustrationVisibility,
+      isOverlay,
+      noSlideBy,
       sectionId,
+      sectionWidthPercent,
       timestamp,
     } = change;
     const sectionObject = lyricsArray.elements.find(
@@ -293,19 +549,74 @@ function updateLyricsSource(text: string, changes: AnimationChange[]) {
     if (!sectionObject) throw new Error(`Section ${sectionId} not found`);
 
     if (timestamp !== undefined) updateTimestamp(sourceFile, sectionObject, sectionId, timestamp, edits);
+    if (hasContinuing) {
+      updateOptionalTrueBooleanProperty(
+        sourceFile,
+        text,
+        sectionObject,
+        sectionId,
+        "continuing",
+        Boolean(continuing),
+        edits,
+      );
+    }
+    if (hasEnterDuration) {
+      updateNumberProperty(sourceFile, text, sectionObject, sectionId, "enterDuration", enterDuration ?? 0, edits);
+    }
+    if (hasExitDuration) {
+      updateNumberProperty(sourceFile, text, sectionObject, sectionId, "exitDuration", exitDuration ?? 0, edits);
+    }
     if (hasIllustrationKind) {
       if (!illustrationKind) throw new Error(`illustrationKind missing for section ${sectionId}`);
       updateIllustrationKind(sourceFile, text, sectionObject, sectionId, illustrationKind, edits);
+    }
+    if (hasIllustrationFadeIn) {
+      updateOptionalNumberProperty(
+        sourceFile,
+        text,
+        sectionObject,
+        sectionId,
+        "illustrationFadeInMs",
+        illustrationFadeInMs ?? 0,
+        0,
+        edits,
+      );
+    }
+    if (hasIllustrationFadeOut) {
+      updateOptionalNumberProperty(
+        sourceFile,
+        text,
+        sectionObject,
+        sectionId,
+        "illustrationFadeOutMs",
+        illustrationFadeOutMs ?? 0,
+        0,
+        edits,
+      );
     }
     if (hasIllustrationVisibility) {
       if (!illustrationVisibility) throw new Error(`illustrationVisibility missing for section ${sectionId}`);
       updateIllustrationVisibility(sourceFile, text, sectionObject, sectionId, illustrationVisibility, edits);
     }
+    if (hasOverlay) updateOverlay(sourceFile, text, sectionObject, sectionId, Boolean(isOverlay), edits);
+    if (hasNoSlideBy) {
+      updateBooleanProperty(sourceFile, text, sectionObject, sectionId, "noSlideBy", Boolean(noSlideBy), edits);
+    }
+    if (hasSectionWidth) {
+      updateOptionalNumberProperty(
+        sourceFile,
+        text,
+        sectionObject,
+        sectionId,
+        "sectionWidthPercent",
+        sectionWidthPercent ?? DEFAULT_SECTION_WIDTH_PERCENT,
+        DEFAULT_SECTION_WIDTH_PERCENT,
+        edits,
+      );
+    }
     if (!hasIllustrationAnimation) return;
 
-    const existing = sectionObject.properties.find(
-      (property) => getPropertyName(property) === "illustrationAnimation",
-    );
+    const existing = sectionObject.properties.find((property) => getPropertyName(property) === "illustrationAnimation");
 
     if (existing && illustrationAnimation === null) {
       const start = getLineStart(text, existing.getStart(sourceFile));
@@ -338,7 +649,8 @@ function updateLyricsSource(text: string, changes: AnimationChange[]) {
   });
 
   return edits
-    .sort((left, right) => right.start - left.start)
+    .map((edit, index) => ({ ...edit, index }))
+    .sort((left, right) => right.start - left.start || right.index - left.index)
     .reduce((current, edit) => current.slice(0, edit.start) + edit.text + current.slice(edit.end), text);
 }
 

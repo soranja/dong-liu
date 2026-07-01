@@ -1,43 +1,92 @@
 import type { IllustrationAnimation, IllustrationVisibility } from "../../lyrics/types";
 import { getRangeAnimation } from "../../utils/tuning/illustrationAnimation";
+import { SectionLayoutControls } from "./SectionLayoutControls";
 
 type DirtyAnimation = IllustrationAnimation | null;
 
 type IllustrationAnimationControlsProps = {
   animationLengthPercent: number;
+  canContinue: boolean;
+  continuing: boolean;
+  enterDurationMs: number;
+  exitDurationMs: number;
   isOverlay: boolean;
   isRange: boolean;
+  isVisibilityLocked: boolean;
+  noSlideBy: boolean;
   saveStatus: string;
+  sectionWidthPercent: number;
   selectedAnimation: IllustrationAnimation | undefined;
   selectedVisibility: IllustrationVisibility;
+  onEnterDurationChange: (enterDurationMs: number) => void;
+  onContinuingChange: (continuing: boolean) => void;
+  onExitDurationChange: (exitDurationMs: number) => void;
   onLengthChange: (animationLengthPercent: number) => void;
+  onNoSlideByChange: (noSlideBy: boolean) => void;
+  onOverlayChange: (isOverlay: boolean) => void;
   onRegisterSnapshot: () => void;
   onResetAnimation: () => void;
+  onSectionWidthChange: (sectionWidthPercent: number) => void;
   onSelectAnimation: (animation: DirtyAnimation) => void;
   onVisibilityChange: (visibility: IllustrationVisibility) => void;
 };
 
 const TOGGLE_BUTTON_CLASS =
   "border border-(--color-border-strong) bg-(--color-panel-raised) px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)";
+const VISIBILITY_OPTIONS = [
+  { label: "Adjacent", value: "adjacent" },
+  { label: "Only active", value: "only-active" },
+  { label: "Start + active", value: "start-active" },
+  { label: "Active + end", value: "active-end" },
+] satisfies Array<{ label: string; value: IllustrationVisibility }>;
 
 export const IllustrationAnimationControls = ({
   animationLengthPercent,
+  canContinue,
+  continuing,
+  enterDurationMs,
+  exitDurationMs,
   isOverlay,
   isRange,
+  isVisibilityLocked,
+  noSlideBy,
+  onEnterDurationChange,
+  onContinuingChange,
+  onExitDurationChange,
   onLengthChange,
+  onNoSlideByChange,
+  onOverlayChange,
   onRegisterSnapshot,
   onResetAnimation,
+  onSectionWidthChange,
   onSelectAnimation,
   onVisibilityChange,
   saveStatus,
+  sectionWidthPercent,
   selectedAnimation,
   selectedVisibility,
 }: IllustrationAnimationControlsProps) => {
-  const visibility = isOverlay ? "only-active" : selectedVisibility;
+  const visibility = isVisibilityLocked ? "only-active" : selectedVisibility;
 
   return (
     <>
       <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={continuing}
+          className="flex min-h-10 w-full items-center justify-between gap-3 border border-(--color-border-soft) bg-(--color-panel-chip) px-3 py-2 font-mono text-xs uppercase text-(--color-text-muted) disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={!canContinue}
+          onClick={() => onContinuingChange(!continuing)}
+        >
+          <span>Continuing</span>
+          <span
+            aria-hidden="true"
+            className="h-4 w-4 border-2 border-(--color-text-muted) bg-transparent data-[active=true]:bg-(--color-control)"
+            data-active={continuing}
+          />
+        </button>
+
         <div>
           <p className="mb-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Variant</p>
           <div className="grid grid-cols-2 gap-1">
@@ -62,43 +111,53 @@ export const IllustrationAnimationControls = ({
 
         <div>
           <p className="mb-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Visibility</p>
-          <div className="flex flex-wrap w-full gap-1">
-            <button
-              type="button"
-              className={`${TOGGLE_BUTTON_CLASS} disabled:cursor-not-allowed disabled:opacity-40 w-full`}
-              data-active={visibility === "adjacent"}
-              disabled={isOverlay}
-              title={isOverlay ? "Overlay sections are always only-active" : undefined}
-              onClick={() => onVisibilityChange("adjacent")}
-            >
-              Adjacent
-            </button>
-            <button
-              type="button"
-              className={`${TOGGLE_BUTTON_CLASS} w-full`}
-              data-active={visibility === "only-active"}
-              onClick={() => onVisibilityChange("only-active")}
-            >
-              Only active
-            </button>
-            <button
-              type="button"
-              className={`${TOGGLE_BUTTON_CLASS} disabled:cursor-not-allowed disabled:opacity-40 w-full`}
-              data-active={visibility === "active-trailing"}
-              disabled={isOverlay}
-              title={isOverlay ? "Overlay sections are always only-active" : undefined}
-              onClick={() => onVisibilityChange("active-trailing")}
-            >
-              Active + end
-            </button>
+          <div className="grid grid-cols-2 gap-1">
+            {VISIBILITY_OPTIONS.map((option) => {
+              const isDisabled = isVisibilityLocked && option.value !== "only-active";
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`${TOGGLE_BUTTON_CLASS} min-h-10 disabled:cursor-not-allowed disabled:opacity-40`}
+                  data-active={visibility === option.value}
+                  disabled={isDisabled}
+                  title={isDisabled ? "Overlay sections are always only-active" : undefined}
+                  onClick={() => onVisibilityChange(option.value)}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
           </div>
-          {isOverlay ? (
-            <p className="mt-1 font-mono text-[0.6rem] uppercase text-(--color-text-muted)">
-              Overlay — locked to only-active
-            </p>
-          ) : null}
         </div>
+
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={isOverlay}
+          className="flex min-h-10 w-full items-center justify-between gap-3 border border-(--color-border-soft) bg-(--color-panel-chip) px-3 py-2 font-mono text-xs uppercase text-(--color-text-muted)"
+          onClick={() => onOverlayChange(!isOverlay)}
+        >
+          <span>Overlay</span>
+          <span
+            aria-hidden="true"
+            className="h-4 w-4 border-2 border-(--color-text-muted) bg-transparent data-[active=true]:bg-(--color-control)"
+            data-active={isOverlay}
+          />
+        </button>
       </div>
+
+      <SectionLayoutControls
+        enterDurationMs={enterDurationMs}
+        exitDurationMs={exitDurationMs}
+        noSlideBy={noSlideBy}
+        onEnterDurationChange={onEnterDurationChange}
+        onExitDurationChange={onExitDurationChange}
+        onNoSlideByChange={onNoSlideByChange}
+        onSectionWidthChange={onSectionWidthChange}
+        sectionWidthPercent={sectionWidthPercent}
+      />
 
       {isRange ? (
         <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">

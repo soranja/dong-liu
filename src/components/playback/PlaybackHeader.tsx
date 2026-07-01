@@ -90,6 +90,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
             </button>
             <input
               aria-label="Volume"
+              data-scroll-seek-ignore="true"
               type="range"
               min="0"
               max="1"

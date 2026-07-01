@@ -1,0 +1,93 @@
+import {
+  SECTION_WIDTH_STEP_PERCENT,
+  SLIDE_MOTION_DURATION_MAX_MS,
+  SLIDE_MOTION_DURATION_STEP_MS,
+} from "../../utils/tuning/sectionLayout";
+
+type SectionLayoutControlsProps = {
+  enterDurationMs: number;
+  exitDurationMs: number;
+  noSlideBy: boolean;
+  sectionWidthPercent: number;
+  onEnterDurationChange: (enterDurationMs: number) => void;
+  onExitDurationChange: (exitDurationMs: number) => void;
+  onNoSlideByChange: (noSlideBy: boolean) => void;
+  onSectionWidthChange: (sectionWidthPercent: number) => void;
+};
+
+export const SectionLayoutControls = ({
+  enterDurationMs,
+  exitDurationMs,
+  noSlideBy,
+  onEnterDurationChange,
+  onExitDurationChange,
+  onNoSlideByChange,
+  onSectionWidthChange,
+  sectionWidthPercent,
+}: SectionLayoutControlsProps) => (
+  <div className="space-y-2">
+    <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <span className="mb-1 flex justify-between">
+        <span>Section width</span>
+        <span>{sectionWidthPercent}%</span>
+      </span>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step={SECTION_WIDTH_STEP_PERCENT}
+        value={sectionWidthPercent}
+        className="w-full accent-(--color-tuner-length)"
+        onChange={(event) => onSectionWidthChange(Number(event.currentTarget.value))}
+      />
+    </label>
+
+    <div className="grid grid-cols-2 gap-2">
+      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+        <span className="mb-1 flex justify-between">
+          <span>Slide in</span>
+          <span>{enterDurationMs}ms</span>
+        </span>
+        <input
+          type="range"
+          min="0"
+          max={SLIDE_MOTION_DURATION_MAX_MS}
+          step={SLIDE_MOTION_DURATION_STEP_MS}
+          value={enterDurationMs}
+          className="w-full accent-(--color-control)"
+          onChange={(event) => onEnterDurationChange(Number(event.currentTarget.value))}
+        />
+      </label>
+      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+        <span className="mb-1 flex justify-between">
+          <span>Slide out</span>
+          <span>{exitDurationMs}ms</span>
+        </span>
+        <input
+          type="range"
+          min="0"
+          max={SLIDE_MOTION_DURATION_MAX_MS}
+          step={SLIDE_MOTION_DURATION_STEP_MS}
+          value={exitDurationMs}
+          className="w-full accent-(--color-accent)"
+          onChange={(event) => onExitDurationChange(Number(event.currentTarget.value))}
+        />
+      </label>
+    </div>
+
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={noSlideBy}
+      className="flex min-h-10 w-full items-center justify-between gap-3 border border-(--color-border-soft) bg-(--color-panel-chip) px-3 py-2 font-mono text-xs uppercase text-(--color-text-muted)"
+      onClick={() => onNoSlideByChange(!noSlideBy)}
+    >
+      <span>No slide by</span>
+      <span
+        aria-hidden="true"
+        className="h-4 w-4 border-2 border-(--color-text-muted) bg-transparent data-[active=true]:bg-(--color-control)"
+        data-active={noSlideBy}
+      />
+    </button>
+  </div>
+);

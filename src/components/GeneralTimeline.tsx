@@ -1,7 +1,14 @@
-import { memo, type CSSProperties, type RefObject } from "react";
+import { memo, useEffect, useState, type CSSProperties, type RefObject } from "react";
 import { useGeneralTimeline } from "../hooks/useGeneralTimeline";
 import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import { isContinuedSection } from "../utils/continuing";
+import {
+  getEffectiveSectionOverlay,
+  getEffectiveSectionWidthPercent,
+  subscribeIllustrationAnimationTuning,
+} from "../utils/tuning/illustrationAnimationTuningStore";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
+import { isAnimationShell } from "./illustrations/AnimationShell";
 
 type GeneralTimelineProps = {
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -16,16 +23,18 @@ type GeneralTimelineProps = {
   timelineRef: RefObject<HTMLDivElement | null>;
   onPrewarmProgress: (progress: number) => void;
   onReplay: (autoplay: boolean) => void;
+  onStart: () => void;
   onTimelinePrepared: () => void;
   onWordCloudReady: (sectionId: number) => void;
 };
 
-const FLOW_SECTIONS = RAM_BOX_LYRICS.filter((section) => !section.isOverlay);
-const OVERLAY_SECTIONS = RAM_BOX_LYRICS.map((section, index) => ({ index, section })).filter(
-  ({ section }) => section.isOverlay,
-);
-const HORIZONTAL_TRAVEL_VW = Math.max(0, FLOW_SECTIONS.length - 1) * 90;
-const VERTICAL_TRAVEL_VH = Math.max(0, FLOW_SECTIONS.length - 1) * 50;
+function getHorizontalTravelVw(sectionWidthPercents: number[]) {
+  if (sectionWidthPercents.length <= 1) return 0;
+
+  const totalWidth = sectionWidthPercents.reduce((sum, width) => sum + width, 0);
+
+  return totalWidth - sectionWidthPercents[0] / 2 - sectionWidthPercents[sectionWidthPercents.length - 1] / 2;
+}
 
 export const GeneralTimeline = memo(
   ({
@@ -36,6 +45,7 @@ export const GeneralTimeline = memo(
     headerHeight,
     onPrewarmProgress,
     onReplay,
+    onStart,
     onTimelinePrepared,
     onWordCloudReady,
     replayPromptVisible,
@@ -44,7 +54,8 @@ export const GeneralTimeline = memo(
     shouldPrewarm,
     timelineRef,
   }: GeneralTimelineProps) => {
-    const isVisible = hasStarted && !replayPromptVisible;
+    const isVisible = !replayPromptVisible;
+    const [, setTuningVersion] = useState(0);
     const { slideRefs, trackRef, viewportRef } = useGeneralTimeline({
       audioRef,
       duration,
@@ -53,6 +64,24 @@ export const GeneralTimeline = memo(
       onTimelinePrepared,
       shouldPrewarm,
     });
+    const sectionRows = RAM_BOX_LYRICS.map((section, index) => ({
+      index,
+      isContinued: isContinuedSection(index),
+      isOverlay: getEffectiveSectionOverlay(section),
+      section,
+      sectionWidthPercent: isAnimationShell(section.illustrateWith) ? 100 : getEffectiveSectionWidthPercent(section),
+    }));
+    const flowSectionWidthPercents = sectionRows
+      .filter(({ isContinued, isOverlay }) => !isContinued && !isOverlay)
+      .map(({ sectionWidthPercent }) => sectionWidthPercent);
+    const flowSectionCount = flowSectionWidthPercents.length;
+    const overlaySections = sectionRows.filter(({ isContinued, isOverlay }) => !isContinued && isOverlay);
+
+    useEffect(() => {
+      if (!import.meta.env.DEV) return;
+
+      return subscribeIllustrationAnimationTuning(() => setTuningVersion((version) => version + 1));
+    }, []);
 
     return (
       <div
@@ -61,9 +90,9 @@ export const GeneralTimeline = memo(
         data-audio-timeline
         style={
           {
-            "--timeline-horizontal-travel": `${HORIZONTAL_TRAVEL_VW}vw`,
+            "--timeline-horizontal-travel": `${getHorizontalTravelVw(flowSectionWidthPercents)}vw`,
             "--timeline-section-height": `${sectionHeight}px`,
-            "--timeline-vertical-travel": `${VERTICAL_TRAVEL_VH}vh`,
+            "--timeline-vertical-travel": `${Math.max(0, flowSectionCount - 1) * 50}vh`,
           } as CSSProperties
         }
       >
@@ -80,20 +109,21 @@ export const GeneralTimeline = memo(
             aria-hidden="true"
             className="general-timeline-track flex h-full w-max will-change-transform max-sm:h-max max-sm:w-full max-sm:flex-col"
           >
-            {RAM_BOX_LYRICS.map((section, index) =>
-              section.isOverlay ? null : (
+            {sectionRows.map(({ index, isContinued, isOverlay, section, sectionWidthPercent }) =>
+              isContinued || isOverlay ? null : (
                 <GeneralTimelineSection
                   key={section.sectionId}
                   index={index}
                   onWordCloudReady={onWordCloudReady}
                   section={section}
+                  sectionWidthPercent={sectionWidthPercent}
                   slideRefs={slideRefs}
                 />
               ),
             )}
           </div>
 
-          {OVERLAY_SECTIONS.map(({ index, section }) => (
+          {overlaySections.map(({ index, section }) => (
             <GeneralTimelineSection
               key={section.sectionId}
               index={index}
@@ -110,10 +140,18 @@ export const GeneralTimeline = memo(
             className="pointer-events-none fixed inset-x-0 z-10 flex items-center justify-center px-6 text-center"
             style={{ bottom: footerHeight, top: headerHeight }}
           >
-            <div className="max-w-lg p-6 text-(--color-text)">
-              <p className="font-mono text-xs uppercase text-(--color-text-muted)">Timeline locked</p>
-              <h2 className="mt-3 font-mono text-3xl font-bold uppercase leading-tight">Press play to start</h2>
-            </div>
+            <button
+              className="timeline-start-prompt pointer-events-auto w-full max-w-lg"
+              onClick={onStart}
+              type="button"
+            >
+              <span className="timeline-start-prompt__visual">
+                <span className="block font-mono text-xs uppercase text-(--color-text-muted)">Timeline locked</span>
+                <span className="mt-3 block font-mono text-3xl font-bold uppercase leading-tight text-(--color-text)">
+                  Press play to start
+                </span>
+              </span>
+            </button>
           </div>
         ) : null}
 

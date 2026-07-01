@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
-import { getTimelineSectionProgress, getTimelineTrackState } from "../utils/generalTimeline";
+import {
+  getTimelineSectionDuration,
+  getTimelineSectionProgress,
+  getTimelineTrackState,
+  getTimelineVisualSectionDuration,
+  getTimelineVisualSectionProgress,
+} from "../utils/generalTimeline";
+import { isContinuedSection } from "../utils/continuing";
 import {
   DEFAULT_INSTANT_ANIMATION,
   SINGLE_WORD_REVEAL_END_PERCENT,
@@ -8,11 +15,14 @@ import {
 } from "../utils/tuning/illustrationAnimation";
 import {
   getEffectiveIllustrationAnimation,
+  getEffectiveIllustrationFadeInMs,
+  getEffectiveIllustrationFadeOutMs,
   getEffectiveIllustrationVisibility,
   subscribeIllustrationAnimationTuning,
 } from "../utils/tuning/illustrationAnimationTuningStore";
 import { subscribeLyricTimingTuning } from "../utils/tuning/lyricTimingTuningStore";
 import { setKineticWarpProgress } from "../utils/kineticWarp";
+import { pauseSyncedVideos, syncSyncedVideos } from "../utils/timelineSyncedVideo";
 import { TIMELINE_PROGRESS_EVENT, type TimelineProgressDetail } from "../utils/tuning/timelineProgressEvent";
 import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
 
@@ -26,6 +36,55 @@ type GeneralTimelineOptions = {
 };
 
 const PREWARM_SECTION_DWELL_MS = 12;
+
+type TrackSlideMetric = {
+  horizontalSize: number;
+  horizontalStart: number;
+  verticalSize: number;
+  verticalStart: number;
+};
+
+type IllustrationProgressOptions = {
+  fadeProgress?: number;
+  shouldPlaySyncedVideo?: boolean;
+  syncedVideoProgress?: number;
+  sectionDuration?: number;
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getTrackCoordinate(position: number, flowSlides: TrackSlideMetric[], isVertical: boolean) {
+  if (!flowSlides.length) return 0;
+
+  const slideIndex = clamp(Math.floor(position + 0.5), 0, flowSlides.length - 1);
+  const slide = flowSlides[slideIndex];
+  const localProgress = clamp(position - (slideIndex - 0.5), 0, 1);
+  const start = isVertical ? slide.verticalStart : slide.horizontalStart;
+  const size = isVertical ? slide.verticalSize : slide.horizontalSize;
+
+  return start + size * localProgress;
+}
+
+function getIllustrationFadeOpacity(
+  sectionIndex: number,
+  progress: number,
+  sectionDuration: number,
+  disableFadeIn: boolean,
+) {
+  const section = RAM_BOX_LYRICS[sectionIndex];
+  const fadeInSeconds = disableFadeIn ? 0 : getEffectiveIllustrationFadeInMs(section) / 1000;
+  const fadeOutSeconds = getEffectiveIllustrationFadeOutMs(section) / 1000;
+  if (!sectionDuration || (!fadeInSeconds && !fadeOutSeconds)) return 1;
+
+  const elapsed = progress * sectionDuration;
+  const remaining = (1 - progress) * sectionDuration;
+  const fadeInOpacity = fadeInSeconds ? elapsed / fadeInSeconds : 1;
+  const fadeOutOpacity = fadeOutSeconds ? remaining / fadeOutSeconds : 1;
+
+  return clamp(Math.min(fadeInOpacity, fadeOutOpacity), 0, 1);
+}
 
 function setRevealedWordCount(slide: HTMLElement, words: NodeListOf<HTMLElement>, revealedWordCount: number) {
   if (slide.dataset.revealedWordCount === String(revealedWordCount)) return;
@@ -60,14 +119,23 @@ function clearIllustrationProgress(slide: HTMLElement | null) {
 
   slide.dataset.illustrationObserved = "false";
   slide.style.setProperty("--illustration-progress", "0");
+  slide.style.setProperty("--illustration-fade-opacity", "0");
   clearWordCloud(slide);
+  pauseSyncedVideos(slide);
 }
 
-function setIllustrationProgress(slide: HTMLElement | null, sectionIndex: number, sectionProgress: number) {
+function setIllustrationProgress(
+  slide: HTMLElement | null,
+  sectionIndex: number,
+  sectionProgress: number,
+  options: IllustrationProgressOptions = {},
+) {
   if (!slide) return;
 
   const section = RAM_BOX_LYRICS[sectionIndex];
   const animation = getEffectiveIllustrationAnimation(section);
+  const fadeProgress = options.fadeProgress ?? sectionProgress;
+  const sectionDuration = options.sectionDuration ?? 0;
   const words = slide.querySelectorAll<HTMLElement>("[data-word-cloud-word]");
   const hasKineticWarp = Boolean(slide.querySelector("[data-kinetic-warp-root]"));
   const defaultEndPercent = words.length
@@ -86,23 +154,48 @@ function setIllustrationProgress(slide: HTMLElement | null, sectionIndex: number
 
   slide.dataset.illustrationObserved = result.isObserved ? "true" : "false";
   slide.style.setProperty("--illustration-progress", String(result.progress));
+  slide.style.setProperty(
+    "--illustration-fade-opacity",
+    String(
+      getIllustrationFadeOpacity(
+        sectionIndex,
+        fadeProgress,
+        sectionDuration,
+        Boolean(slide.querySelector("[data-animation-shell]")),
+      ),
+    ),
+  );
   if (words.length === 1) {
     setRevealedWordCount(slide, words, result.isObserved ? 1 : 0);
   } else if (words.length) {
     setWordCloudProgress(slide, result.progress);
   }
   if (hasKineticWarp) setKineticWarpProgress(slide, result.progress);
+  syncSyncedVideos(slide, {
+    progress: options.syncedVideoProgress ?? sectionProgress,
+    sectionDuration,
+    shouldPlay: Boolean(options.shouldPlaySyncedVideo),
+  });
 }
 
-function syncInactiveIllustrations(slides: Array<HTMLElement | null>, activeIndex: number) {
+function syncInactiveIllustrations(slides: Array<HTMLElement | null>, activeIndex: number, duration: number) {
   slides.forEach((slide, index) => {
-    if (!slide || index === activeIndex) return;
+    if (!slide || index === activeIndex || isContinuedSection(index)) return;
 
     const visibility = getEffectiveIllustrationVisibility(RAM_BOX_LYRICS[index]);
     slide.dataset.illustrationVisibility = visibility;
 
-    if (visibility === "adjacent" || (visibility === "active-trailing" && index < activeIndex)) {
-      setIllustrationProgress(slide, index, 1);
+    if (
+      visibility === "adjacent" ||
+      (visibility === "start-active" && index > activeIndex) ||
+      (visibility === "active-end" && index < activeIndex)
+    ) {
+      const inactiveProgress = index < activeIndex ? 1 : 0;
+      setIllustrationProgress(slide, index, 1, {
+        fadeProgress: inactiveProgress,
+        sectionDuration: getTimelineSectionDuration(index, duration),
+        syncedVideoProgress: inactiveProgress,
+      });
       return;
     }
 
@@ -137,11 +230,8 @@ export function useGeneralTimeline({
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const trackMetricsRef = useRef({
-    horizontalBorderOffset: 0,
-    horizontalSlideSize: 0,
+    flowSlides: [] as TrackSlideMetric[],
     isVertical: false,
-    verticalBorderOffset: 0,
-    verticalSlideSize: 0,
     viewportCenterX: 0,
     viewportCenterY: 0,
   });
@@ -174,12 +264,14 @@ export function useGeneralTimeline({
       const track = trackRef.current;
       if (!track) return;
 
-      const { activeIndex, isHighlighted, position } = getTimelineTrackState(time, duration);
+      const { activeIndex, isHighlighted, position, visualIndex } = getTimelineTrackState(time, duration);
       const sectionProgress = getTimelineSectionProgress(activeIndex, time, duration);
-      setCurrentSlide(activeIndex);
+      const visualProgress = getTimelineVisualSectionProgress(visualIndex, time, duration);
+      const shouldPlaySyncedVideo = Boolean(audioRef.current && !audioRef.current.paused && !audioRef.current.ended);
+      setCurrentSlide(visualIndex);
       dispatchTimelineProgress(activeIndex, sectionProgress, time, duration);
       const previousRevealedSlide = revealedSlideRef.current;
-      if (previousRevealedSlide !== activeIndex) {
+      if (previousRevealedSlide !== visualIndex) {
         const previousVisibility =
           previousRevealedSlide === null
             ? "adjacent"
@@ -187,29 +279,24 @@ export function useGeneralTimeline({
         if (previousVisibility === "only-active") {
           clearIllustrationProgress(previousRevealedSlide === null ? null : slideRefs.current[previousRevealedSlide]);
         }
-        revealedSlideRef.current = activeIndex;
+        revealedSlideRef.current = visualIndex;
       }
-      setIllustrationProgress(slideRefs.current[activeIndex], activeIndex, sectionProgress);
-      syncInactiveIllustrations(slideRefs.current, activeIndex);
+      setIllustrationProgress(slideRefs.current[visualIndex], visualIndex, visualProgress, {
+        fadeProgress: visualProgress,
+        sectionDuration: getTimelineVisualSectionDuration(visualIndex, duration),
+        shouldPlaySyncedVideo,
+      });
+      syncInactiveIllustrations(slideRefs.current, visualIndex, duration);
 
-      const offset = position + 0.5;
-      const {
-        horizontalBorderOffset,
-        horizontalSlideSize,
-        isVertical,
-        verticalBorderOffset,
-        verticalSlideSize,
-        viewportCenterX,
-        viewportCenterY,
-      } = trackMetricsRef.current;
-
-      const x = viewportCenterX - horizontalSlideSize * offset + horizontalBorderOffset;
-      const y = viewportCenterY - verticalSlideSize * offset + verticalBorderOffset;
+      const { flowSlides, isVertical, viewportCenterX, viewportCenterY } = trackMetricsRef.current;
+      const coordinate = getTrackCoordinate(position, flowSlides, isVertical);
+      const x = viewportCenterX - coordinate;
+      const y = viewportCenterY - coordinate;
       track.style.transform = isVertical ? `translate3d(0, ${y}px, 0)` : `translate3d(${x}px, 0, 0)`;
 
-      highlightSlide(isHighlighted ? activeIndex : null);
+      highlightSlide(isHighlighted ? visualIndex : null);
     },
-    [duration, highlightSlide, setCurrentSlide],
+    [audioRef, duration, highlightSlide, setCurrentSlide],
   );
 
   useLayoutEffect(() => {
@@ -222,26 +309,31 @@ export function useGeneralTimeline({
       const viewportCenterY = viewport.clientHeight / 2;
       track.style.setProperty("--timeline-mobile-slide-height", `${viewport.clientHeight / 2}px`);
 
-      const flowSlide = slideRefs.current.find((slide) => slide && slide.dataset.overlay !== "true");
-      if (flowSlide) {
-        trackMetricsRef.current = {
-          horizontalBorderOffset: (flowSlide.offsetWidth - flowSlide.clientWidth - flowSlide.clientLeft) / 2,
-          horizontalSlideSize: flowSlide.offsetWidth,
-          isVertical: window.matchMedia("(max-width: 639px)").matches,
-          verticalBorderOffset: (flowSlide.offsetHeight - flowSlide.clientHeight - flowSlide.clientTop) / 2,
-          verticalSlideSize: flowSlide.offsetHeight,
-          viewportCenterX,
-          viewportCenterY,
-        };
-      }
+      const flowSlides = slideRefs.current
+        .filter((slide): slide is HTMLElement => slide !== null && slide.dataset.overlay !== "true")
+        .map((slide) => ({
+          horizontalSize: slide.offsetWidth,
+          horizontalStart: slide.offsetLeft,
+          verticalSize: slide.offsetHeight,
+          verticalStart: slide.offsetTop,
+        }));
+      trackMetricsRef.current = {
+        flowSlides,
+        isVertical: window.matchMedia("(max-width: 639px)").matches,
+        viewportCenterX,
+        viewportCenterY,
+      };
 
       updateTrack(audioRef.current?.currentTime ?? 0);
     };
 
-    measureTrack();
-
     const resizeObserver = new ResizeObserver(measureTrack);
     if (viewportRef.current) resizeObserver.observe(viewportRef.current);
+    if (trackRef.current) resizeObserver.observe(trackRef.current);
+    slideRefs.current.forEach((slide) => {
+      if (slide && slide.dataset.overlay !== "true") resizeObserver.observe(slide);
+    });
+    measureTrack();
 
     return () => resizeObserver.disconnect();
   }, [audioRef, updateTrack]);
@@ -327,6 +419,12 @@ export function useGeneralTimeline({
 
     return () => window.cancelAnimationFrame(frame);
   }, [audioRef, isVisible, updateTrack]);
+
+  useEffect(() => {
+    if (isVisible) return;
+
+    slideRefs.current.forEach(pauseSyncedVideos);
+  }, [isVisible]);
 
   return { slideRefs, trackRef, viewportRef };
 }

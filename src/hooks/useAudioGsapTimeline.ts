@@ -9,6 +9,7 @@ type AudioGsapTimelineOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;
   isEnabled: () => boolean;
   isTimelineReady: boolean;
+  onManualScroll: () => void;
   onSeek?: (progress: number) => void;
   timelineRef: RefObject<HTMLElement | null>;
 };
@@ -18,7 +19,6 @@ type SyncToAudioOptions = {
   continuePlaybackScroll?: boolean;
 };
 
-const MANUAL_SCROLL_RESUME_DELAY = 0.65;
 const PLAYBACK_SCROLL_EPSILON_PX = 0.05;
 const PROGRAMMATIC_SCROLL_EPSILON_PX = 1;
 
@@ -45,15 +45,15 @@ function getPageScrollProgress(maxScroll: number) {
 }
 
 export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
-  const { audioRef, isEnabled, isTimelineReady, onSeek, timelineRef } = options;
+  const { audioRef, isEnabled, isTimelineReady, onManualScroll, onSeek, timelineRef } = options;
   const isEnabledRef = useSyncedRef(isEnabled);
+  const onManualScrollRef = useSyncedRef(onManualScroll);
   const onSeekRef = useSyncedRef(onSeek);
   const maxScrollRef = useRef(0);
   const lastPlaybackScrollPositionRef = useRef<number | null>(null);
   const pageTweenRef = useRef<gsap.core.Tween | null>(null);
   const playbackScrollSyncFrameRef = useRef<number | null>(null);
   const releaseAutoScrollRef = useRef<gsap.core.Tween | null>(null);
-  const resumePlaybackScrollRef = useRef<gsap.core.Tween | null>(null);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
   const timelineRefInternal = useRef<gsap.core.Timeline | null>(null);
   const isAutoScrollingRef = useRef(false);
@@ -214,14 +214,6 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
     ],
   );
 
-  const resumePlaybackScrollSoon = useCallback(() => {
-    resumePlaybackScrollRef.current?.kill();
-    resumePlaybackScrollRef.current = gsap.delayedCall(MANUAL_SCROLL_RESUME_DELAY, () => {
-      resumePlaybackScrollRef.current = null;
-      if (!audioRef.current?.paused) syncToAudio({ continuePlaybackScroll: true });
-    });
-  }, [audioRef, syncToAudio]);
-
   const syncPlaybackScrollAfterLayout = useCallback(() => {
     if (playbackScrollSyncFrameRef.current !== null) window.cancelAnimationFrame(playbackScrollSyncFrameRef.current);
 
@@ -290,8 +282,8 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
 
         stopPlaybackScroll();
         isAutoScrollingRef.current = false;
+        onManualScrollRef.current();
         syncAudioToPageScroll();
-        if (!audio.paused) resumePlaybackScrollSoon();
       };
 
       scrollTriggerRef.current = ScrollTrigger.create({
@@ -333,7 +325,6 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
           window.cancelAnimationFrame(playbackScrollSyncFrameRef.current);
           playbackScrollSyncFrameRef.current = null;
         }
-        resumePlaybackScrollRef.current?.kill();
         timeline.kill();
         timelineRefInternal.current = null;
         scrollTriggerRef.current?.kill();
@@ -345,9 +336,9 @@ export function useAudioGsapTimeline(options: AudioGsapTimelineOptions) {
         audioRef,
         getIsEnabled,
         isTimelineReady,
+        onManualScrollRef,
         onSeekRef,
         refreshMaxScroll,
-        resumePlaybackScrollSoon,
         syncAudioToPageScroll,
         stopAudioTicker,
         stopPlaybackScroll,

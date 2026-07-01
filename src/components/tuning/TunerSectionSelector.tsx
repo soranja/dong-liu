@@ -4,6 +4,7 @@ import { TEXT_ILLUSTRATION_KINDS, type TimelineIllustrationKind } from "../../ut
 type TunerSectionSelectorProps = {
   followActive: boolean;
   illustrationKind: TimelineIllustrationKind;
+  isLocked: boolean;
   selectedSection: LyricsSection;
   onFollowActiveChange: (followActive: boolean) => void;
   onIllustrationKindChange: (illustrationKind: TextIllustrationKind) => void;
@@ -22,6 +23,7 @@ const ILLUSTRATION_KIND_CONTROL_CLASS =
 export const TunerSectionSelector = ({
   followActive,
   illustrationKind,
+  isLocked,
   onFollowActiveChange,
   onIllustrationKindChange,
   onNext,
@@ -40,6 +42,7 @@ export const TunerSectionSelector = ({
             <select
               aria-label="Illustration component"
               className={`${ILLUSTRATION_KIND_CONTROL_CLASS} pr-10`}
+              disabled={isLocked}
               value={illustrationKind}
               onChange={(event) => onIllustrationKindChange(event.currentTarget.value as TextIllustrationKind)}
             >
@@ -56,6 +59,11 @@ export const TunerSectionSelector = ({
           )}
         </div>
         <p className="mt-1 max-h-16 overflow-auto text-sm leading-snug">{selectedSection.line}</p>
+        {isLocked ? (
+          <p className="mt-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+            Continuing previous illustration · time controls only
+          </p>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-2 gap-2">

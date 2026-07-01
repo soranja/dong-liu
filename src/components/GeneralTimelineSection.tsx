@@ -1,9 +1,11 @@
-import { memo, useEffect, useState, type ReactNode, type RefObject } from "react";
+import { memo, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import type { LyricsIllustration, LyricsMedia, LyricsSection } from "../lyrics/types";
+import { DEFAULT_SECTION_WIDTH_PERCENT } from "../utils/tuning/sectionLayout";
 import {
   getEffectiveTimelineIllustrationKind,
   subscribeIllustrationKindTuning,
 } from "../utils/tuning/illustrationKind";
+import { isAnimationShell } from "./illustrations/AnimationShell";
 import { KineticWarpTextAnimation } from "./illustrations/KineticWarpTextAnimation";
 import { LyricsWordCloud } from "./illustrations/LyricsWordCloud";
 
@@ -12,6 +14,7 @@ type GeneralTimelineSectionProps = {
   isOverlay?: boolean;
   onWordCloudReady: (sectionId: number) => void;
   section: LyricsSection;
+  sectionWidthPercent?: number;
   slideRefs: RefObject<Array<HTMLElement | null>>;
 };
 
@@ -40,13 +43,24 @@ function renderIllustration(illustration: LyricsIllustration): ReactNode {
 }
 
 export const GeneralTimelineSection = memo(
-  ({ index, isOverlay = false, onWordCloudReady, section, slideRefs }: GeneralTimelineSectionProps) => {
+  ({
+    index,
+    isOverlay = false,
+    onWordCloudReady,
+    section,
+    sectionWidthPercent = DEFAULT_SECTION_WIDTH_PERCENT,
+    slideRefs,
+  }: GeneralTimelineSectionProps) => {
     const text = typeof section.illustrateWith === "string" ? section.illustrateWith : null;
     const isText = text !== null;
+    const hasAnimationShell = isAnimationShell(section.illustrateWith);
+    const isFullBleed = hasAnimationShell || Boolean(section.fullBleedIllustration);
     const [illustrationKind, setIllustrationKind] = useState(() => getEffectiveTimelineIllustrationKind(section));
-    const contentClassName = isText
-      ? "h-full w-full overflow-hidden [font-family:var(--font-unbounded)]"
-      : "flex h-full w-full items-center justify-center overflow-hidden py-6 transition-opacity duration-150";
+    const contentClassName = isFullBleed
+      ? "h-full w-full overflow-hidden"
+      : isText
+        ? "h-full w-full overflow-hidden [font-family:var(--font-unbounded)]"
+        : "flex h-full w-full items-center justify-center overflow-hidden py-6 transition-opacity duration-150";
 
     useEffect(
       () =>
@@ -62,9 +76,11 @@ export const GeneralTimelineSection = memo(
           slideRefs.current[index] = slide;
         }}
         className={
-          isOverlay
-            ? "group absolute inset-0 z-10 flex h-full w-full items-center justify-center px-2 text-center sm:px-6"
-            : "group relative flex h-full w-[90vw] shrink-0 items-center justify-center border-r-[50px] border-(--color-border) px-2 text-center max-sm:h-(--timeline-mobile-slide-height) max-sm:w-full max-sm:border-r-0 max-sm:border-b-[50px] sm:px-6"
+          isFullBleed && isOverlay
+            ? "group absolute inset-0 z-10 h-full w-full"
+            : isOverlay
+              ? "group absolute inset-0 z-10 flex h-full w-full items-center justify-center px-2 text-center"
+              : "group relative flex h-full w-(--timeline-section-width) shrink-0 items-center justify-center text-center max-sm:h-(--timeline-mobile-slide-height) max-sm:w-full"
         }
         aria-hidden="true"
         data-active="false"
@@ -72,9 +88,17 @@ export const GeneralTimelineSection = memo(
         data-section-id={section.sectionId}
         data-timeline-section
         data-timestamp={section.timestamp}
+        style={
+          isOverlay
+            ? undefined
+            : ({
+                "--timeline-section-width": `${sectionWidthPercent}vw`,
+              } as CSSProperties)
+        }
       >
         <div
           className={contentClassName}
+          data-animation-shell={hasAnimationShell ? "true" : undefined}
           data-illustration-kind={illustrationKind}
           data-size-level={section.sizeLevel}
           data-timeline-content

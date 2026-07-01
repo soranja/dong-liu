@@ -26,21 +26,26 @@ export type IllustrationAnimation =
       variant: "range";
     };
 
-export type IllustrationVisibility = "adjacent" | "only-active" | "active-trailing";
+export type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
 export type TextIllustrationKind = "kinetic-warp" | "word-cloud";
 
 export type LyricsSection = {
+  continuing?: boolean;
   enterDuration: number;
   exitDuration: number;
+  fullBleedIllustration?: boolean;
   illustrateWith: LyricsIllustration;
   illustrationAnimation?: IllustrationAnimation;
+  illustrationFadeInMs?: number;
+  illustrationFadeOutMs?: number;
   illustrationKind?: TextIllustrationKind;
   illustrationVisibility?: IllustrationVisibility;
   isOverlay?: boolean;
   line: string;
+  noSlideBy?: boolean;
   offsetEnter: number;
   sectionId: number;
+  sectionWidthPercent?: number;
   sizeLevel?: TextSizeLevel;
-  slideBy?: boolean;
   timestamp: string;
 };

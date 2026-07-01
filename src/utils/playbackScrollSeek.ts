@@ -1,16 +1,12 @@
 type PlaybackScrollSeekOptions = {
-  audio: HTMLAudioElement;
   isEnabled: () => boolean;
-  onSeek?: (progress: number) => void;
+  onSeekStep: (seconds: number) => void;
   target: HTMLElement;
+  wheelTarget?: Window;
 };
 
-const WHEEL_SECONDS_PER_PIXEL = 0.012;
+const WHEEL_SEEK_STEP_SECONDS = 1;
 const TOUCH_SECONDS_PER_PIXEL = 0.035;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function getWheelPixels(event: WheelEvent) {
   if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) return event.deltaY * 16;
@@ -25,23 +21,26 @@ function shouldIgnoreGesture(eventTarget: EventTarget | null) {
   return Boolean(eventTarget.closest("button,input,select,textarea,[data-scroll-seek-ignore='true']"));
 }
 
+function shouldIgnoreWheel(eventTarget: EventTarget | null) {
+  if (!(eventTarget instanceof Element)) return false;
+
+  return Boolean(
+    eventTarget.closest("button,input:not([type='range']),select,textarea,[data-scroll-seek-ignore='true']"),
+  );
+}
+
 export function installPlaybackScrollSeek(options: PlaybackScrollSeekOptions) {
-  const { audio, isEnabled, onSeek, target } = options;
+  const { isEnabled, onSeekStep, target, wheelTarget = window } = options;
   let lastTouchY: number | null = null;
 
-  function seekBy(seconds: number) {
-    if (!audio.duration || !Number.isFinite(audio.duration)) return;
-
-    audio.currentTime = clamp(audio.currentTime + seconds, 0, audio.duration);
-    onSeek?.((audio.currentTime / audio.duration) * 100);
-  }
-
   function handleWheel(event: WheelEvent) {
-    if (!isEnabled() || shouldIgnoreGesture(event.target)) return;
+    if (!isEnabled() || shouldIgnoreWheel(event.target)) return;
+
+    const wheelPixels = getWheelPixels(event);
+    if (!wheelPixels) return;
 
     event.preventDefault();
-    const seconds = clamp(getWheelPixels(event) * WHEEL_SECONDS_PER_PIXEL, -6, 6);
-    seekBy(seconds);
+    onSeekStep(Math.sign(wheelPixels) * WHEEL_SEEK_STEP_SECONDS);
   }
 
   function handleTouchStart(event: TouchEvent) {
@@ -60,7 +59,7 @@ export function installPlaybackScrollSeek(options: PlaybackScrollSeekOptions) {
     if (touchY === undefined) return;
 
     event.preventDefault();
-    seekBy((lastTouchY - touchY) * TOUCH_SECONDS_PER_PIXEL);
+    onSeekStep((lastTouchY - touchY) * TOUCH_SECONDS_PER_PIXEL);
     lastTouchY = touchY;
   }
 
@@ -68,14 +67,14 @@ export function installPlaybackScrollSeek(options: PlaybackScrollSeekOptions) {
     lastTouchY = null;
   }
 
-  target.addEventListener("wheel", handleWheel, { passive: false });
+  wheelTarget.addEventListener("wheel", handleWheel, { passive: false });
   target.addEventListener("touchstart", handleTouchStart, { passive: true });
   target.addEventListener("touchmove", handleTouchMove, { passive: false });
   target.addEventListener("touchend", handleTouchEnd);
   target.addEventListener("touchcancel", handleTouchEnd);
 
   return () => {
-    target.removeEventListener("wheel", handleWheel);
+    wheelTarget.removeEventListener("wheel", handleWheel);
     target.removeEventListener("touchstart", handleTouchStart);
     target.removeEventListener("touchmove", handleTouchMove);
     target.removeEventListener("touchend", handleTouchEnd);

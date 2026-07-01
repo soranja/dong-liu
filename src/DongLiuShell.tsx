@@ -11,7 +11,9 @@ import { usePlaybackController } from "./hooks/usePlaybackController";
 import { usePreloadedAudio } from "./hooks/usePreloadedAudio";
 import { RAM_BOX_LYRICS } from "./lyrics/ram-box-lyrics";
 
-const WORD_CLOUD_COUNT = RAM_BOX_LYRICS.filter((section) => typeof section.illustrateWith === "string").length;
+const WORD_CLOUD_COUNT = RAM_BOX_LYRICS.filter(
+  (section, index) => typeof section.illustrateWith === "string" && !RAM_BOX_LYRICS[index - 1]?.continuing,
+).length;
 const AUDIO_PROGRESS_WEIGHT = 10;
 const CLOUD_PROGRESS_WEIGHT = 35;
 const FONT_PROGRESS_WEIGHT = 5;
@@ -60,6 +62,11 @@ export const DongLiuShell = () => {
     playbackRef: headerRef,
     timelineRef,
   });
+  const togglePlaybackRef = useRef(playback.togglePlayback);
+  togglePlaybackRef.current = playback.togglePlayback;
+  const handleTogglePlayback = useCallback(() => {
+    void togglePlaybackRef.current();
+  }, []);
   const layoutHeights = useLayoutHeights({
     footerRef,
     hasStarted: playback.hasStarted,
@@ -124,8 +131,8 @@ export const DongLiuShell = () => {
         headerRef={headerRef}
         isPlaying={playback.isPlaying}
         isReady={isReady}
-        onSeek={playback.seek}
-        onTogglePlayback={() => void playback.togglePlayback()}
+        onSeek={playback.scrub}
+        onTogglePlayback={handleTogglePlayback}
         onVolumeChange={playback.setVolume}
         progress={playback.progress}
         volume={playback.volume}
@@ -146,6 +153,7 @@ export const DongLiuShell = () => {
           headerHeight={layoutHeights.header}
           onPrewarmProgress={handlePrewarmProgress}
           onReplay={(autoplay) => void playback.replayFromStart(autoplay)}
+          onStart={handleTogglePlayback}
           onTimelinePrepared={handleTimelinePrepared}
           onWordCloudReady={handleWordCloudReady}
           replayPromptVisible={playback.replayPromptVisible}
