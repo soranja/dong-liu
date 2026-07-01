@@ -1,4 +1,5 @@
-import type { LyricsSection, TextIllustrationKind } from "../../lyrics/types";
+import type { LyricsSection } from "../../entities/track/model/types";
+import type { TextIllustrationKind } from "../../shared/ui/illustration-animations/types";
 import { TEXT_ILLUSTRATION_KINDS, type TimelineIllustrationKind } from "../../utils/tuning/illustrationKind";
 
 type TunerSectionSelectorProps = {

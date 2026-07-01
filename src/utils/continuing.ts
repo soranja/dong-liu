@@ -1,26 +1,26 @@
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import type { LyricsSection } from "../entities/track/model/types";
 import { getEffectiveSectionContinuing } from "./tuning/illustrationAnimationTuningStore";
 
-export function getVisualSectionIndex(index: number) {
+export function getVisualSectionIndex(lyrics: readonly LyricsSection[], index: number) {
   let visualIndex = index;
 
-  while (visualIndex > 0 && getEffectiveSectionContinuing(RAM_BOX_LYRICS[visualIndex - 1])) {
+  while (visualIndex > 0 && getEffectiveSectionContinuing(lyrics[visualIndex - 1])) {
     visualIndex -= 1;
   }
 
   return visualIndex;
 }
 
-export function getNextVisualSectionIndex(index: number) {
-  let nextIndex = getVisualSectionIndex(index) + 1;
+export function getNextVisualSectionIndex(lyrics: readonly LyricsSection[], index: number) {
+  let nextIndex = getVisualSectionIndex(lyrics, index) + 1;
 
-  while (nextIndex < RAM_BOX_LYRICS.length && getEffectiveSectionContinuing(RAM_BOX_LYRICS[nextIndex - 1])) {
+  while (nextIndex < lyrics.length && getEffectiveSectionContinuing(lyrics[nextIndex - 1])) {
     nextIndex += 1;
   }
 
   return nextIndex;
 }
 
-export function isContinuedSection(index: number) {
-  return getVisualSectionIndex(index) !== index;
+export function isContinuedSection(lyrics: readonly LyricsSection[], index: number) {
+  return getVisualSectionIndex(lyrics, index) !== index;
 }

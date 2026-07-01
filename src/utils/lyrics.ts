@@ -1,4 +1,4 @@
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import type { LyricsSection } from "../entities/track/model/types";
 import { getDraftLyricSectionStart } from "./tuning/lyricTimingTuningStore";
 
 type LyricLinePart = {
@@ -20,25 +20,23 @@ export function formatLyricsTimestamp(time: number) {
   return `${String(minutes).padStart(2, "0")}:${seconds.toFixed(3).padStart(6, "0")}`;
 }
 
-const SECTION_START_TIMES = RAM_BOX_LYRICS.map(({ timestamp }) => parseLyricsTimestamp(timestamp));
+export function getLyricsSectionStart(lyrics: readonly LyricsSection[], index: number) {
+  const section = lyrics[index];
+  if (!section) return 0;
 
-export function getLyricsSectionStart(index: number) {
-  const sectionId = RAM_BOX_LYRICS[index]?.sectionId;
-  if (!sectionId) return SECTION_START_TIMES[index] ?? 0;
-
-  return getDraftLyricSectionStart(sectionId) ?? SECTION_START_TIMES[index] ?? 0;
+  return getDraftLyricSectionStart(section.sectionId) ?? parseLyricsTimestamp(section.timestamp);
 }
 
-function getActiveLyricsSectionIndex(currentTime: number) {
-  for (let index = RAM_BOX_LYRICS.length - 1; index >= 0; index -= 1) {
-    if (currentTime >= getLyricsSectionStart(index)) return index;
+function getActiveLyricsSectionIndex(lyrics: readonly LyricsSection[], currentTime: number) {
+  for (let index = lyrics.length - 1; index >= 0; index -= 1) {
+    if (currentTime >= getLyricsSectionStart(lyrics, index)) return index;
   }
 
   return 0;
 }
 
-export function getActiveLyricsSection(currentTime: number) {
-  return RAM_BOX_LYRICS[getActiveLyricsSectionIndex(currentTime)];
+export function getActiveLyricsSection(lyrics: readonly LyricsSection[], currentTime: number) {
+  return lyrics[getActiveLyricsSectionIndex(lyrics, currentTime)];
 }
 
 export function getLyricLineParts(line: string) {

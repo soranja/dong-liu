@@ -1,39 +1,42 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-import audioSrc from "./audio/ram_box.mp3";
+import { CaptionsFooter } from "./CaptionsFooter";
+import { ExperienceLoadingScreen } from "./ExperienceLoadingScreen";
+import { GeneralTimeline } from "./GeneralTimeline";
+import { PlaybackHeader } from "./playback/PlaybackHeader";
 
-import { CaptionsFooter } from "./components/CaptionsFooter";
-import { ExperienceLoadingScreen } from "./components/ExperienceLoadingScreen";
-import { PlaybackHeader } from "./components/playback/PlaybackHeader";
+import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
+import { useLayoutHeights } from "../model/useLayoutHeights";
+import { usePlaybackController } from "../model/usePlaybackController";
+import { usePreloadedAudio } from "../model/usePreloadedAudio";
 
-import { useLayoutHeights } from "./hooks/useLayoutHeights";
-import { usePlaybackController } from "./hooks/usePlaybackController";
-import { usePreloadedAudio } from "./hooks/usePreloadedAudio";
-import { RAM_BOX_LYRICS } from "./lyrics/ram-box-lyrics";
-
-const WORD_CLOUD_COUNT = RAM_BOX_LYRICS.filter(
-  (section, index) => typeof section.illustrateWith === "string" && !RAM_BOX_LYRICS[index - 1]?.continuing,
-).length;
 const AUDIO_PROGRESS_WEIGHT = 10;
 const CLOUD_PROGRESS_WEIGHT = 35;
 const FONT_PROGRESS_WEIGHT = 5;
 const PREWARM_PROGRESS_WEIGHT = 50;
-const GeneralTimeline = lazy(() =>
-  import("./components/GeneralTimeline").then((module) => ({ default: module.GeneralTimeline })),
-);
 const IllustrationAnimationTuner = import.meta.env.DEV
   ? lazy(() =>
-      import("./components/tuning/IllustrationAnimationTuner").then((module) => ({
+      import("../../../components/tuning/IllustrationAnimationTuner").then((module) => ({
         default: module.IllustrationAnimationTuner,
       })),
     )
   : null;
 
-type DongLiuShellProps = {
+export type TrackExperienceProps<TCustomIllustration> = {
+  audioSrc: string;
   headerTrailingContent?: ReactNode;
+  lyrics: readonly LyricsSection<TCustomIllustration>[];
+  renderCustomIllustration: CustomIllustrationRenderer<TCustomIllustration>;
+  trackId: string;
 };
 
-export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
+export const TrackExperience = <TCustomIllustration,>({
+  audioSrc,
+  headerTrailingContent,
+  lyrics,
+  renderCustomIllustration,
+  trackId,
+}: TrackExperienceProps<TCustomIllustration>) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
@@ -41,13 +44,19 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
   const readyCloudIdsRef = useRef(new Set<number>());
   const readyCloudUpdateFrameRef = useRef<number | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
+  const wordCloudCount = useMemo(
+    () =>
+      lyrics.filter((section, index) => typeof section.illustrateWith === "string" && !lyrics[index - 1]?.continuing)
+        .length,
+    [lyrics],
+  );
   const preloadedAudioSrc = usePreloadedAudio(audioSrc);
   const [audioReady, setAudioReady] = useState(false);
   const [fontReady, setFontReady] = useState(false);
   const [prewarmProgress, setPrewarmProgress] = useState(0);
   const [readyCloudCount, setReadyCloudCount] = useState(0);
   const [timelinePrepared, setTimelinePrepared] = useState(false);
-  const cloudLayoutsReady = readyCloudCount === WORD_CLOUD_COUNT;
+  const cloudLayoutsReady = readyCloudCount === wordCloudCount;
   const shouldPrewarm = audioReady && fontReady && cloudLayoutsReady && !timelinePrepared;
   const isReady = audioReady && fontReady && cloudLayoutsReady && timelinePrepared;
   const loadingProgress = Math.min(
@@ -55,7 +64,7 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
     Math.round(
       (audioReady ? AUDIO_PROGRESS_WEIGHT : 0) +
         (fontReady ? FONT_PROGRESS_WEIGHT : 0) +
-        (readyCloudCount / WORD_CLOUD_COUNT) * CLOUD_PROGRESS_WEIGHT +
+        (wordCloudCount ? readyCloudCount / wordCloudCount : 1) * CLOUD_PROGRESS_WEIGHT +
         prewarmProgress * PREWARM_PROGRESS_WEIGHT,
     ),
   );
@@ -96,6 +105,10 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
     setPrewarmProgress(1);
     setTimelinePrepared(true);
   }, []);
+  const renderIllustration = useCallback(
+    (descriptor: unknown) => renderCustomIllustration(descriptor as TCustomIllustration),
+    [renderCustomIllustration],
+  );
 
   useEffect(() => {
     let disposed = false;
@@ -117,6 +130,7 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
     <main
       aria-busy={!isReady}
       className="relative isolate min-h-screen overflow-x-clip bg-(--color-bg) text-(--color-panel)"
+      data-track-id={trackId}
       style={{ paddingBottom: layoutHeights.footer, paddingTop: layoutHeights.header }}
     >
       <audio
@@ -147,6 +161,7 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
         currentTime={playback.currentTime}
         footerRef={footerRef}
         isVisible={playback.hasStarted && !playback.replayPromptVisible}
+        lyrics={lyrics}
       />
 
       <Suspense fallback={null}>
@@ -156,11 +171,13 @@ export const DongLiuShell = ({ headerTrailingContent }: DongLiuShellProps) => {
           footerHeight={layoutHeights.footer}
           hasStarted={playback.hasStarted}
           headerHeight={layoutHeights.header}
+          lyrics={lyrics}
           onPrewarmProgress={handlePrewarmProgress}
           onReplay={(autoplay) => void playback.replayFromStart(autoplay)}
           onStart={handleTogglePlayback}
           onTimelinePrepared={handleTimelinePrepared}
           onWordCloudReady={handleWordCloudReady}
+          renderCustomIllustration={renderIllustration}
           replayPromptVisible={playback.replayPromptVisible}
           replaySequence={playback.replaySequence}
           sectionHeight={layoutHeights.section}

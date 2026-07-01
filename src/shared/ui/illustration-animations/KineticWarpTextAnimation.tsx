@@ -1,14 +1,10 @@
 import { type CSSProperties } from "react";
-import { usePackedWordsLayout } from "../../hooks/usePackedWordsLayout";
-import "../../styles/illustrations/kinetic-warp-text-animation.css";
+import { usePackedWordsLayout } from "./lib/usePackedWordsLayout";
+import "./styles/kinetic-warp-text-animation.css";
 
-type KineticWarpTextAnimationProps = {
-  onReady: (sectionId: number) => void;
-  sectionId: number;
-  text: string;
-};
+import type { TextIllustrationProps } from "./types";
 
-export const KineticWarpTextAnimation = ({ onReady, sectionId, text }: KineticWarpTextAnimationProps) => {
+export const KineticWarpTextAnimation = ({ onReady, sectionId, text }: TextIllustrationProps) => {
   const { containerRef, words } = usePackedWordsLayout({ onReady, sectionId, text });
 
   return (

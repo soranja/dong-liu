@@ -1,14 +1,10 @@
 import { type CSSProperties } from "react";
-import { usePackedWordsLayout } from "../../hooks/usePackedWordsLayout";
-import "../../styles/illustrations/lyrics-word-cloud.css";
+import { usePackedWordsLayout } from "./lib/usePackedWordsLayout";
+import "./styles/lyrics-word-cloud.css";
 
-type LyricsWordCloudProps = {
-  onReady: (sectionId: number) => void;
-  sectionId: number;
-  text: string;
-};
+import type { TextIllustrationProps } from "./types";
 
-export const LyricsWordCloud = ({ onReady, sectionId, text }: LyricsWordCloudProps) => {
+export const LyricsWordCloud = ({ onReady, sectionId, text }: TextIllustrationProps) => {
   const { containerRef, words } = usePackedWordsLayout({ onReady, sectionId, text });
 
   return (

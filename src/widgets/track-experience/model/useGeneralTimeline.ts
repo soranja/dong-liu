@@ -1,35 +1,36 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import type { LyricsSection } from "../../../entities/track/model/types";
+import { setKineticWarpProgress } from "../../../shared/ui/illustration-animations/lib/kineticWarp";
 import {
   getTimelineSectionDuration,
   getTimelineSectionProgress,
   getTimelineTrackState,
   getTimelineVisualSectionDuration,
   getTimelineVisualSectionProgress,
-} from "../utils/generalTimeline";
-import { isContinuedSection } from "../utils/continuing";
+} from "../../../utils/generalTimeline";
+import { isContinuedSection } from "../../../utils/continuing";
 import {
   DEFAULT_INSTANT_ANIMATION,
   SINGLE_WORD_REVEAL_END_PERCENT,
   WORD_CLOUD_REVEAL_END_PERCENT,
   resolveIllustrationAnimation,
-} from "../utils/tuning/illustrationAnimation";
+} from "../../../utils/tuning/illustrationAnimation";
 import {
   getEffectiveIllustrationAnimation,
   getEffectiveIllustrationFadeInMs,
   getEffectiveIllustrationFadeOutMs,
   getEffectiveIllustrationVisibility,
   subscribeIllustrationAnimationTuning,
-} from "../utils/tuning/illustrationAnimationTuningStore";
-import { subscribeLyricTimingTuning } from "../utils/tuning/lyricTimingTuningStore";
-import { setKineticWarpProgress } from "../utils/kineticWarp";
-import { pauseSyncedVideos, syncSyncedVideos } from "../utils/timelineSyncedVideo";
-import { TIMELINE_PROGRESS_EVENT, type TimelineProgressDetail } from "../utils/tuning/timelineProgressEvent";
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+} from "../../../utils/tuning/illustrationAnimationTuningStore";
+import { pauseSyncedVideos, syncSyncedVideos } from "../../../utils/timelineSyncedVideo";
+import { subscribeLyricTimingTuning } from "../../../utils/tuning/lyricTimingTuningStore";
+import { TIMELINE_PROGRESS_EVENT, type TimelineProgressDetail } from "../../../utils/tuning/timelineProgressEvent";
 
 type GeneralTimelineOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;
   duration: number;
   isVisible: boolean;
+  lyrics: readonly LyricsSection[];
   onPrewarmProgress: (progress: number) => void;
   onTimelinePrepared: () => void;
   shouldPrewarm: boolean;
@@ -68,12 +69,13 @@ function getTrackCoordinate(position: number, flowSlides: TrackSlideMetric[], is
 }
 
 function getIllustrationFadeOpacity(
+  lyrics: readonly LyricsSection[],
   sectionIndex: number,
   progress: number,
   sectionDuration: number,
   disableFadeIn: boolean,
 ) {
-  const section = RAM_BOX_LYRICS[sectionIndex];
+  const section = lyrics[sectionIndex];
   const fadeInSeconds = disableFadeIn ? 0 : getEffectiveIllustrationFadeInMs(section) / 1000;
   const fadeOutSeconds = getEffectiveIllustrationFadeOutMs(section) / 1000;
   if (!sectionDuration || (!fadeInSeconds && !fadeOutSeconds)) return 1;
@@ -125,6 +127,7 @@ function clearIllustrationProgress(slide: HTMLElement | null) {
 }
 
 function setIllustrationProgress(
+  lyrics: readonly LyricsSection[],
   slide: HTMLElement | null,
   sectionIndex: number,
   sectionProgress: number,
@@ -132,7 +135,7 @@ function setIllustrationProgress(
 ) {
   if (!slide) return;
 
-  const section = RAM_BOX_LYRICS[sectionIndex];
+  const section = lyrics[sectionIndex];
   const animation = getEffectiveIllustrationAnimation(section);
   const fadeProgress = options.fadeProgress ?? sectionProgress;
   const sectionDuration = options.sectionDuration ?? 0;
@@ -158,10 +161,11 @@ function setIllustrationProgress(
     "--illustration-fade-opacity",
     String(
       getIllustrationFadeOpacity(
+        lyrics,
         sectionIndex,
         fadeProgress,
         sectionDuration,
-        Boolean(slide.querySelector("[data-animation-shell]")),
+        Boolean(slide.querySelector("[data-timeline-synced-video]")),
       ),
     ),
   );
@@ -178,11 +182,16 @@ function setIllustrationProgress(
   });
 }
 
-function syncInactiveIllustrations(slides: Array<HTMLElement | null>, activeIndex: number, duration: number) {
+function syncInactiveIllustrations(
+  lyrics: readonly LyricsSection[],
+  slides: Array<HTMLElement | null>,
+  activeIndex: number,
+  duration: number,
+) {
   slides.forEach((slide, index) => {
-    if (!slide || index === activeIndex || isContinuedSection(index)) return;
+    if (!slide || index === activeIndex || isContinuedSection(lyrics, index)) return;
 
-    const visibility = getEffectiveIllustrationVisibility(RAM_BOX_LYRICS[index]);
+    const visibility = getEffectiveIllustrationVisibility(lyrics[index]);
     slide.dataset.illustrationVisibility = visibility;
 
     if (
@@ -191,9 +200,9 @@ function syncInactiveIllustrations(slides: Array<HTMLElement | null>, activeInde
       (visibility === "active-end" && index < activeIndex)
     ) {
       const inactiveProgress = index < activeIndex ? 1 : 0;
-      setIllustrationProgress(slide, index, 1, {
+      setIllustrationProgress(lyrics, slide, index, 1, {
         fadeProgress: inactiveProgress,
-        sectionDuration: getTimelineSectionDuration(index, duration),
+        sectionDuration: getTimelineSectionDuration(lyrics, index, duration),
         syncedVideoProgress: inactiveProgress,
       });
       return;
@@ -203,7 +212,13 @@ function syncInactiveIllustrations(slides: Array<HTMLElement | null>, activeInde
   });
 }
 
-function dispatchTimelineProgress(activeIndex: number, sectionProgress: number, currentTime: number, duration: number) {
+function dispatchTimelineProgress(
+  lyrics: readonly LyricsSection[],
+  activeIndex: number,
+  sectionProgress: number,
+  currentTime: number,
+  duration: number,
+) {
   if (!import.meta.env.DEV) return;
 
   const detail: TimelineProgressDetail = {
@@ -211,7 +226,7 @@ function dispatchTimelineProgress(activeIndex: number, sectionProgress: number, 
     currentTime,
     duration,
     progress: sectionProgress,
-    sectionId: RAM_BOX_LYRICS[activeIndex].sectionId,
+    sectionId: lyrics[activeIndex].sectionId,
   };
   window.dispatchEvent(new CustomEvent(TIMELINE_PROGRESS_EVENT, { detail }));
 }
@@ -220,6 +235,7 @@ export function useGeneralTimeline({
   audioRef,
   duration,
   isVisible,
+  lyrics,
   onPrewarmProgress,
   onTimelinePrepared,
   shouldPrewarm,
@@ -264,29 +280,29 @@ export function useGeneralTimeline({
       const track = trackRef.current;
       if (!track) return;
 
-      const { activeIndex, isHighlighted, position, visualIndex } = getTimelineTrackState(time, duration);
-      const sectionProgress = getTimelineSectionProgress(activeIndex, time, duration);
-      const visualProgress = getTimelineVisualSectionProgress(visualIndex, time, duration);
+      const { activeIndex, isHighlighted, position, visualIndex } = getTimelineTrackState(lyrics, time, duration);
+      const sectionProgress = getTimelineSectionProgress(lyrics, activeIndex, time, duration);
+      const visualProgress = getTimelineVisualSectionProgress(lyrics, visualIndex, time, duration);
       const shouldPlaySyncedVideo = Boolean(audioRef.current && !audioRef.current.paused && !audioRef.current.ended);
       setCurrentSlide(visualIndex);
-      dispatchTimelineProgress(activeIndex, sectionProgress, time, duration);
+      dispatchTimelineProgress(lyrics, activeIndex, sectionProgress, time, duration);
       const previousRevealedSlide = revealedSlideRef.current;
       if (previousRevealedSlide !== visualIndex) {
         const previousVisibility =
           previousRevealedSlide === null
             ? "adjacent"
-            : getEffectiveIllustrationVisibility(RAM_BOX_LYRICS[previousRevealedSlide]);
+            : getEffectiveIllustrationVisibility(lyrics[previousRevealedSlide]);
         if (previousVisibility === "only-active") {
           clearIllustrationProgress(previousRevealedSlide === null ? null : slideRefs.current[previousRevealedSlide]);
         }
         revealedSlideRef.current = visualIndex;
       }
-      setIllustrationProgress(slideRefs.current[visualIndex], visualIndex, visualProgress, {
+      setIllustrationProgress(lyrics, slideRefs.current[visualIndex], visualIndex, visualProgress, {
         fadeProgress: visualProgress,
-        sectionDuration: getTimelineVisualSectionDuration(visualIndex, duration),
+        sectionDuration: getTimelineVisualSectionDuration(lyrics, visualIndex, duration),
         shouldPlaySyncedVideo,
       });
-      syncInactiveIllustrations(slideRefs.current, visualIndex, duration);
+      syncInactiveIllustrations(lyrics, slideRefs.current, visualIndex, duration);
 
       const { flowSlides, isVertical, viewportCenterX, viewportCenterY } = trackMetricsRef.current;
       const coordinate = getTrackCoordinate(position, flowSlides, isVertical);
@@ -296,7 +312,7 @@ export function useGeneralTimeline({
 
       highlightSlide(isHighlighted ? visualIndex : null);
     },
-    [audioRef, duration, highlightSlide, setCurrentSlide],
+    [audioRef, duration, highlightSlide, lyrics, setCurrentSlide],
   );
 
   useLayoutEffect(() => {

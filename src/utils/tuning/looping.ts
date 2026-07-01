@@ -1,4 +1,4 @@
-import { RAM_BOX_LYRICS } from "../../lyrics/ram-box-lyrics";
+import { RAM_BOX_LYRICS } from "../../pages/ram-box/model/lyrics";
 import { getTimelineSectionTime } from "../generalTimeline";
 
 export type TuningLoopMode = 0 | 1 | 3 | 5;
@@ -22,8 +22,8 @@ export function getTuningLoopBounds(selectedIndex: number, loopMode: TuningLoopM
 
   return {
     endIndex,
-    endTime: getTimelineSectionTime(endIndex, 1, duration),
+    endTime: getTimelineSectionTime(RAM_BOX_LYRICS, endIndex, 1, duration),
     startIndex,
-    startTime: getTimelineSectionTime(startIndex, 0, duration),
+    startTime: getTimelineSectionTime(RAM_BOX_LYRICS, startIndex, 0, duration),
   };
 }

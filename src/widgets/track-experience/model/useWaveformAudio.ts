@@ -1,6 +1,6 @@
 import { useEffect, useRef, type RefObject } from "react";
-import { getCssVariable } from "../utils/cssVariables";
-import { drawWaveform } from "../utils/waveform";
+import { getCssVariable } from "../../../utils/cssVariables";
+import { drawWaveform } from "../../../utils/waveform";
 
 type AudioGraph = {
   analyser: AnalyserNode;

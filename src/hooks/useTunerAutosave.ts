@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
-import type { IllustrationVisibility, TextIllustrationKind } from "../lyrics/types";
+import type { IllustrationVisibility } from "../entities/track/model/types";
+import { RAM_BOX_LYRICS } from "../pages/ram-box/model/lyrics";
+import type { TextIllustrationKind } from "../shared/ui/illustration-animations/types";
 import { usePendingTunerAutosave } from "./usePendingTunerAutosave";
 import {
   areDirtyAnimationsEqual,
@@ -603,7 +604,7 @@ export function useTunerAutosave(selectedIndex: number, duration: number) {
     selectedExitDurationMs: currentSnapshot.exitDuration,
     selectedFadeInMs: currentSnapshot.fadeInMs,
     selectedFadeOutMs: currentSnapshot.fadeOutMs,
-    selectedIllustrationKind: getEffectiveTimelineIllustrationKind(selectedSection),
+    selectedIllustrationKind: getEffectiveTimelineIllustrationKind(RAM_BOX_LYRICS, selectedSection),
     selectedIllustrationVisibility: getEffectiveIllustrationVisibility(selectedSection),
     selectedIsOverlay: currentSnapshot.isOverlay,
     selectedIsLocked: selectedIndex > 0 && getEffectiveSectionContinuing(RAM_BOX_LYRICS[selectedIndex - 1]),

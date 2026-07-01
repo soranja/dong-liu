@@ -1,4 +1,4 @@
-import type { IllustrationAnimation } from "../../lyrics/types";
+import type { IllustrationAnimation } from "../../entities/track/model/types";
 
 type IllustrationAnimationResult = {
   isObserved: boolean;

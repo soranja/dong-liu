@@ -1,10 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import {
-  cancelWordCloudLayout,
-  getPackedWords,
-  scheduleWordCloudLayout,
-  type PackedWord,
-} from "../utils/wordCloudLayout";
+import { cancelWordCloudLayout, getPackedWords, scheduleWordCloudLayout, type PackedWord } from "./wordCloudLayout";
 
 type PackedWordsLayoutOptions = {
   onReady: (sectionId: number) => void;

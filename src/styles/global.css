@@ -111,7 +111,7 @@ html {
   opacity: calc(var(--illustration-progress, 0) * var(--illustration-fade-opacity, 1));
 }
 
-[data-timeline-content][data-animation-shell="true"] {
+[data-timeline-content]:has([data-timeline-synced-video]) {
   opacity: var(--illustration-fade-opacity, 1);
 }
 

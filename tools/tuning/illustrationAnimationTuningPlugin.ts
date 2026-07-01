@@ -51,7 +51,7 @@ type TextEdit = {
 };
 
 const TUNING_ENDPOINT = "/__dong-liu/illustration-animation-settings";
-const LYRICS_FILE = resolve("src/lyrics/ram-box-lyrics.ts");
+const LYRICS_FILE = resolve("src/pages/ram-box/model/lyrics.ts");
 const NORMALIZED_LYRICS_FILE = normalizePath(LYRICS_FILE);
 const FADE_TIMING_MAX_MS = 1000;
 const DEFAULT_SECTION_WIDTH_PERCENT = 90;

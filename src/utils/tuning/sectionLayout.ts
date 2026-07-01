@@ -1,5 +1,4 @@
-import { isAnimationShell } from "../../components/illustrations/AnimationShell";
-import type { LyricsSection } from "../../lyrics/types";
+import type { LyricsSection } from "../../entities/track/model/types";
 
 export const DEFAULT_SECTION_WIDTH_PERCENT = 90;
 export const SECTION_WIDTH_STEP_PERCENT = 5;
@@ -36,5 +35,5 @@ export function getSavedExitDurationMs(section: LyricsSection) {
 }
 
 export function getSavedNoSlideBy(section: LyricsSection) {
-  return section.noSlideBy ?? isAnimationShell(section.illustrateWith);
+  return section.noSlideBy ?? false;
 }

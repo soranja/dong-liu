@@ -1,5 +1,5 @@
-import { RAM_BOX_LYRICS } from "../../lyrics/ram-box-lyrics";
-import type { IllustrationAnimation } from "../../lyrics/types";
+import type { IllustrationAnimation } from "../../entities/track/model/types";
+import { RAM_BOX_LYRICS } from "../../pages/ram-box/model/lyrics";
 import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "./illustrationAnimation";
 
 export type DirtyAnimation = IllustrationAnimation | null;

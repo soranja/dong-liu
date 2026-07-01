@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { HOME_TRACKS } from "./model/tracks";
+import { TRACKS } from "../../entities/track/model/catalog";
 
 export const meta = () => [{ title: "Dong Liu — Interactive tracks" }];
 
@@ -15,12 +15,12 @@ const HomeRoute = () => (
       </header>
 
       <ol aria-label="Track list" className="border-t border-(--color-border-strong)">
-        {HOME_TRACKS.map((track, index) => (
-          <li key={track.path} className="border-b border-(--color-border-strong)">
+        {TRACKS.map((track, index) => (
+          <li key={track.id} className="border-b border-(--color-border-strong)">
             <Link
               className="group flex min-h-28 items-center gap-6 px-1 py-6 transition-colors hover:text-(--color-accent) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--color-accent)"
               prefetch="intent"
-              to={track.path}
+              to={track.route}
             >
               <span className="font-mono text-xs text-(--color-text-muted)">{String(index + 1).padStart(2, "0")}</span>
               <span className="[font-family:var(--font-unbounded)] text-2xl font-bold uppercase sm:text-4xl">

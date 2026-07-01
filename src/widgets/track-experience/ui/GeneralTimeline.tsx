@@ -1,14 +1,13 @@
 import { memo, useEffect, useState, type CSSProperties, type RefObject } from "react";
-import { useGeneralTimeline } from "../hooks/useGeneralTimeline";
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
-import { isContinuedSection } from "../utils/continuing";
+import type { CustomIllustrationRenderer, LyricsSection } from "../../../entities/track/model/types";
+import { isContinuedSection } from "../../../utils/continuing";
 import {
   getEffectiveSectionOverlay,
   getEffectiveSectionWidthPercent,
   subscribeIllustrationAnimationTuning,
-} from "../utils/tuning/illustrationAnimationTuningStore";
+} from "../../../utils/tuning/illustrationAnimationTuningStore";
+import { useGeneralTimeline } from "../model/useGeneralTimeline";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
-import { isAnimationShell } from "./illustrations/AnimationShell";
 
 type GeneralTimelineProps = {
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -26,6 +25,8 @@ type GeneralTimelineProps = {
   onStart: () => void;
   onTimelinePrepared: () => void;
   onWordCloudReady: (sectionId: number) => void;
+  renderCustomIllustration: CustomIllustrationRenderer<unknown>;
+  lyrics: readonly LyricsSection[];
 };
 
 function getHorizontalTravelVw(sectionWidthPercents: number[]) {
@@ -43,11 +44,13 @@ export const GeneralTimeline = memo(
     footerHeight,
     hasStarted,
     headerHeight,
+    lyrics,
     onPrewarmProgress,
     onReplay,
     onStart,
     onTimelinePrepared,
     onWordCloudReady,
+    renderCustomIllustration,
     replayPromptVisible,
     replaySequence,
     sectionHeight,
@@ -60,16 +63,17 @@ export const GeneralTimeline = memo(
       audioRef,
       duration,
       isVisible,
+      lyrics,
       onPrewarmProgress,
       onTimelinePrepared,
       shouldPrewarm,
     });
-    const sectionRows = RAM_BOX_LYRICS.map((section, index) => ({
+    const sectionRows = lyrics.map((section, index) => ({
       index,
-      isContinued: isContinuedSection(index),
+      isContinued: isContinuedSection(lyrics, index),
       isOverlay: getEffectiveSectionOverlay(section),
       section,
-      sectionWidthPercent: isAnimationShell(section.illustrateWith) ? 100 : getEffectiveSectionWidthPercent(section),
+      sectionWidthPercent: getEffectiveSectionWidthPercent(section),
     }));
     const flowSectionWidthPercents = sectionRows
       .filter(({ isContinued, isOverlay }) => !isContinued && !isOverlay)
@@ -114,7 +118,9 @@ export const GeneralTimeline = memo(
                 <GeneralTimelineSection
                   key={section.sectionId}
                   index={index}
+                  lyrics={lyrics}
                   onWordCloudReady={onWordCloudReady}
+                  renderCustomIllustration={renderCustomIllustration}
                   section={section}
                   sectionWidthPercent={sectionWidthPercent}
                   slideRefs={slideRefs}
@@ -128,7 +134,9 @@ export const GeneralTimeline = memo(
               key={section.sectionId}
               index={index}
               isOverlay
+              lyrics={lyrics}
               onWordCloudReady={onWordCloudReady}
+              renderCustomIllustration={renderCustomIllustration}
               section={section}
               slideRefs={slideRefs}
             />
@@ -196,6 +204,8 @@ export const GeneralTimeline = memo(
     previous.footerHeight === next.footerHeight &&
     previous.hasStarted === next.hasStarted &&
     previous.headerHeight === next.headerHeight &&
+    previous.lyrics === next.lyrics &&
+    previous.renderCustomIllustration === next.renderCustomIllustration &&
     previous.replayPromptVisible === next.replayPromptVisible &&
     previous.replaySequence === next.replaySequence &&
     previous.sectionHeight === next.sectionHeight &&

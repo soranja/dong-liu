@@ -1,29 +1,42 @@
 import { memo, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
-import type { LyricsIllustration, LyricsMedia, LyricsSection } from "../lyrics/types";
-import { DEFAULT_SECTION_WIDTH_PERCENT } from "../utils/tuning/sectionLayout";
+import type {
+  CustomIllustrationRenderer,
+  LyricsIllustration,
+  LyricsSection,
+} from "../../../entities/track/model/types";
+import { TextIllustration } from "../../../shared/ui/illustration-animations/TextIllustration";
+import { DEFAULT_SECTION_WIDTH_PERCENT } from "../../../utils/tuning/sectionLayout";
 import {
   getEffectiveTimelineIllustrationKind,
   subscribeIllustrationKindTuning,
-} from "../utils/tuning/illustrationKind";
-import { isAnimationShell } from "./illustrations/AnimationShell";
-import { KineticWarpTextAnimation } from "./illustrations/KineticWarpTextAnimation";
-import { LyricsWordCloud } from "./illustrations/LyricsWordCloud";
+} from "../../../utils/tuning/illustrationKind";
 
 type GeneralTimelineSectionProps = {
   index: number;
   isOverlay?: boolean;
+  lyrics: readonly LyricsSection[];
   onWordCloudReady: (sectionId: number) => void;
+  renderCustomIllustration: CustomIllustrationRenderer<unknown>;
   section: LyricsSection;
   sectionWidthPercent?: number;
   slideRefs: RefObject<Array<HTMLElement | null>>;
 };
 
-function isLyricsMedia(illustration: LyricsIllustration): illustration is LyricsMedia {
+type StructuredLyricsIllustration = Exclude<LyricsIllustration, string>;
+
+function isStructuredIllustration(illustration: LyricsIllustration): illustration is StructuredLyricsIllustration {
   return typeof illustration === "object" && illustration !== null && "mediaType" in illustration;
 }
 
-function renderIllustration(illustration: LyricsIllustration): ReactNode {
-  if (!isLyricsMedia(illustration)) return illustration;
+function renderIllustration(
+  illustration: LyricsIllustration,
+  renderCustomIllustration: CustomIllustrationRenderer<unknown>,
+): ReactNode {
+  if (!isStructuredIllustration(illustration)) return null;
+
+  if (illustration.mediaType === "custom") {
+    return renderCustomIllustration(illustration.descriptor);
+  }
 
   if (illustration.mediaType === "image") {
     return <img alt={illustration.alt} className="max-h-full max-w-full object-contain" src={illustration.src} />;
@@ -46,16 +59,19 @@ export const GeneralTimelineSection = memo(
   ({
     index,
     isOverlay = false,
+    lyrics,
     onWordCloudReady,
+    renderCustomIllustration,
     section,
     sectionWidthPercent = DEFAULT_SECTION_WIDTH_PERCENT,
     slideRefs,
   }: GeneralTimelineSectionProps) => {
     const text = typeof section.illustrateWith === "string" ? section.illustrateWith : null;
     const isText = text !== null;
-    const hasAnimationShell = isAnimationShell(section.illustrateWith);
-    const isFullBleed = hasAnimationShell || Boolean(section.fullBleedIllustration);
-    const [illustrationKind, setIllustrationKind] = useState(() => getEffectiveTimelineIllustrationKind(section));
+    const isFullBleed = Boolean(section.fullBleedIllustration);
+    const [illustrationKind, setIllustrationKind] = useState(() =>
+      getEffectiveTimelineIllustrationKind(lyrics, section),
+    );
     const contentClassName = isFullBleed
       ? "h-full w-full overflow-hidden"
       : isText
@@ -65,9 +81,9 @@ export const GeneralTimelineSection = memo(
     useEffect(
       () =>
         subscribeIllustrationKindTuning(() => {
-          setIllustrationKind(getEffectiveTimelineIllustrationKind(section));
+          setIllustrationKind(getEffectiveTimelineIllustrationKind(lyrics, section));
         }),
-      [section],
+      [lyrics, section],
     );
 
     return (
@@ -98,17 +114,19 @@ export const GeneralTimelineSection = memo(
       >
         <div
           className={contentClassName}
-          data-animation-shell={hasAnimationShell ? "true" : undefined}
           data-illustration-kind={illustrationKind}
           data-size-level={section.sizeLevel}
           data-timeline-content
         >
-          {illustrationKind === "kinetic-warp" && isText ? (
-            <KineticWarpTextAnimation onReady={onWordCloudReady} sectionId={section.sectionId} text={text} />
-          ) : isText ? (
-            <LyricsWordCloud onReady={onWordCloudReady} sectionId={section.sectionId} text={text} />
+          {illustrationKind !== "generic" && isText ? (
+            <TextIllustration
+              kind={illustrationKind}
+              onReady={onWordCloudReady}
+              sectionId={section.sectionId}
+              text={text}
+            />
           ) : (
-            renderIllustration(section.illustrateWith)
+            renderIllustration(section.illustrateWith, renderCustomIllustration)
           )}
         </div>
       </section>

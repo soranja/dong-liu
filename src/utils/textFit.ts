@@ -1,5 +1,3 @@
-export type TextSizeLevel = 1 | 2 | 3 | 4 | 5;
-
 type SingleLineTextFitOptions = {
   availableWidth: number;
   fontFamily: string;

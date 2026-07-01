@@ -1,11 +1,19 @@
 import { Link } from "react-router";
 
-import { DongLiuShell } from "../../DongLiuShell";
+import { TrackExperience } from "../../widgets/track-experience/ui/TrackExperience";
+import { RAM_BOX_TRACK } from "./model/track";
+import type { RamBoxIllustrationDescriptor } from "./model/types";
+import { RamBoxIllustration } from "./ui/RamBoxIllustration";
 
 export const meta = () => [{ title: "Ram Box — Dong Liu" }];
 
+const renderRamBoxIllustration = (descriptor: RamBoxIllustrationDescriptor) => (
+  <RamBoxIllustration descriptor={descriptor} />
+);
+
 const RamBoxRoute = () => (
-  <DongLiuShell
+  <TrackExperience
+    audioSrc={RAM_BOX_TRACK.audioSrc}
     headerTrailingContent={
       <Link
         aria-label="Back to track list"
@@ -15,6 +23,9 @@ const RamBoxRoute = () => (
         Tracks
       </Link>
     }
+    lyrics={RAM_BOX_TRACK.lyrics}
+    renderCustomIllustration={renderRamBoxIllustration}
+    trackId={RAM_BOX_TRACK.id}
   />
 );
 

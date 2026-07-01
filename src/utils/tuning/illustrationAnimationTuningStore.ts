@@ -1,4 +1,4 @@
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "../../lyrics/types";
+import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "../../entities/track/model/types";
 import {
   clampSectionWidthPercent,
   clampSlideMotionDurationMs,

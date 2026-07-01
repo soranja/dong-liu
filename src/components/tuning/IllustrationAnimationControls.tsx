@@ -1,4 +1,4 @@
-import type { IllustrationAnimation, IllustrationVisibility } from "../../lyrics/types";
+import type { IllustrationAnimation, IllustrationVisibility } from "../../entities/track/model/types";
 import { getRangeAnimation } from "../../utils/tuning/illustrationAnimation";
 import { SectionLayoutControls } from "./SectionLayoutControls";
 

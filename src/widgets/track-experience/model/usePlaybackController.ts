@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { installPlaybackScrollSeek } from "../utils/playbackScrollSeek";
+import { installPlaybackScrollSeek } from "../../../utils/playbackScrollSeek";
 import { useAudioGsapTimeline } from "./useAudioGsapTimeline";
 import { usePlaybackKeyboard } from "./usePlaybackKeyboard";
 import { useReplayCountdown } from "./useReplayCountdown";

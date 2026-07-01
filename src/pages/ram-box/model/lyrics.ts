@@ -1,8 +1,7 @@
-import { createElement } from "react";
-import { AnimationShell } from "../components/illustrations/AnimationShell";
-import type { LyricsSection } from "./types";
+import type { LyricsSection } from "../../../entities/track/model/types";
+import type { RamBoxIllustrationDescriptor } from "./types";
 
-export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
+export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor>[] = [
   {
     sectionId: 1,
     sectionWidthPercent: 100,
@@ -10,12 +9,16 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
     fullBleedIllustration: true,
     illustrationVisibility: "start-active",
     illustrationAnimation: { variant: "instant" },
+    noSlideBy: true,
     timestamp: "00:00.00",
     line: "*instrumental*",
     offsetEnter: -500,
     enterDuration: 500,
     exitDuration: 175,
-    illustrateWith: createElement(AnimationShell, { src: "/animations/001-intro.mp4" }),
+    illustrateWith: {
+      descriptor: { kind: "synced-video", src: "/animations/001-intro.mp4" },
+      mediaType: "custom",
+    },
   },
   {
     sectionId: 2,
@@ -30,7 +33,10 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
     offsetEnter: 500,
     enterDuration: 0,
     exitDuration: 0,
-    illustrateWith: createElement(AnimationShell, { src: "/animations/002-003-are-you-ready-ready-to-rumble.mp4" }),
+    illustrateWith: {
+      descriptor: { kind: "synced-video", src: "/animations/002-003-are-you-ready-ready-to-rumble.mp4" },
+      mediaType: "custom",
+    },
   },
   {
     sectionId: 3,
@@ -59,13 +65,18 @@ export const RAM_BOX_LYRICS: readonly LyricsSection[] = [
   {
     sectionId: 5,
     noSlideBy: true,
+    sectionWidthPercent: 100,
+    fullBleedIllustration: true,
     illustrationVisibility: "adjacent",
     timestamp: "00:28.450",
     line: "БОКС",
     offsetEnter: -100,
     enterDuration: 100,
     exitDuration: 100,
-    illustrateWith: createElement(AnimationShell, { src: "/animations/000-box.mp4" }),
+    illustrateWith: {
+      descriptor: { kind: "synced-video", src: "/animations/000-box.mp4" },
+      mediaType: "custom",
+    },
   },
   {
     sectionId: 6,

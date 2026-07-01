@@ -1,5 +1,6 @@
-import { RAM_BOX_LYRICS } from "../../lyrics/ram-box-lyrics";
-import type { IllustrationVisibility, TextIllustrationKind } from "../../lyrics/types";
+import type { IllustrationVisibility } from "../../entities/track/model/types";
+import { RAM_BOX_LYRICS } from "../../pages/ram-box/model/lyrics";
+import type { TextIllustrationKind } from "../../shared/ui/illustration-animations/types";
 import { formatLyricsTimestamp, parseLyricsTimestamp } from "../lyrics";
 import {
   areDirtyAnimationsEqual,
@@ -103,7 +104,7 @@ export function getSavedStartTime(sectionId: number) {
 export function getSavedIllustrationKind(sectionId: number) {
   const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
 
-  return section ? getSavedTimelineIllustrationKind(section) : "generic";
+  return section ? getSavedTimelineIllustrationKind(RAM_BOX_LYRICS, section) : "generic";
 }
 
 export function getSavedContinuing(sectionId: number) {
@@ -175,7 +176,7 @@ export function getCurrentIllustrationKind(draftIllustrationKinds: DraftIllustra
   const section = RAM_BOX_LYRICS.find((candidate) => candidate.sectionId === sectionId);
   if (!section || typeof section.illustrateWith !== "string") return "generic";
 
-  return draftIllustrationKinds[sectionId] ?? getSavedTimelineIllustrationKind(section);
+  return draftIllustrationKinds[sectionId] ?? getSavedTimelineIllustrationKind(RAM_BOX_LYRICS, section);
 }
 
 export function getCurrentOverlay(draftOverlays: DraftOverlays, sectionId: number) {

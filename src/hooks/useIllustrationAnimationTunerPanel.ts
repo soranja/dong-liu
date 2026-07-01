@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import { RAM_BOX_LYRICS } from "../pages/ram-box/model/lyrics";
 import { getTimelineSectionTime } from "../utils/generalTimeline";
 import { getRangeValues } from "../utils/tuning/animationSelection";
 import { DEFAULT_ANIMATION_LENGTH_PERCENT, getRangeAnimation } from "../utils/tuning/illustrationAnimation";
@@ -145,7 +145,7 @@ export function useIllustrationAnimationTunerPanel({
     setSelectedIndex(nextIndex);
     if (!duration || !Number.isFinite(duration)) return;
 
-    const nextTime = getTimelineSectionTime(nextIndex, 0, duration);
+    const nextTime = getTimelineSectionTime(RAM_BOX_LYRICS, nextIndex, 0, duration);
     onSeek((nextTime / duration) * 100);
   };
 
@@ -153,7 +153,7 @@ export function useIllustrationAnimationTunerPanel({
     setPlayheadPreviewPercent(percent);
     if (!duration || !Number.isFinite(duration)) return;
 
-    const nextTime = getTimelineSectionTime(selectedIndex, percent / 100, duration);
+    const nextTime = getTimelineSectionTime(RAM_BOX_LYRICS, selectedIndex, percent / 100, duration);
     onSeek((nextTime / duration) * 100);
   };
 

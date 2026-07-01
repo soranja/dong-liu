@@ -1,4 +1,4 @@
-import { RAM_BOX_LYRICS } from "../lyrics/ram-box-lyrics";
+import type { LyricsSection } from "../entities/track/model/types";
 import { getNextVisualSectionIndex, getVisualSectionIndex, isContinuedSection } from "./continuing";
 import {
   getEffectiveSectionEnterDurationMs,
@@ -15,112 +15,128 @@ const SLOW_END_POSITION = 0.1;
 const SLOW_START_POSITION = -0.1;
 const SECTION_BOUNDARY_EPSILON_SECONDS = 0.001;
 
-function getVisualSectionStart(index: number) {
-  return getLyricsSectionStart(index);
+function getVisualSectionStart(lyrics: readonly LyricsSection[], index: number) {
+  return getLyricsSectionStart(lyrics, index);
 }
 
-function isTimelineOverlay(index: number) {
-  const section = RAM_BOX_LYRICS[getVisualSectionIndex(index)];
+function isTimelineOverlay(lyrics: readonly LyricsSection[], index: number) {
+  const section = lyrics[getVisualSectionIndex(lyrics, index)];
 
   return section ? getEffectiveSectionOverlay(section) : false;
 }
 
-function getPlayableSectionBounds(index: number, duration: number) {
-  const visualStart = getVisualSectionStart(index);
-  const visualEnd = index < RAM_BOX_LYRICS.length - 1 ? getVisualSectionStart(index + 1) : duration;
+function getPlayableSectionBounds(lyrics: readonly LyricsSection[], index: number, duration: number) {
+  const visualStart = getVisualSectionStart(lyrics, index);
+  const visualEnd = index < lyrics.length - 1 ? getVisualSectionStart(lyrics, index + 1) : duration;
   const start = Math.min(duration, Math.max(0, visualStart));
   const end = Math.min(duration, Math.max(start, visualEnd));
 
   return { end, start };
 }
 
-function getPlayableVisualSectionBounds(index: number, duration: number) {
-  const visualIndex = getVisualSectionIndex(index);
-  const nextVisualIndex = getNextVisualSectionIndex(visualIndex);
-  const visualStart = getVisualSectionStart(visualIndex);
-  const visualEnd = nextVisualIndex < RAM_BOX_LYRICS.length ? getVisualSectionStart(nextVisualIndex) : duration;
+function getPlayableVisualSectionBounds(lyrics: readonly LyricsSection[], index: number, duration: number) {
+  const visualIndex = getVisualSectionIndex(lyrics, index);
+  const nextVisualIndex = getNextVisualSectionIndex(lyrics, visualIndex);
+  const visualStart = getVisualSectionStart(lyrics, visualIndex);
+  const visualEnd = nextVisualIndex < lyrics.length ? getVisualSectionStart(lyrics, nextVisualIndex) : duration;
   const start = Math.min(duration, Math.max(0, visualStart));
   const end = Math.min(duration, Math.max(start, visualEnd));
 
   return { end, start, visualIndex };
 }
 
-export function getTimelineSectionDuration(index: number, duration: number) {
+export function getTimelineSectionDuration(lyrics: readonly LyricsSection[], index: number, duration: number) {
   if (!duration || !Number.isFinite(duration)) return 0;
 
-  const { end, start } = getPlayableSectionBounds(index, duration);
+  const { end, start } = getPlayableSectionBounds(lyrics, index, duration);
 
   return Math.max(0, end - start);
 }
 
-export function getTimelineSectionProgress(index: number, currentTime: number, duration: number) {
+export function getTimelineSectionProgress(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  currentTime: number,
+  duration: number,
+) {
   if (!duration || !Number.isFinite(duration)) return 0;
 
-  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(index, duration);
+  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(lyrics, index, duration);
   const sectionDuration = Math.max(0, sectionEnd - sectionStart);
   if (!sectionDuration) return currentTime >= sectionStart ? 1 : 0;
 
   return Math.min(1, Math.max(0, (currentTime - sectionStart) / sectionDuration));
 }
 
-export function getTimelineVisualSectionDuration(index: number, duration: number) {
+export function getTimelineVisualSectionDuration(lyrics: readonly LyricsSection[], index: number, duration: number) {
   if (!duration || !Number.isFinite(duration)) return 0;
 
-  const { end, start } = getPlayableVisualSectionBounds(index, duration);
+  const { end, start } = getPlayableVisualSectionBounds(lyrics, index, duration);
 
   return Math.max(0, end - start);
 }
 
-export function getTimelineVisualSectionProgress(index: number, currentTime: number, duration: number) {
+export function getTimelineVisualSectionProgress(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  currentTime: number,
+  duration: number,
+) {
   if (!duration || !Number.isFinite(duration)) return 0;
 
-  const { end, start } = getPlayableVisualSectionBounds(index, duration);
+  const { end, start } = getPlayableVisualSectionBounds(lyrics, index, duration);
   const sectionDuration = Math.max(0, end - start);
   if (!sectionDuration) return currentTime >= start ? 1 : 0;
 
   return Math.min(1, Math.max(0, (currentTime - start) / sectionDuration));
 }
 
-export function getTimelineSectionTime(index: number, progress: number, duration: number) {
+export function getTimelineSectionTime(
+  lyrics: readonly LyricsSection[],
+  index: number,
+  progress: number,
+  duration: number,
+) {
   if (!duration || !Number.isFinite(duration)) return 0;
 
-  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(index, duration);
+  const { end: sectionEnd, start: sectionStart } = getPlayableSectionBounds(lyrics, index, duration);
   const sectionDuration = Math.max(0, sectionEnd - sectionStart);
   const sectionTime = sectionStart + sectionDuration * Math.min(1, Math.max(0, progress));
   const boundedSectionTime =
-    index < RAM_BOX_LYRICS.length - 1 && progress >= 1
+    index < lyrics.length - 1 && progress >= 1
       ? Math.max(sectionStart, sectionEnd - SECTION_BOUNDARY_EPSILON_SECONDS)
       : sectionTime;
 
   return Math.min(duration, Math.max(0, boundedSectionTime));
 }
 
-function getFlowSectionIndex(index: number) {
-  return RAM_BOX_LYRICS.slice(0, getVisualSectionIndex(index)).filter(
-    (_, sectionIndex) => !isContinuedSection(sectionIndex) && !isTimelineOverlay(sectionIndex),
-  ).length;
+function getFlowSectionIndex(lyrics: readonly LyricsSection[], index: number) {
+  return lyrics
+    .slice(0, getVisualSectionIndex(lyrics, index))
+    .filter((_, sectionIndex) => !isContinuedSection(lyrics, sectionIndex) && !isTimelineOverlay(lyrics, sectionIndex))
+    .length;
 }
 
-function getActiveVisualSectionIndex(currentTime: number) {
-  for (let index = RAM_BOX_LYRICS.length - 1; index >= 0; index -= 1) {
-    if (currentTime >= getVisualSectionStart(index)) return index;
+function getActiveVisualSectionIndex(lyrics: readonly LyricsSection[], currentTime: number) {
+  for (let index = lyrics.length - 1; index >= 0; index -= 1) {
+    if (currentTime >= getVisualSectionStart(lyrics, index)) return index;
   }
 
   return 0;
 }
 
-function getSectionTiming(index: number, duration: number) {
-  const visualIndex = getVisualSectionIndex(index);
-  const section = RAM_BOX_LYRICS[visualIndex];
-  const nextVisualIndex = getNextVisualSectionIndex(visualIndex);
-  const hasNextSection = nextVisualIndex < RAM_BOX_LYRICS.length;
-  const previousVisualIndex = visualIndex > 0 ? getVisualSectionIndex(visualIndex - 1) : -1;
-  const previousSectionIsOverlay = previousVisualIndex >= 0 && isTimelineOverlay(previousVisualIndex);
-  const nextSectionIsOverlay = hasNextSection && isTimelineOverlay(nextVisualIndex);
-  const sectionStart = getVisualSectionStart(visualIndex);
+function getSectionTiming(lyrics: readonly LyricsSection[], index: number, duration: number) {
+  const visualIndex = getVisualSectionIndex(lyrics, index);
+  const section = lyrics[visualIndex];
+  const nextVisualIndex = getNextVisualSectionIndex(lyrics, visualIndex);
+  const hasNextSection = nextVisualIndex < lyrics.length;
+  const previousVisualIndex = visualIndex > 0 ? getVisualSectionIndex(lyrics, visualIndex - 1) : -1;
+  const previousSectionIsOverlay = previousVisualIndex >= 0 && isTimelineOverlay(lyrics, previousVisualIndex);
+  const nextSectionIsOverlay = hasNextSection && isTimelineOverlay(lyrics, nextVisualIndex);
+  const sectionStart = getVisualSectionStart(lyrics, visualIndex);
   const sectionDuration = Math.max(
     0,
-    (hasNextSection ? getVisualSectionStart(nextVisualIndex) : duration) - sectionStart,
+    (hasNextSection ? getVisualSectionStart(lyrics, nextVisualIndex) : duration) - sectionStart,
   );
   const desiredEntryDuration = previousSectionIsOverlay ? 0 : getEffectiveSectionEnterDurationMs(section) / 1000;
   const desiredExitDuration =
@@ -138,7 +154,7 @@ function getSectionTiming(index: number, duration: number) {
     entryEndPosition: previousSectionIsOverlay || noSlideBy ? 0 : hasSlowPhase ? SLOW_START_POSITION : 0,
     exitDuration,
     exitStartPosition: nextSectionIsOverlay || noSlideBy ? 0 : hasSlowPhase ? SLOW_END_POSITION : 0,
-    flowIndex: getFlowSectionIndex(visualIndex),
+    flowIndex: getFlowSectionIndex(lyrics, visualIndex),
     nextVisualIndex,
     sectionDuration,
     sectionStart,
@@ -150,15 +166,15 @@ function getSegmentSpeed(distance: number, duration: number) {
   return duration > 0 ? distance / duration : 0;
 }
 
-function getBoundarySpeed(index: number, duration: number) {
-  const visualIndex = getVisualSectionIndex(index);
-  if (isTimelineOverlay(visualIndex)) return 0;
+function getBoundarySpeed(lyrics: readonly LyricsSection[], index: number, duration: number) {
+  const visualIndex = getVisualSectionIndex(lyrics, index);
+  if (isTimelineOverlay(lyrics, visualIndex)) return 0;
 
-  const current = getSectionTiming(visualIndex, duration);
+  const current = getSectionTiming(lyrics, visualIndex, duration);
   const entrySpeed = getSegmentSpeed(current.entryEndPosition + 0.5, current.entryDuration);
   if (visualIndex === 0) return entrySpeed;
 
-  const previous = getSectionTiming(getVisualSectionIndex(visualIndex - 1), duration);
+  const previous = getSectionTiming(lyrics, getVisualSectionIndex(lyrics, visualIndex - 1), duration);
   const exitSpeed = getSegmentSpeed(0.5 - previous.exitStartPosition, previous.exitDuration);
 
   return Math.min(exitSpeed || entrySpeed, entrySpeed || exitSpeed);
@@ -193,48 +209,53 @@ function interpolateCenterSlowdown(start: number, end: number, progress: number)
   return start + (end - start) * curvedProgress;
 }
 
-function getOverlayTrackPosition(activeIndex: number, currentTime: number, duration: number) {
-  let overlayStartIndex = getVisualSectionIndex(activeIndex);
-  let nextFlowIndex = getNextVisualSectionIndex(overlayStartIndex);
+function getOverlayTrackPosition(
+  lyrics: readonly LyricsSection[],
+  activeIndex: number,
+  currentTime: number,
+  duration: number,
+) {
+  let overlayStartIndex = getVisualSectionIndex(lyrics, activeIndex);
+  let nextFlowIndex = getNextVisualSectionIndex(lyrics, overlayStartIndex);
 
   while (overlayStartIndex > 0) {
-    const previousVisualIndex = getVisualSectionIndex(overlayStartIndex - 1);
-    if (!isTimelineOverlay(previousVisualIndex)) break;
+    const previousVisualIndex = getVisualSectionIndex(lyrics, overlayStartIndex - 1);
+    if (!isTimelineOverlay(lyrics, previousVisualIndex)) break;
     overlayStartIndex = previousVisualIndex;
   }
-  while (nextFlowIndex < RAM_BOX_LYRICS.length && isTimelineOverlay(nextFlowIndex)) {
-    nextFlowIndex = getNextVisualSectionIndex(nextFlowIndex);
+  while (nextFlowIndex < lyrics.length && isTimelineOverlay(lyrics, nextFlowIndex)) {
+    nextFlowIndex = getNextVisualSectionIndex(lyrics, nextFlowIndex);
   }
 
-  const previousFlowIndex = overlayStartIndex > 0 ? getVisualSectionIndex(overlayStartIndex - 1) : -1;
+  const previousFlowIndex = overlayStartIndex > 0 ? getVisualSectionIndex(lyrics, overlayStartIndex - 1) : -1;
   const startPosition =
     previousFlowIndex >= 0
-      ? getFlowSectionIndex(previousFlowIndex)
-      : nextFlowIndex < RAM_BOX_LYRICS.length
-        ? getFlowSectionIndex(nextFlowIndex)
+      ? getFlowSectionIndex(lyrics, previousFlowIndex)
+      : nextFlowIndex < lyrics.length
+        ? getFlowSectionIndex(lyrics, nextFlowIndex)
         : 0;
-  const endPosition = nextFlowIndex < RAM_BOX_LYRICS.length ? getFlowSectionIndex(nextFlowIndex) : startPosition;
-  const overlayStart = getVisualSectionStart(overlayStartIndex);
-  const overlayEnd = nextFlowIndex < RAM_BOX_LYRICS.length ? getVisualSectionStart(nextFlowIndex) : duration;
+  const endPosition = nextFlowIndex < lyrics.length ? getFlowSectionIndex(lyrics, nextFlowIndex) : startPosition;
+  const overlayStart = getVisualSectionStart(lyrics, overlayStartIndex);
+  const overlayEnd = nextFlowIndex < lyrics.length ? getVisualSectionStart(lyrics, nextFlowIndex) : duration;
   const overlayDuration = Math.max(0, overlayEnd - overlayStart);
   const progress = overlayDuration ? Math.min(1, Math.max(0, (currentTime - overlayStart) / overlayDuration)) : 1;
 
   return interpolateCenterSlowdown(startPosition, endPosition, progress);
 }
 
-export function getTimelineTrackState(currentTime: number, duration: number) {
-  const activeIndex = getActiveVisualSectionIndex(currentTime);
-  const visualIndex = getVisualSectionIndex(activeIndex);
-  if (isTimelineOverlay(visualIndex)) {
+export function getTimelineTrackState(lyrics: readonly LyricsSection[], currentTime: number, duration: number) {
+  const activeIndex = getActiveVisualSectionIndex(lyrics, currentTime);
+  const visualIndex = getVisualSectionIndex(lyrics, activeIndex);
+  if (isTimelineOverlay(lyrics, visualIndex)) {
     return {
       activeIndex,
       isHighlighted: true,
-      position: getOverlayTrackPosition(visualIndex, currentTime, duration),
+      position: getOverlayTrackPosition(lyrics, visualIndex, currentTime, duration),
       visualIndex,
     };
   }
 
-  const timing = getSectionTiming(visualIndex, duration);
+  const timing = getSectionTiming(lyrics, visualIndex, duration);
   const flowIndex = timing.flowIndex;
 
   if (timing.sectionDuration === 0) {
@@ -253,7 +274,7 @@ export function getTimelineTrackState(currentTime: number, duration: number) {
     const position = interpolateHermite(
       flowIndex - 0.5,
       flowIndex + timing.entryEndPosition,
-      getBoundarySpeed(visualIndex, duration),
+      getBoundarySpeed(lyrics, visualIndex, duration),
       entryEndSpeed,
       timing.entryDuration,
       sectionTime,
@@ -262,7 +283,7 @@ export function getTimelineTrackState(currentTime: number, duration: number) {
     return { activeIndex, isHighlighted: position >= flowIndex + HIGHLIGHT_START_POSITION, position, visualIndex };
   }
 
-  if (sectionTime < timing.entryDuration + timing.slowDuration || timing.nextVisualIndex >= RAM_BOX_LYRICS.length) {
+  if (sectionTime < timing.entryDuration + timing.slowDuration || timing.nextVisualIndex >= lyrics.length) {
     const progress = timing.slowDuration ? (sectionTime - timing.entryDuration) / timing.slowDuration : 1;
     const position = interpolateCenterSlowdown(
       flowIndex + timing.entryEndPosition,
@@ -282,7 +303,7 @@ export function getTimelineTrackState(currentTime: number, duration: number) {
     flowIndex + timing.exitStartPosition,
     flowIndex + 0.5,
     exitStartSpeed,
-    getBoundarySpeed(timing.nextVisualIndex, duration),
+    getBoundarySpeed(lyrics, timing.nextVisualIndex, duration),
     timing.exitDuration,
     sectionTime - timing.entryDuration - timing.slowDuration,
   );
