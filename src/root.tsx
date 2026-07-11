@@ -1,8 +1,6 @@
-import { useLayoutEffect, type ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, useLocation } from "react-router";
-
-import "@shared/styles/global.css";
-import "@shared/styles/wave.css";
+import { useLayoutEffect, type ReactNode } from 'react';
+import { Links, Meta, Outlet, Scripts, useLocation } from 'react-router';
+import '@shared/styles/global.css';
 
 type LayoutProps = {
   children: ReactNode;
@@ -12,7 +10,7 @@ const RouteScrollManager = () => {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
-    history.scrollRestoration = "manual";
+    history.scrollRestoration = 'manual';
     window.scrollTo({ left: 0, top: 0 });
   }, [pathname]);
 

@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanyi Pagoda';
+  src: url('/fonts/hanyi-pagoda-web.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-unbounded: 'Unbounded', var(--font-sans);
+}

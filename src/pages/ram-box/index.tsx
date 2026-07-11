@@ -23,7 +23,7 @@ const TunedRamBoxExperience = import.meta.env.DEV
 const headerTrailingContent = (
   <Link
     aria-label="Back to track list"
-    className="flex h-full shrink-0 items-center px-5 font-hanyi-pagoda text-xl text-(--color-text) transition-colors hover:text-(--color-accent) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--color-accent)"
+    className="flex h-full shrink-0 items-center px-5 font-hanyi-pagoda text-xl text-primary-text transition-colors hover:text-(--color-accent) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--color-accent)"
     to="/"
   >
     动流

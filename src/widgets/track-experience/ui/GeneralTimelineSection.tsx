@@ -91,7 +91,7 @@ export const GeneralTimelineSection = memo(
             ? "group absolute inset-0 z-10 h-full w-full"
             : isOverlay
               ? "group absolute inset-0 z-10 flex h-full w-full items-center justify-center px-2 text-center"
-              : "group relative flex h-full w-(--timeline-section-width) shrink-0 items-center justify-center text-center max-sm:h-(--timeline-mobile-slide-height) max-sm:w-full"
+              : "group relative flex h-full w-(--timeline-section-width) shrink-0 items-center justify-center text-center"
         }
         aria-hidden="true"
         data-active="false"

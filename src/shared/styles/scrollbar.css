@@ -1,0 +1,36 @@
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--color-border-strong) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  background: transparent;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-button {
+  appearance: none;
+  display: none;
+  width: 0;
+  height: 0;
+  border: 0;
+  background: var(--color-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--color-border-strong);
+  background-clip: padding-box;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}

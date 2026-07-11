@@ -81,7 +81,6 @@ export const GeneralTimeline = memo(
     const flowSectionWidthPercents = sectionRows
       .filter(({ isContinued, isOverlay }) => !isContinued && !isOverlay)
       .map(({ sectionWidthPercent }) => sectionWidthPercent);
-    const flowSectionCount = flowSectionWidthPercents.length;
     const overlaySections = sectionRows.filter(({ isContinued, isOverlay }) => !isContinued && isOverlay);
 
     useEffect(() => {
@@ -97,7 +96,6 @@ export const GeneralTimeline = memo(
           {
             "--timeline-horizontal-travel": `${getHorizontalTravelVw(flowSectionWidthPercents)}vw`,
             "--timeline-section-height": `${sectionHeight}px`,
-            "--timeline-vertical-travel": `${Math.max(0, flowSectionCount - 1) * 50}vh`,
           } as CSSProperties
         }
       >
@@ -112,7 +110,7 @@ export const GeneralTimeline = memo(
           <div
             ref={trackRef}
             aria-hidden="true"
-            className="general-timeline-track flex h-full w-max will-change-transform max-sm:h-max max-sm:w-full max-sm:flex-col"
+            className="general-timeline-track flex h-full w-max will-change-transform"
           >
             {sectionRows.map(({ index, isContinued, isOverlay, section, sectionWidthPercent }) =>
               isContinued || isOverlay ? null : (
@@ -158,7 +156,7 @@ export const GeneralTimeline = memo(
             >
               <span className="timeline-start-prompt__visual">
                 <span className="block font-mono text-xs uppercase text-(--color-text-muted)">Timeline locked</span>
-                <span className="mt-3 block font-mono text-3xl font-bold uppercase leading-tight text-(--color-text)">
+                <span className="mt-3 block font-mono text-3xl font-bold uppercase leading-tight text-primary-text">
                   Press play to start
                 </span>
               </span>
@@ -171,7 +169,7 @@ export const GeneralTimeline = memo(
             className="fixed inset-x-0 z-10 flex items-center justify-center px-6 text-center"
             style={{ bottom: footerHeight, top: headerHeight }}
           >
-            <div className="max-w-md p-6 text-(--color-text)">
+            <div className="max-w-md p-6 text-primary-text">
               <p className="font-mono text-xs uppercase text-(--color-text-muted)">
                 {replaySequence > 0 ? `Replay prompt in ${replaySequence}` : "Timeline complete"}
               </p>
@@ -189,7 +187,7 @@ export const GeneralTimeline = memo(
                     <button
                       type="button"
                       onClick={() => onReplay(false)}
-                      className="h-11 border border-(--color-border-strong) bg-panel-raised px-6 font-mono text-sm font-bold uppercase text-(--color-text) transition hover:bg-(--color-panel-hover)"
+                      className="h-11 border border-(--color-border-strong) bg-panel-raised px-6 font-mono text-sm font-bold uppercase text-primary-text transition hover:bg-(--color-panel-hover)"
                     >
                       No
                     </button>

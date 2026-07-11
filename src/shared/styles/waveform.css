@@ -63,13 +63,3 @@
 .wave-slider:active::-moz-range-thumb {
   opacity: 1;
 }
-
-@media (hover: none), (pointer: coarse), (max-width: 767px) {
-  .wave-slider::-webkit-slider-thumb {
-    opacity: 1;
-  }
-
-  .wave-slider::-moz-range-thumb {
-    opacity: 1;
-  }
-}

@@ -40,8 +40,6 @@ const PREWARM_SECTION_DWELL_MS = 12;
 type TrackSlideMetric = {
   horizontalSize: number;
   horizontalStart: number;
-  verticalSize: number;
-  verticalStart: number;
 };
 
 type IllustrationProgressOptions = {
@@ -55,16 +53,13 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function getTrackCoordinate(position: number, flowSlides: TrackSlideMetric[], isVertical: boolean) {
+function getTrackCoordinate(position: number, flowSlides: TrackSlideMetric[]) {
   if (!flowSlides.length) return 0;
 
   const slideIndex = clamp(Math.floor(position + 0.5), 0, flowSlides.length - 1);
   const slide = flowSlides[slideIndex];
   const localProgress = clamp(position - (slideIndex - 0.5), 0, 1);
-  const start = isVertical ? slide.verticalStart : slide.horizontalStart;
-  const size = isVertical ? slide.verticalSize : slide.horizontalSize;
-
-  return start + size * localProgress;
+  return slide.horizontalStart + slide.horizontalSize * localProgress;
 }
 
 function getIllustrationFadeOpacity(
@@ -256,9 +251,7 @@ export function useGeneralTimeline({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const trackMetricsRef = useRef({
     flowSlides: [] as TrackSlideMetric[],
-    isVertical: false,
     viewportCenterX: 0,
-    viewportCenterY: 0,
   });
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
@@ -325,11 +318,10 @@ export function useGeneralTimeline({
       );
       syncInactiveIllustrations(lyrics, slideRefs.current, visualIndex, duration, tuningAdapter);
 
-      const { flowSlides, isVertical, viewportCenterX, viewportCenterY } = trackMetricsRef.current;
-      const coordinate = getTrackCoordinate(position, flowSlides, isVertical);
+      const { flowSlides, viewportCenterX } = trackMetricsRef.current;
+      const coordinate = getTrackCoordinate(position, flowSlides);
       const x = viewportCenterX - coordinate;
-      const y = viewportCenterY - coordinate;
-      track.style.transform = isVertical ? `translate3d(0, ${y}px, 0)` : `translate3d(${x}px, 0, 0)`;
+      track.style.transform = `translate3d(${x}px, 0, 0)`;
 
       highlightSlide(isHighlighted ? visualIndex : null);
     },
@@ -343,22 +335,15 @@ export function useGeneralTimeline({
       if (!track || !viewport) return;
 
       const viewportCenterX = viewport.clientWidth / 2;
-      const viewportCenterY = viewport.clientHeight / 2;
-      track.style.setProperty("--timeline-mobile-slide-height", `${viewport.clientHeight / 2}px`);
-
       const flowSlides = slideRefs.current
         .filter((slide): slide is HTMLElement => slide !== null && slide.dataset.overlay !== "true")
         .map((slide) => ({
           horizontalSize: slide.offsetWidth,
           horizontalStart: slide.offsetLeft,
-          verticalSize: slide.offsetHeight,
-          verticalStart: slide.offsetTop,
         }));
       trackMetricsRef.current = {
         flowSlides,
-        isVertical: window.matchMedia("(max-width: 639px)").matches,
         viewportCenterX,
-        viewportCenterY,
       };
 
       updateTrack(audioRef.current?.currentTime ?? 0);
@@ -403,10 +388,7 @@ export function useGeneralTimeline({
         const { index: sectionIndex, slide } = sections[index];
         if (slide.dataset.overlay !== "true") {
           const x = viewport.clientWidth / 2 - slide.offsetLeft - slide.offsetWidth / 2;
-          const y = viewport.clientHeight / 2 - slide.offsetTop - slide.offsetHeight / 2;
-          track.style.transform = trackMetricsRef.current.isVertical
-            ? `translate3d(0, ${y}px, 0)`
-            : `translate3d(${x}px, 0, 0)`;
+          track.style.transform = `translate3d(${x}px, 0, 0)`;
         }
 
         highlightSlide(sectionIndex);

@@ -1,37 +1,33 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties } from 'react';
 
 type ExperienceLoadingScreenProps = {
   progress: number;
 };
 
-export const ExperienceLoadingScreen = ({ progress }: ExperienceLoadingScreenProps) => (
-  <div
-    className="fixed inset-0 z-[60] flex items-center justify-center px-6 text-(--color-text)"
-    role="status"
-    style={{ backgroundColor: "var(--color-bg)" }}
-  >
-    <div className="w-full max-w-lg font-mono">
-      <div className="mb-3 flex items-end justify-between gap-6">
-        <div>
-          <p className="text-xs uppercase text-(--color-text-muted)">Preparing timeline</p>
-          <h1 className="mt-2 text-2xl font-bold uppercase">Loading experience</h1>
-        </div>
-        <span className="text-xl font-bold tabular-nums">{progress}%</span>
-      </div>
+const LOADING_FRAME_COUNT = 10;
 
-      <div
-        aria-label="Loading progress"
-        aria-valuemax={100}
-        aria-valuemin={0}
-        aria-valuenow={progress}
-        className="h-3 overflow-hidden border border-(--color-border-strong) bg-(--color-panel)"
-        role="progressbar"
-      >
+export const ExperienceLoadingScreen = ({ progress }: ExperienceLoadingScreenProps) => {
+  const frameIndex = Math.min(LOADING_FRAME_COUNT - 1, Math.max(0, Math.floor(progress / 10)));
+  const framePosition = `${(frameIndex / (LOADING_FRAME_COUNT - 1)) * 100}%`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary-bg px-6 text-primary-text"
+      role="status"
+    >
+      <div className="w-full max-w-lg font-mono flex-col flex gap-4 justify-center items-center">
         <div
-          className="h-full bg-(--color-accent) transition-[width] duration-150"
-          style={{ width: `${progress}%` } as CSSProperties}
+          aria-label="Loading progress"
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={progress}
+          className="aspect-8/1 w-full bg-[url('/animations/loading/loading-sprite.png')] bg-size-[100%_1000%] bg-no-repeat"
+          role="progressbar"
+          style={{ backgroundPosition: `center ${framePosition}` } as CSSProperties}
         />
+
+        <h3 className="mt-2 text-4xl font-bold uppercase">Preparing Timeline</h3>
       </div>
     </div>
-  </div>
-);
+  );
+};

@@ -55,7 +55,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
   return (
     <header
       ref={headerRef}
-      className="fixed inset-x-0 top-0 z-20 flex h-16 items-center bg-(--color-bg) text-(--color-text) pr-10 lg:pr-0 shadow-2xl"
+      className="fixed inset-x-0 top-0 z-20 flex h-16 items-center bg-(--color-bg) text-primary-text shadow-2xl"
     >
       <div className="flex h-full w-full max-w-7xl items-center gap-10 mx-auto">
         <PlaybackButtons isPlaying={isPlaying} isReady={isReady} onTogglePlayback={onTogglePlayback} />
@@ -79,7 +79,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
             <span>{formatTime(duration)}</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               aria-label={volume === 0 ? "Restore volume" : "Mute"}
@@ -107,7 +107,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
           </div>
         </div>
 
-        <div className="hidden h-full w-54 shrink-0 overflow-hidden bg-(--color-panel) lg:block">
+        <div className="h-full w-54 shrink-0 overflow-hidden bg-(--color-panel)">
           <canvas ref={canvasRef} className="h-full w-full" />
         </div>
 

@@ -3,6 +3,7 @@ import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 const COLUMN_COUNT = 56;
 const WATERFALL_WIDTH_PERCENT = 90;
 const WATERFALL_INSET_PERCENT = (100 - WATERFALL_WIDTH_PERCENT) / 2;
+const DRIP_SPRITE_URL = '/animations/drip-sprite.png';
 const ROGUE_DROPS = Array.from({ length: 14 }, (_, drop) => ({
   position: ((drop * 17 + 9) % COLUMN_COUNT) + 1,
 }));
@@ -15,6 +16,7 @@ type WaterfallProps = {
 
 export const DrippingTrack = ({ active }: WaterfallProps) => {
   const [drops, setDrops] = useState<EmittedDrop[]>([]);
+  const [spriteReady, setSpriteReady] = useState(false);
   const surfaceRef = useRef<HTMLElement>(null);
   const nextDropRef = useRef(0);
 
@@ -35,7 +37,23 @@ export const DrippingTrack = ({ active }: WaterfallProps) => {
   }, []);
 
   useEffect(() => {
-    if (!active) return;
+    let cancelled = false;
+    const sprite = new Image();
+    sprite.src = DRIP_SPRITE_URL;
+    void sprite
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        if (!cancelled) setSpriteReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!active || !spriteReady) return;
 
     const emitDrop = () => {
       const source = ROGUE_DROPS[nextDropRef.current % ROGUE_DROPS.length];
@@ -48,7 +66,7 @@ export const DrippingTrack = ({ active }: WaterfallProps) => {
     emitDrop();
     const emitter = window.setInterval(emitDrop, 180);
     return () => window.clearInterval(emitter);
-  }, [active]);
+  }, [active, spriteReady]);
 
   return (
     <section

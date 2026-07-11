@@ -32,7 +32,7 @@ export const IllustrationAnimationTuner = ({
     <aside
       data-illustration-tuner
       data-scroll-seek-ignore="true"
-      className={`fixed inset-y-0 right-0 z-50 h-screen w-[min(24rem,100vw)] overflow-y-auto border-l border-(--color-border-strong) bg-(--color-panel) p-4 text-(--color-text) shadow-[0_24px_80px_var(--color-footer-shadow)] transition-transform duration-75 ease-out ${isPlaying ? "translate-x-full" : "translate-x-0"}`}
+      className={`fixed inset-y-0 right-0 z-50 h-screen w-[min(24rem,100vw)] overflow-y-auto border-l border-(--color-border-strong) bg-(--color-panel) p-4 text-primary-text shadow-[0_24px_80px_var(--color-footer-shadow)] transition-transform duration-75 ease-out ${isPlaying ? "translate-x-full" : "translate-x-0"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>

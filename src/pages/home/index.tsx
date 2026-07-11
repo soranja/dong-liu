@@ -21,10 +21,10 @@ const HomeRoute = () => {
   }, [activeTrackId]);
 
   return (
-    <main className="min-h-screen bg-(--color-bg) px-6 pt-16 text-(--color-text) sm:px-10 lg:px-16">
+    <main className="min-h-screen bg-(--color-bg) px-16 pt-16 text-primary-text">
       <div className="mx-auto flex w-full max-w-6xl flex-col text-center">
         <header className="mb-14">
-          <h1 className="mt-4 font-hanyi-pagoda text-4xl font-normal uppercase leading-none sm:text-7xl">动流</h1>
+          <h1 className="dong-liu-title mx-auto mt-4"></h1>
         </header>
 
         <ol aria-label="Track list">
@@ -45,12 +45,12 @@ const HomeRoute = () => {
 
                 <img
                   alt={track.cover.alt}
-                  className="size-16 shrink-0 object-cover sm:size-24"
+                  className="size-24 shrink-0 object-cover"
                   loading="lazy"
                   src={track.cover.src}
                 />
 
-                <span className="[font-family:var(--font-unbounded)] text-2xl font-bold uppercase sm:text-4xl">
+                <span className="[font-family:var(--font-unbounded)] text-4xl font-bold uppercase">
                   {track.title}
                 </span>
 
@@ -59,8 +59,8 @@ const HomeRoute = () => {
                   className="pointer-events-none absolute inset-0 z-10 flex items-center gap-6 px-4 py-6 text-(--color-bg) [clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-500 ease-in group-hover:[clip-path:inset(0_0_0_0)] group-focus-visible:[clip-path:inset(0_0_0_0)]"
                 >
                   <span className="font-mono text-xs">{track.trackNo >= 9 ? track.trackNo : `0${track.trackNo}`}</span>
-                  <span className="size-16 shrink-0 sm:size-24" />
-                  <span className="[font-family:var(--font-unbounded)] text-2xl font-bold uppercase sm:text-4xl">
+                  <span className="size-24 shrink-0" />
+                  <span className="[font-family:var(--font-unbounded)] text-4xl font-bold uppercase">
                     {track.title}
                   </span>
                 </span>

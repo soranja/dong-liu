@@ -1,0 +1,133 @@
+.general-timeline-spacer {
+  height: calc(var(--timeline-section-height) + var(--timeline-horizontal-travel));
+}
+
+.general-timeline-track {
+  transform: translate3d(var(--timeline-track-x), 0, 0);
+}
+
+[data-timeline-section] {
+  contain: layout paint style;
+}
+
+[data-timeline-content] {
+  opacity: var(--illustration-fade-opacity, 1);
+}
+
+[data-timeline-content][data-illustration-kind='generic'] {
+  opacity: calc(var(--illustration-progress, 0) * var(--illustration-fade-opacity, 1));
+}
+
+[data-timeline-content]:has([data-timeline-synced-video]) {
+  opacity: var(--illustration-fade-opacity, 1);
+}
+
+.timeline-start-prompt {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.timeline-start-prompt__visual {
+  display: block;
+  padding: 1.6rem 2.25rem 1.75rem;
+  border-radius: 0;
+  background: #000;
+  animation: timeline-start-prompt-blink 3s steps(1, end) infinite;
+}
+
+@keyframes timeline-start-prompt-blink {
+  0%,
+  83.333% {
+    opacity: 1;
+  }
+
+  83.334%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.dong-liu-title {
+  width: min(100%, 24rem);
+  aspect-ratio: 2;
+  background-image: url('/animations/dong-liu-title/dong-liu-title-sprite.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 900%;
+  transition: background-position 500ms steps(8, end);
+}
+
+.dong-liu-title:hover {
+  background-position: center bottom;
+}
+
+.waterfall {
+  position: relative;
+  z-index: 1;
+  min-height: 8rem;
+  margin-top: -1px;
+  overflow: hidden;
+  cursor: default;
+}
+
+.waterfall__stream {
+  position: absolute;
+  inset: 0;
+}
+
+.waterfall__drop {
+  position: absolute;
+  display: block;
+}
+
+.waterfall__drip {
+  position: absolute;
+  top: 0;
+  z-index: 20;
+  background-image: url('/animations/drip/drip-sprite.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 1200%;
+  opacity: 1;
+  transform: translateX(-50%);
+  animation: waterfall-drip-frames 550ms steps(11, end) forwards;
+}
+
+.waterfall:not(.waterfall--active) .waterfall__drip {
+  visibility: hidden;
+}
+
+.waterfall__drop--rogue {
+  top: -2rem;
+  z-index: 1;
+  background-color: currentColor;
+  color: var(--color-accent);
+  mask: url('/icons/drop.svg') center / contain no-repeat;
+  opacity: 1;
+  -webkit-mask: url('/icons/drop.svg') center / contain no-repeat;
+  transform: translateX(-50%);
+  animation-name: waterfall-rogue-fall;
+  animation-timing-function: cubic-bezier(0.75, 0, 1, 0.5);
+  animation-fill-mode: forwards;
+  transition: opacity 120ms linear;
+  will-change: top;
+}
+
+@keyframes waterfall-rogue-fall {
+  from {
+    top: -2rem;
+  }
+
+  to {
+    top: calc(100% + 2rem);
+  }
+}
+
+@keyframes waterfall-drip-frames {
+  to {
+    background-position: center bottom;
+  }
+}
