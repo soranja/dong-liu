@@ -1,29 +1,34 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
 export type TrackSummary = {
   id: string;
+  trackNo: number;
   route: `/tracks/${string}`;
   slug: string;
   title: string;
+  cover: {
+    alt: string;
+    src: string;
+  };
 };
 
 export type LyricsMedia =
   | {
       alt: string;
-      mediaType: "image";
+      mediaType: 'image';
       src: string;
     }
   | {
-      mediaType: "video";
+      mediaType: 'video';
       poster?: string;
       src: string;
     };
 
 export type CustomLyricsIllustration<TCustomIllustration> = {
   descriptor: TCustomIllustration;
-  mediaType: "custom";
+  mediaType: 'custom';
 };
 
 export type LyricsIllustration<TCustomIllustration = unknown> =
@@ -33,16 +38,16 @@ export type LyricsIllustration<TCustomIllustration = unknown> =
 
 export type IllustrationAnimation =
   | {
-      variant: "instant";
+      variant: 'instant';
     }
   | {
       animationLengthPercent?: number;
       endPercent: number;
       startPercent: number;
-      variant: "range";
+      variant: 'range';
     };
 
-export type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
+export type IllustrationVisibility = 'adjacent' | 'only-active' | 'start-active' | 'active-end';
 export type TextSizeLevel = 1 | 2 | 3 | 4 | 5;
 
 export type LyricsSection<TCustomIllustration = unknown> = {

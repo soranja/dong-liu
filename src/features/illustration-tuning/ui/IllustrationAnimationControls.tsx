@@ -32,7 +32,7 @@ type IllustrationAnimationControlsProps = {
 };
 
 const TOGGLE_BUTTON_CLASS =
-  "border border-(--color-border-strong) bg-(--color-panel-raised) px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)";
+  "border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)";
 const VISIBILITY_OPTIONS = [
   { label: "Adjacent", value: "adjacent" },
   { label: "Only active", value: "only-active" },

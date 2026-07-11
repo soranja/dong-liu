@@ -19,7 +19,7 @@ export const LoopModeControls = ({ loopMode, onLoopModeChange }: LoopModeControl
       {TUNING_LOOP_MODES.map((option) => (
         <label
           key={option}
-          className="border border-(--color-border-strong) bg-(--color-panel-raised) px-2 py-2 text-center font-mono text-[0.65rem] uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)"
+          className="border border-(--color-border-strong) bg-panel-raised px-2 py-2 text-center font-mono text-[0.65rem] uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)"
           data-active={loopMode === option}
         >
           <input

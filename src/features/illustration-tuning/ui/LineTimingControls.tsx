@@ -29,7 +29,7 @@ export const LineTimingControls = ({
           min="0"
           step={LINE_TIMING_STEP_SECONDS}
           value={formatTimeInput(selectedStartTime)}
-          className="w-full border border-(--color-border-strong) bg-(--color-panel-raised) px-2 py-2 text-(--color-text)"
+          className="w-full border border-(--color-border-strong) bg-panel-raised px-2 py-2 text-(--color-text)"
           onChange={(event) => {
             if (event.currentTarget.value === "") return;
             onStartTimeChange(Number(event.currentTarget.value));
@@ -44,7 +44,7 @@ export const LineTimingControls = ({
           step={LINE_TIMING_STEP_SECONDS}
           value={formatTimeInput(selectedEndTime)}
           disabled={!hasNextSection}
-          className="w-full border border-(--color-border-strong) bg-(--color-panel-raised) px-2 py-2 text-(--color-text) disabled:opacity-40"
+          className="w-full border border-(--color-border-strong) bg-panel-raised px-2 py-2 text-(--color-text) disabled:opacity-40"
           onChange={(event) => {
             if (event.currentTarget.value === "") return;
             onEndTimeChange(Number(event.currentTarget.value));

@@ -189,7 +189,7 @@ export const GeneralTimeline = memo(
                     <button
                       type="button"
                       onClick={() => onReplay(false)}
-                      className="h-11 border border-(--color-border-strong) bg-(--color-panel-raised) px-6 font-mono text-sm font-bold uppercase text-(--color-text) transition hover:bg-(--color-panel-hover)"
+                      className="h-11 border border-(--color-border-strong) bg-panel-raised px-6 font-mono text-sm font-bold uppercase text-(--color-text) transition hover:bg-(--color-panel-hover)"
                     >
                       No
                     </button>

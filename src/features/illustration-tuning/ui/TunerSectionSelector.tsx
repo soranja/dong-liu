@@ -70,14 +70,14 @@ export const TunerSectionSelector = ({
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          className="border border-(--color-border-strong) bg-(--color-panel-raised) px-3 py-2 font-mono text-xs uppercase"
+          className="border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
           onClick={onPrevious}
         >
           Previous
         </button>
         <button
           type="button"
-          className="border border-(--color-border-strong) bg-(--color-panel-raised) px-3 py-2 font-mono text-xs uppercase"
+          className="border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
           onClick={onNext}
         >
           Next

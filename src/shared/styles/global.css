@@ -1,8 +1,21 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme inline {
+  --color-panel-raised: #292929;
+  --font-hanyi-pagoda: 'Hanyi Pagoda', var(--font-sans);
+}
 
 @font-face {
-  font-family: "Unbounded";
-  src: url("/fonts/unbounded.ttf") format("truetype");
+  font-family: 'Unbounded';
+  src: url('/fonts/unbounded.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanyi Pagoda';
+  src: url('/fonts/hanyi-pagoda-web.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
   font-display: swap;
 }
 
@@ -12,7 +25,6 @@
   --color-bg: #141414;
   --color-pumpkin: #f59e0b;
   --color-panel: #1e1e1e;
-  --color-panel-raised: #292929;
   --color-panel-chip: #252525;
   --color-panel-hover: #333333;
   --color-control: #e7e7d8;
@@ -22,9 +34,9 @@
   --color-border-soft: #393939;
   --color-border-strong: #505050;
   --color-footer-shadow: rgb(0 0 0 / 0.25);
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --font-unbounded: "Unbounded", var(--font-sans);
+  --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
+  --font-unbounded: 'Unbounded', var(--font-sans);
   font: 18px/145% var(--font-sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
@@ -101,7 +113,7 @@ html {
   opacity: var(--illustration-fade-opacity, 1);
 }
 
-[data-timeline-content][data-illustration-kind="generic"] {
+[data-timeline-content][data-illustration-kind='generic'] {
   opacity: calc(var(--illustration-progress, 0) * var(--illustration-fade-opacity, 1));
 }
 
@@ -163,4 +175,113 @@ input {
 
 button {
   cursor: pointer;
+}
+
+.waterfall {
+  position: relative;
+  z-index: 1;
+  min-height: 8rem;
+  margin-top: -1px;
+  overflow: hidden;
+  cursor: default;
+}
+
+.waterfall__stream {
+  position: absolute;
+  inset: 0;
+}
+
+.waterfall__drop {
+  position: absolute;
+  display: block;
+}
+
+.waterfall__drip {
+  position: absolute;
+  top: 0;
+  z-index: 20;
+  background: center / contain no-repeat;
+  opacity: 1;
+  transform: translateX(-50%);
+  animation: waterfall-drip-frames 550ms step-end forwards;
+}
+
+.waterfall:not(.waterfall--active) .waterfall__drip {
+  visibility: hidden;
+}
+
+.waterfall__drop--rogue {
+  top: -2rem;
+  z-index: 1;
+  background-color: currentColor;
+  color: var(--color-accent);
+  mask: url('/icons/drop.svg') center / contain no-repeat;
+  opacity: 1;
+  -webkit-mask: url('/icons/drop.svg') center / contain no-repeat;
+  transform: translateX(-50%);
+  animation-name: waterfall-rogue-fall;
+  animation-timing-function: cubic-bezier(0.75, 0, 1, 0.5);
+  animation-fill-mode: forwards;
+  transition: opacity 120ms linear;
+  will-change: top;
+}
+
+@keyframes waterfall-rogue-fall {
+  from {
+    top: -2rem;
+  }
+
+  to {
+    top: calc(100% + 2rem);
+  }
+}
+
+@keyframes waterfall-drip-frames {
+  0% {
+    background-image: url('/animations/drip/drip-00001.png');
+  }
+
+  9.09% {
+    background-image: url('/animations/drip/drip-00002.png');
+  }
+
+  18.18% {
+    background-image: url('/animations/drip/drip-00003.png');
+  }
+
+  27.27% {
+    background-image: url('/animations/drip/drip-00004.png');
+  }
+
+  36.36% {
+    background-image: url('/animations/drip/drip-00005.png');
+  }
+
+  45.45% {
+    background-image: url('/animations/drip/drip-00006.png');
+  }
+
+  54.55% {
+    background-image: url('/animations/drip/drip-00007.png');
+  }
+
+  63.64% {
+    background-image: url('/animations/drip/drip-00008.png');
+  }
+
+  72.73% {
+    background-image: url('/animations/drip/drip-00009.png');
+  }
+
+  81.82% {
+    background-image: url('/animations/drip/drip-00010.png');
+  }
+
+  90.91% {
+    background-image: url('/animations/drip/drip-00011.png');
+  }
+
+  100% {
+    background-image: none;
+  }
 }
