@@ -108,7 +108,7 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible, lyrics, tuni
           aria-atomic="true"
           aria-hidden={!isVisible}
           aria-live="polite"
-          className="max-w-full whitespace-nowrap text-center [font-family:var(--font-unbounded)] tracking-wide text-primary-text transition-opacity"
+          className="max-w-full whitespace-pre text-center [font-family:var(--font-unbounded)] tracking-wide text-primary-text transition-opacity"
           data-captions-line
           style={{ fontSize, opacity: isVisible ? 1 : 0 }}
         >

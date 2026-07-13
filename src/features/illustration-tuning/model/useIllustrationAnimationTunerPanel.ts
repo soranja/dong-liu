@@ -123,12 +123,22 @@ export function useIllustrationAnimationTunerPanel({
   }, [activeProgress.currentTime, duration, isLoading, isOpen, loopMode, onSeek, selectedIndex, session]);
 
   const setRangeAnimation = (startPercent: number, endPercent: number) => {
-    tunerState.setAnimation(getRangeAnimation(startPercent, endPercent, selectedAnimationLengthPercent));
+    tunerState.setAnimation({
+      ...getRangeAnimation(startPercent, endPercent, selectedAnimationLengthPercent),
+      ...(selectedAnimation?.variant === "range"
+        ? { wordStartPercents: selectedAnimation.wordStartPercents }
+        : {}),
+    });
   };
 
   const setAnimationLength = (animationLengthPercent: number) => {
     tunerState.setAnimation(
-      getRangeAnimation(selectedRange.startPercent, selectedRange.endPercent, animationLengthPercent),
+      {
+        ...getRangeAnimation(selectedRange.startPercent, selectedRange.endPercent, animationLengthPercent),
+        ...(selectedAnimation?.variant === "range"
+          ? { wordStartPercents: selectedAnimation.wordStartPercents }
+          : {}),
+      },
     );
   };
 

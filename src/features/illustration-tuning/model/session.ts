@@ -3,7 +3,7 @@ import {
   parseLyricsTimestamp,
   type TimelineProgressDetail,
   type TrackTuningAdapter,
-} from "@entities/track/model/tuning";
+} from '@entities/track/model/tuning';
 import {
   clampSectionWidthPercent,
   clampSlideMotionDurationMs,
@@ -11,15 +11,16 @@ import {
   getSavedExitDurationMs,
   getSavedNoSlideBy,
   getSavedSectionWidthPercent,
-} from "@entities/track/model/layout";
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "@entities/track/model/types";
-import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
+} from '@entities/track/model/layout';
+import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from '@entities/track/model/types';
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
 type DraftAnimation = IllustrationAnimation | null;
 type SessionListener = () => void;
 type ProgressListener = (detail: TimelineProgressDetail) => void;
 
-export type IllustrationTuningSession = Omit<TrackTuningAdapter, "renderPanel"> & {
+export type IllustrationTuningSession = Omit<TrackTuningAdapter, 'renderPanel'> & {
+  clearDrafts: () => void;
   lyrics: readonly LyricsSection[];
   setDraftIllustrationAnimation: (sectionId: number, animation: DraftAnimation) => void;
   setDraftIllustrationFadeInMs: (sectionId: number, fadeInMs: number) => void;
@@ -65,6 +66,21 @@ export function createIllustrationTuningSession(
   };
 
   return {
+    clearDrafts() {
+      draftAnimations.clear();
+      draftContinuing.clear();
+      draftEnterDurationMs.clear();
+      draftExitDurationMs.clear();
+      draftFadeInMs.clear();
+      draftFadeOutMs.clear();
+      draftIllustrationKinds.clear();
+      draftNoSlideBys.clear();
+      draftOverlays.clear();
+      draftSectionStarts.clear();
+      draftSectionWidthPercents.clear();
+      draftVisibilities.clear();
+      emit();
+    },
     getIllustrationAnimation(section) {
       if (!draftAnimations.has(section.sectionId)) return section.illustrationAnimation;
 
@@ -77,14 +93,14 @@ export function createIllustrationTuningSession(
       return draftFadeOutMs.get(section.sectionId) ?? section.illustrationFadeOutMs ?? 0;
     },
     getIllustrationKind(section) {
-      if (typeof section.illustrateWith !== "string") return "generic";
+      if (typeof section.illustrateWith !== 'string') return 'generic';
 
       return draftIllustrationKinds.get(section.sectionId) ?? getSavedTimelineIllustrationKind(lyrics, section);
     },
     getIllustrationVisibility(section) {
-      if (draftOverlays.get(section.sectionId) ?? Boolean(section.isOverlay)) return "only-active";
+      if (draftOverlays.get(section.sectionId) ?? Boolean(section.isOverlay)) return 'only-active';
 
-      return draftVisibilities.get(section.sectionId) ?? section.illustrationVisibility ?? "adjacent";
+      return draftVisibilities.get(section.sectionId) ?? section.illustrationVisibility ?? 'adjacent';
     },
     getSectionContinuing(section) {
       return draftContinuing.get(section.sectionId) ?? Boolean(section.continuing);

@@ -1,8 +1,14 @@
-export const TEXT_ILLUSTRATION_KINDS = ["word-cloud", "kinetic-warp"] as const;
+export const TEXT_ILLUSTRATION_KINDS = [
+  "word-cloud",
+  "blinking-words",
+  "kinetic-warp",
+  "vertical-typewriter",
+] as const;
 
 export type TextIllustrationKind = (typeof TEXT_ILLUSTRATION_KINDS)[number];
 
 export type TextIllustrationProps = {
+  animation?: import("@entities/track/model/types").IllustrationAnimation;
   onReady: (sectionId: number) => void;
   sectionId: number;
   text: string;

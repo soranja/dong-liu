@@ -110,9 +110,9 @@ Tuning is development-only:
 
 Press `F4` after the experience is ready to open the tuner. It supports section selection, live preview, loop ranges, line timing, animation range/length, illustration selection, visibility, overlays, section width, slide motion, fades, continuation, reset, and register.
 
-Drafts, progress subscriptions, cached snapshots, panel state, and autosave state are scoped to the track session. Session-storage keys include the track ID. No global progress events or global draft maps are used.
+Drafts, progress subscriptions, and panel state are scoped to the track session. Drafts are kept only in memory and are discarded on refresh. No global progress events or global draft maps are used.
 
-### Autosave protocol
+### Register protocol
 
 The tuner posts to:
 
@@ -136,7 +136,7 @@ The JSON body contains:
 
 The request never contains a file path. `vite.config.ts` supplies an allowlisted map from track ID to lyrics source and export name. Unknown track IDs are rejected. The plugin is active only while serving development.
 
-Autosave rewrites the allowlisted lyrics source. Reset restores the registered snapshot and autosaves the restoration when necessary. Register changes only the session’s reset baseline.
+Edits update the live preview but do not write to the lyrics source. Register writes every changed section in one request. Reset discards every unregistered change across all sections. Refreshing the page has the same effect as Reset.
 
 ## Adding a track page
 

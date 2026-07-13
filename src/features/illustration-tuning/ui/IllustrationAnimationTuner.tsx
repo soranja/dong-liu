@@ -6,6 +6,7 @@ import { LineTimingControls } from "./LineTimingControls";
 import { LoopModeControls } from "./LoopModeControls";
 import { TuningProgressBar } from "./TuningProgressBar";
 import { TunerSectionSelector } from "./TunerSectionSelector";
+import { WordAnimationControls } from "./WordAnimationControls";
 import "./illustration-tuning.css";
 
 type IllustrationAnimationTunerProps = {
@@ -34,21 +35,15 @@ export const IllustrationAnimationTuner = ({
       data-scroll-seek-ignore="true"
       className={`fixed inset-y-0 right-0 z-50 h-screen w-[min(24rem,100vw)] overflow-y-auto border-l border-(--color-border-strong) bg-(--color-panel) p-4 text-primary-text shadow-[0_24px_80px_var(--color-footer-shadow)] transition-transform duration-75 ease-out ${isPlaying ? "translate-x-full" : "translate-x-0"}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Illustration tuner</p>
-          <h2 className="mt-1 font-mono text-lg font-bold uppercase leading-tight">F4 animation timing</h2>
-        </div>
-        <button
-          type="button"
-          className="px-2 font-mono text-sm text-(--color-text-muted)"
-          onClick={() => panel.setTunerOpen(false)}
-        >
-          Close
-        </button>
-      </div>
+      <button
+        type="button"
+        className="ml-auto block px-2 font-mono text-sm text-(--color-text-muted)"
+        onClick={() => panel.setTunerOpen(false)}
+      >
+        Close
+      </button>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-2 space-y-3">
         <TunerSectionSelector
           followActive={panel.followActive}
           illustrationKind={tunerState.selectedIllustrationKind}
@@ -72,6 +67,10 @@ export const IllustrationAnimationTuner = ({
             playheadPercent={panel.playheadPercent}
             startPercent={panel.selectedRange.startPercent}
           />
+        </fieldset>
+
+        <fieldset disabled={tunerState.selectedIsLocked} className="disabled:opacity-40">
+          <WordAnimationControls animation={panel.selectedAnimation} illustrationKind={tunerState.selectedIllustrationKind} onChange={tunerState.setAnimation} text={typeof panel.selectedSection.illustrateWith === "string" ? panel.selectedSection.illustrateWith : ""} />
         </fieldset>
 
         <LoopModeControls loopMode={panel.loopMode} onLoopModeChange={panel.setAnchoredLoopMode} />
@@ -118,6 +117,7 @@ export const IllustrationAnimationTuner = ({
             selectedAnimation={panel.selectedAnimation}
             selectedVisibility={tunerState.selectedIllustrationVisibility}
           />
+
         </fieldset>
       </div>
     </aside>

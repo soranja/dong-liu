@@ -1,4 +1,5 @@
 import { type CSSProperties } from "react";
+import { getLyricDisplayText } from "./lib/lyricText";
 import { usePackedWordsLayout } from "./lib/usePackedWordsLayout";
 import "./styles/kinetic-warp-text-animation.css";
 
@@ -10,7 +11,7 @@ export const KineticWarpTextAnimation = ({ onReady, sectionId, text }: TextIllus
   return (
     <div
       ref={containerRef}
-      aria-label={text}
+      aria-label={getLyricDisplayText(text)}
       className="kinetic-warp-text-animation"
       data-kinetic-warp-root
       data-section-id={sectionId}

@@ -1,3 +1,5 @@
+import { getLyricWords } from "./lyricText";
+
 export type PackedWord = {
   fontSize: number;
   fontWeight: number;
@@ -69,26 +71,21 @@ function getVariation(seed: number) {
 }
 
 function getWords(text: string, sectionId: number, context: CanvasRenderingContext2D, fontFamily: string) {
-  return text
-    .replace(BRACKETED_WORD_PATTERN, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((word, index): WordDetails => {
-      const uppercaseWord = word.toLocaleUpperCase();
-      const seed = sectionId * 97 + index * 37 + word.length * 13;
-      const fontWeight = FONT_WEIGHTS[Math.floor(getVariation(seed + 1) * FONT_WEIGHTS.length)];
-      context.font = `normal ${fontWeight} ${BASE_FONT_SIZE}px ${fontFamily}`;
-      const textWidthRatio = Math.max(0.01, context.measureText(uppercaseWord).width / BASE_FONT_SIZE);
+  return getLyricWords(text.replace(BRACKETED_WORD_PATTERN, " ")).map((word, index): WordDetails => {
+    const uppercaseWord = word.toLocaleUpperCase();
+    const seed = sectionId * 97 + index * 37 + word.length * 13;
+    const fontWeight = FONT_WEIGHTS[Math.floor(getVariation(seed + 1) * FONT_WEIGHTS.length)];
+    context.font = `normal ${fontWeight} ${BASE_FONT_SIZE}px ${fontFamily}`;
+    const textWidthRatio = Math.max(0.01, context.measureText(uppercaseWord).width / BASE_FONT_SIZE);
 
-      return {
-        areaWeight: textWidthRatio * (0.72 + getVariation(seed) * 0.65),
-        fontWeight,
-        index,
-        text: uppercaseWord,
-        textWidthRatio,
-      };
-    });
+    return {
+      areaWeight: textWidthRatio * (0.72 + getVariation(seed) * 0.65),
+      fontWeight,
+      index,
+      text: uppercaseWord,
+      textWidthRatio,
+    };
+  });
 }
 
 function getRows(words: WordDetails[], width: number, height: number) {

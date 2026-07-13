@@ -12,10 +12,11 @@ type AnimationSetting =
       endPercent: number;
       startPercent: number;
       variant: "range";
+      wordStartPercents?: number[];
     };
 
 type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
-type TextIllustrationKind = "kinetic-warp" | "word-cloud";
+type TextIllustrationKind = "blinking-words" | "kinetic-warp" | "vertical-typewriter" | "word-cloud";
 
 type AnimationChange = {
   continuing?: boolean;
@@ -95,7 +96,11 @@ function parseAnimation(value: unknown): AnimationSetting | null {
     throw new Error("animationLengthPercent must be 0-100");
   }
 
-  return { animationLengthPercent, endPercent, startPercent, variant: "range" };
+  const wordStartPercents = value.wordStartPercents === undefined ? undefined : value.wordStartPercents;
+  if (wordStartPercents !== undefined && (!Array.isArray(wordStartPercents) || wordStartPercents.some((item) => !Number.isFinite(Number(item)) || Number(item) < 0 || Number(item) > 100))) {
+    throw new Error("wordStartPercents must contain percentages from 0-100");
+  }
+  return { animationLengthPercent, endPercent, startPercent, variant: "range", wordStartPercents: wordStartPercents?.map(Number) };
 }
 
 function parseIllustrationVisibility(value: unknown): IllustrationVisibility {
@@ -140,7 +145,7 @@ function parseBoolean(value: unknown, propertyName: string) {
 }
 
 function parseIllustrationKind(value: unknown): TextIllustrationKind {
-  if (value === "kinetic-warp" || value === "word-cloud") return value;
+  if (value === "blinking-words" || value === "kinetic-warp" || value === "vertical-typewriter" || value === "word-cloud") return value;
 
   throw new Error("Invalid illustration kind");
 }
@@ -302,7 +307,8 @@ function getLineIndent(text: string, position: number) {
 function formatAnimation(animation: AnimationSetting) {
   if (animation.variant === "instant") return '{ variant: "instant" }';
 
-  return `{ variant: "range", startPercent: ${animation.startPercent}, endPercent: ${animation.endPercent}, animationLengthPercent: ${animation.animationLengthPercent} }`;
+  const wordStarts = animation.wordStartPercents ? `, wordStartPercents: [${animation.wordStartPercents.join(", ")}]` : "";
+  return `{ variant: "range", startPercent: ${animation.startPercent}, endPercent: ${animation.endPercent}, animationLengthPercent: ${animation.animationLengthPercent}${wordStarts} }`;
 }
 
 function updateStringProperty(
@@ -721,6 +727,10 @@ export function illustrationAnimationTuningPlugin(options: IllustrationAnimation
     },
     handleHotUpdate(context) {
       const normalizedFile = normalizePath(context.file);
+      if ([...targets.values()].some((target) => target.normalizedLyricsFile === normalizedFile)) return [];
+    },
+    hotUpdate(options) {
+      const normalizedFile = normalizePath(options.file);
       if ([...targets.values()].some((target) => target.normalizedLyricsFile === normalizedFile)) return [];
     },
     name: "dong-liu-illustration-animation-tuning",

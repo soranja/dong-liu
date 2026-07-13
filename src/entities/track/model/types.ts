@@ -45,6 +45,7 @@ export type IllustrationAnimation =
       endPercent: number;
       startPercent: number;
       variant: 'range';
+      wordStartPercents?: number[];
     };
 
 export type IllustrationVisibility = 'adjacent' | 'only-active' | 'start-active' | 'active-end';

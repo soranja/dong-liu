@@ -23,7 +23,7 @@
   opacity: 0;
   transform: rotate(var(--word-rotation)) scale(var(--word-scale-x), var(--word-scale-y));
   transform-origin: center;
-  white-space: nowrap;
+  white-space: pre;
 }
 
 .lyrics-word-cloud__word[data-word-revealed="true"] {

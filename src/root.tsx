@@ -22,7 +22,7 @@ export const Layout = ({ children }: LayoutProps) => (
     <head>
       <meta charSet="utf-8" />
       <meta content="width=device-width, initial-scale=1" name="viewport" />
-      <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+      <link href="/favicon.png" rel="icon" type="image/svg+xml" />
       <Meta />
       <Links />
     </head>

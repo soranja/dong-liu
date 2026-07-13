@@ -1,14 +1,14 @@
-import { formatLyricsTimestamp, parseLyricsTimestamp } from "@entities/track/lib/lyrics";
-import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from "@entities/track/model/tuning";
-import type { IllustrationVisibility } from "@entities/track/model/types";
-import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
+import { formatLyricsTimestamp, parseLyricsTimestamp } from '@entities/track/lib/lyrics';
+import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from '@entities/track/model/tuning';
+import type { IllustrationVisibility } from '@entities/track/model/types';
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import {
   areDirtyAnimationsEqual,
   getDirtyAnimation,
   getSavedAnimation,
   type DirtyAnimation,
   type DirtyAnimations,
-} from "./animationSelection";
+} from './animationSelection';
 import {
   clampSectionWidthPercent,
   clampSlideMotionDurationMs,
@@ -17,10 +17,10 @@ import {
   getSavedExitDurationMs as getSavedExitDurationMsForSection,
   getSavedNoSlideBy as getSavedNoSlideByForSection,
   getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection,
-} from "@entities/track/model/layout";
-import type { IllustrationTuningSession } from "./session";
+} from '@entities/track/model/layout';
+import type { IllustrationTuningSession } from './session';
 
-export { getSavedAnimation } from "./animationSelection";
+export { getSavedAnimation } from './animationSelection';
 
 export type DraftIllustrationKinds = Record<number, TextIllustrationKind>;
 export type DraftIllustrationVisibilities = Record<number, IllustrationVisibility>;
@@ -73,21 +73,13 @@ export type Snapshot = {
   startTime: number;
 };
 export type Snapshots = Record<number, Snapshot>;
-export type SaveStatus =
-  | "Autosave failed"
-  | "Autosaved"
-  | "Autosaving"
-  | "Cached value"
-  | "Pending autosave"
-  | "Resetting";
+export type SaveStatus = 'Register failed' | 'Registering' | 'Registered' | 'Reset' | 'Unsaved changes';
 export type StatusState = {
   label: SaveStatus;
   sectionId: number | null;
 };
 
-export const SAVE_ENDPOINT = "/__dong-liu/illustration-animation-settings";
-export const AUTOSAVE_DELAY_MS = 300;
-export const CACHED_SNAPSHOTS_STORAGE_KEY = "dong-liu:tuner-cached-snapshots";
+export const SAVE_ENDPOINT = '/__dong-liu/illustration-animation-settings';
 export const FADE_TIMING_MAX_MS = 1000;
 export const LINE_TIMING_STEP_SECONDS = 0.005;
 
@@ -104,7 +96,7 @@ export function getSavedStartTime(session: IllustrationTuningSession, sectionId:
 export function getSavedIllustrationKind(session: IllustrationTuningSession, sectionId: number) {
   const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
-  return section ? getSavedTimelineIllustrationKind(session.lyrics, section) : "generic";
+  return section ? getSavedTimelineIllustrationKind(session.lyrics, section) : 'generic';
 }
 
 export function getSavedContinuing(session: IllustrationTuningSession, sectionId: number) {
@@ -115,7 +107,7 @@ export function getSavedIllustrationVisibility(
   session: IllustrationTuningSession,
   sectionId: number,
 ): IllustrationVisibility {
-  return session.lyrics.find((section) => section.sectionId === sectionId)?.illustrationVisibility ?? "adjacent";
+  return session.lyrics.find((section) => section.sectionId === sectionId)?.illustrationVisibility ?? 'adjacent';
 }
 
 export function getSavedOverlay(session: IllustrationTuningSession, sectionId: number) {
@@ -190,7 +182,7 @@ export function getCurrentIllustrationKind(
   sectionId: number,
 ) {
   const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
-  if (!section || typeof section.illustrateWith !== "string") return "generic";
+  if (!section || typeof section.illustrateWith !== 'string') return 'generic';
 
   return draftIllustrationKinds[sectionId] ?? getSavedTimelineIllustrationKind(session.lyrics, section);
 }
@@ -254,33 +246,19 @@ export function getDraftStartTime(session: IllustrationTuningSession, draftStart
   return draftStartTimes[sectionId] ?? getSavedStartTime(session, sectionId);
 }
 
-export function readCachedSnapshots(trackId: string) {
-  if (typeof window === "undefined") return {};
-
-  try {
-    return JSON.parse(window.sessionStorage.getItem(`${CACHED_SNAPSHOTS_STORAGE_KEY}:${trackId}`) ?? "{}") as Snapshots;
-  } catch {
-    return {};
-  }
-}
-
-export function writeCachedSnapshots(trackId: string, snapshots: Snapshots) {
-  window.sessionStorage.setItem(`${CACHED_SNAPSHOTS_STORAGE_KEY}:${trackId}`, JSON.stringify(snapshots));
-}
-
 function normalizeCachedAnimation(animation: DirtyAnimation) {
   const cachedVariant = (animation as { variant?: string } | null)?.variant;
 
-  return cachedVariant === "static" ? ({ variant: "instant" } satisfies DirtyAnimation) : animation;
+  return cachedVariant === 'static' ? ({ variant: 'instant' } satisfies DirtyAnimation) : animation;
 }
 
 function normalizeIllustrationVisibility(value: unknown): IllustrationVisibility {
-  if (value === "adjacent" || value === "only-active" || value === "start-active" || value === "active-end") {
+  if (value === 'adjacent' || value === 'only-active' || value === 'start-active' || value === 'active-end') {
     return value;
   }
-  if (value === "active-trailing") return "active-end";
+  if (value === 'active-trailing') return 'active-end';
 
-  return "adjacent";
+  return 'adjacent';
 }
 
 export function normalizeCachedSnapshot(
@@ -293,20 +271,20 @@ export function normalizeCachedSnapshot(
 
   return {
     animation,
-    continuing: typeof snapshot.continuing === "boolean" ? snapshot.continuing : getSavedContinuing(session, sectionId),
-    endTime: typeof snapshot.endTime === "number" ? snapshot.endTime : null,
+    continuing: typeof snapshot.continuing === 'boolean' ? snapshot.continuing : getSavedContinuing(session, sectionId),
+    endTime: typeof snapshot.endTime === 'number' ? snapshot.endTime : null,
     enterDuration: clampSlideMotionDurationMs(snapshot.enterDuration ?? getSavedEnterDurationMs(session, sectionId)),
     exitDuration: clampSlideMotionDurationMs(snapshot.exitDuration ?? getSavedExitDurationMs(session, sectionId)),
     fadeInMs: clampFadeDuration(snapshot.fadeInMs ?? getSavedFadeInMs(session, sectionId)),
     fadeOutMs: clampFadeDuration(snapshot.fadeOutMs ?? getSavedFadeOutMs(session, sectionId)),
     illustrationKind: snapshot.illustrationKind ?? getSavedIllustrationKind(session, sectionId),
     illustrationVisibility: normalizeIllustrationVisibility(snapshot.illustrationVisibility),
-    isOverlay: typeof snapshot.isOverlay === "boolean" ? snapshot.isOverlay : getSavedOverlay(session, sectionId),
-    noSlideBy: typeof snapshot.noSlideBy === "boolean" ? snapshot.noSlideBy : getSavedNoSlideBy(session, sectionId),
+    isOverlay: typeof snapshot.isOverlay === 'boolean' ? snapshot.isOverlay : getSavedOverlay(session, sectionId),
+    noSlideBy: typeof snapshot.noSlideBy === 'boolean' ? snapshot.noSlideBy : getSavedNoSlideBy(session, sectionId),
     sectionWidthPercent: clampSectionWidthPercent(
       snapshot.sectionWidthPercent ?? getSavedSectionWidthPercent(session, sectionId),
     ),
-    startTime: typeof snapshot.startTime === "number" ? snapshot.startTime : getSavedStartTime(session, sectionId),
+    startTime: typeof snapshot.startTime === 'number' ? snapshot.startTime : getSavedStartTime(session, sectionId),
   };
 }
 

@@ -14,6 +14,13 @@ function blurActiveElement() {
   if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 }
 
+function isEditableTarget(target: EventTarget | null) {
+  return (
+    target instanceof HTMLElement &&
+    Boolean(target.closest("button,input,select,textarea,[contenteditable]:not([contenteditable='false'])"))
+  );
+}
+
 export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep }: PlaybackKeyboardOptions) {
   const seekStepRef = useSyncedRef(onSeekStep);
   const togglePlaybackRef = useSyncedRef(onTogglePlayback);
@@ -21,6 +28,8 @@ export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep
 
   useEffect(() => {
     function handlePlaybackKey(event: KeyboardEvent) {
+      if (isEditableTarget(event.target)) return;
+
       if (event.code === "Space") {
         if (event.repeat) return;
 

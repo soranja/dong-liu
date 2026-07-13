@@ -1,3 +1,4 @@
+import { getLyricDisplayText } from "@shared/ui/illustration-animations/lib/lyricText";
 import type { LyricsSection } from "../model/types";
 import { resolveSectionStart, type TrackTuningAdapter } from "../model/tuning";
 
@@ -59,18 +60,18 @@ export function getLyricLineParts(line: string) {
 
   while ((match = italicPattern.exec(line))) {
     if (match.index > cursor) {
-      parts.push({ isItalic: false, text: line.slice(cursor, match.index) });
+      parts.push({ isItalic: false, text: getLyricDisplayText(line.slice(cursor, match.index)) });
     }
 
-    parts.push({ isItalic: true, text: match[0] });
+    parts.push({ isItalic: true, text: getLyricDisplayText(match[0]) });
     cursor = match.index + match[0].length;
   }
 
   if (cursor < line.length) {
-    parts.push({ isItalic: false, text: line.slice(cursor) });
+    parts.push({ isItalic: false, text: getLyricDisplayText(line.slice(cursor)) });
   }
 
-  return parts.length ? parts : [{ isItalic: false, text: line }];
+  return parts.length ? parts : [{ isItalic: false, text: getLyricDisplayText(line) }];
 }
 
 export function getLyricPlainText(line: string) {

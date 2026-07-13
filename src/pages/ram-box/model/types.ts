@@ -1,4 +1,5 @@
 export type RamBoxIllustrationDescriptor = {
-  kind: "synced-video";
+  kind: "looping-video" | "synced-video";
+  loopStartTimeSeconds?: number;
   src: string;
 };

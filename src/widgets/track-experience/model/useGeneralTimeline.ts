@@ -21,7 +21,7 @@ import {
   getTimelineVisualSectionDuration,
   getTimelineVisualSectionProgress,
 } from "@entities/track/lib/generalTimeline";
-import { pauseSyncedVideos, syncSyncedVideos } from "@shared/lib/timelineSyncedVideo";
+import { pauseSyncedVideos, syncLoopingVideos, syncSyncedVideos } from "@shared/lib/timelineSyncedVideo";
 import { setKineticWarpProgress } from "@shared/ui/illustration-animations/lib/kineticWarp";
 
 type GeneralTimelineOptions = {
@@ -107,8 +107,26 @@ function setWordCloudProgress(slide: HTMLElement | null, progress: number) {
   const words = slide.querySelectorAll<HTMLElement>("[data-word-cloud-word]");
   if (!words.length) return;
 
-  const revealedWordCount = Math.min(words.length, Math.floor(progress * words.length + Number.EPSILON));
-  setRevealedWordCount(slide, words, revealedWordCount);
+  const hasCustomTiming = Array.from(words).some((word) => word.dataset.wordStartPercent !== undefined);
+  if (!hasCustomTiming) {
+    const revealedWordCount = Math.min(words.length, Math.floor(progress * words.length + Number.EPSILON));
+    setRevealedWordCount(slide, words, revealedWordCount);
+    return;
+  }
+
+  words.forEach((word) => {
+    const start = Number(word.dataset.wordStartPercent ?? 0) / 100;
+    const letterIndex = Number(word.dataset.wordLetterIndex ?? 0);
+    const letterCount = Number(word.dataset.wordLetterCount ?? 1);
+    const wordIndex = Number(word.dataset.wordIndex ?? 0);
+    const nextWord = Array.from(words).find(
+      (candidate) => Number(candidate.dataset.wordIndex) === wordIndex + 1,
+    );
+    const end = Number(nextWord?.dataset.wordStartPercent ?? 100) / 100;
+    const threshold = start + ((end - start) * letterIndex) / Math.max(1, letterCount);
+    word.dataset.wordRevealed = progress + Number.EPSILON >= threshold ? "true" : "false";
+  });
+  delete slide.dataset.revealedWordCount;
 }
 
 function clearIllustrationProgress(slide: HTMLElement | null) {
@@ -317,6 +335,7 @@ export function useGeneralTimeline({
         tuningAdapter,
       );
       syncInactiveIllustrations(lyrics, slideRefs.current, visualIndex, duration, tuningAdapter);
+      syncLoopingVideos(track, time);
 
       const { flowSlides, viewportCenterX } = trackMetricsRef.current;
       const coordinate = getTrackCoordinate(position, flowSlides);

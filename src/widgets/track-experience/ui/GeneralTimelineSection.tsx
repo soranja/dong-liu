@@ -1,6 +1,6 @@
 import { memo, useEffect, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { DEFAULT_SECTION_WIDTH_PERCENT } from "@entities/track/model/layout";
-import { resolveIllustrationKind, type TrackTuningAdapter } from "@entities/track/model/tuning";
+import { resolveIllustrationAnimation, resolveIllustrationKind, type TrackTuningAdapter } from "@entities/track/model/tuning";
 import type { CustomIllustrationRenderer, LyricsIllustration, LyricsSection } from "@entities/track/model/types";
 import { TextIllustration } from "@shared/ui/illustration-animations/TextIllustration";
 
@@ -64,9 +64,8 @@ export const GeneralTimelineSection = memo(
     const text = typeof section.illustrateWith === "string" ? section.illustrateWith : null;
     const isText = text !== null;
     const isFullBleed = Boolean(section.fullBleedIllustration);
-    const [illustrationKind, setIllustrationKind] = useState(() =>
-      resolveIllustrationKind(lyrics, section, tuningAdapter),
-    );
+    const [, setRevision] = useState(0);
+    const illustrationKind = resolveIllustrationKind(lyrics, section, tuningAdapter);
     const contentClassName = isFullBleed
       ? "h-full w-full overflow-hidden"
       : isText
@@ -76,7 +75,7 @@ export const GeneralTimelineSection = memo(
     useEffect(
       () =>
         tuningAdapter?.subscribe(() => {
-          setIllustrationKind(resolveIllustrationKind(lyrics, section, tuningAdapter));
+          setRevision((revision) => revision + 1);
         }),
       [lyrics, section, tuningAdapter],
     );
@@ -115,6 +114,7 @@ export const GeneralTimelineSection = memo(
         >
           {illustrationKind !== "generic" && isText ? (
             <TextIllustration
+              animation={resolveIllustrationAnimation(section, tuningAdapter)}
               kind={illustrationKind}
               onReady={onWordCloudReady}
               sectionId={section.sectionId}

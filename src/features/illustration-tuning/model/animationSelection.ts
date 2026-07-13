@@ -34,6 +34,13 @@ export function getRangeValues(animation: IllustrationAnimation | undefined) {
   return animation?.variant === "range" ? animation : DEFAULT_RANGE;
 }
 
+function areArraysEqual<T>(left: readonly T[] | undefined, right: readonly T[] | undefined) {
+  if (left === right) return true;
+  if (!left || !right || left.length !== right.length) return false;
+
+  return left.every((value, index) => value === right[index]);
+}
+
 export function areDirtyAnimationsEqual(left: DirtyAnimation | undefined, right: DirtyAnimation | undefined) {
   const leftAnimation = left ?? null;
   const rightAnimation = right ?? null;
@@ -45,6 +52,7 @@ export function areDirtyAnimationsEqual(left: DirtyAnimation | undefined, right:
     leftAnimation.startPercent === rightAnimation.startPercent &&
     leftAnimation.endPercent === rightAnimation.endPercent &&
     (leftAnimation.animationLengthPercent ?? DEFAULT_ANIMATION_LENGTH_PERCENT) ===
-      (rightAnimation.animationLengthPercent ?? DEFAULT_ANIMATION_LENGTH_PERCENT)
+      (rightAnimation.animationLengthPercent ?? DEFAULT_ANIMATION_LENGTH_PERCENT) &&
+    areArraysEqual(leftAnimation.wordStartPercents, rightAnimation.wordStartPercents)
   );
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { getLyricWords } from "@shared/ui/illustration-animations/lib/lyricText";
 import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 import {
   getSavedEnterDurationMs,
@@ -59,7 +60,7 @@ export function getAutomaticTimelineIllustrationKind(
   let previousWarpSectionIndex = -2;
 
   lyrics.forEach((section, sectionIndex) => {
-    if (typeof section.illustrateWith !== "string" || section.illustrateWith.trim().split(/\s+/).length <= 1) return;
+    if (typeof section.illustrateWith !== "string" || getLyricWords(section.illustrateWith).length <= 1) return;
 
     const isThirdEligibleSection = eligibleWarpIndex % 3 === 2;
     if (isThirdEligibleSection && sectionIndex - previousWarpSectionIndex > 1) {

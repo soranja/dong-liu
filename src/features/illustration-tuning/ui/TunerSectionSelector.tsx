@@ -1,5 +1,6 @@
 import type { TimelineIllustrationKind } from "@entities/track/model/tuning";
 import type { LyricsSection } from "@entities/track/model/types";
+import { getLyricDisplayText } from "@shared/ui/illustration-animations/lib/lyricText";
 import { TEXT_ILLUSTRATION_KINDS, type TextIllustrationKind } from "@shared/ui/illustration-animations/types";
 
 type TunerSectionSelectorProps = {
@@ -14,8 +15,10 @@ type TunerSectionSelectorProps = {
 };
 
 const ILLUSTRATION_KIND_LABELS: Record<TimelineIllustrationKind, string> = {
+  "blinking-words": "Blinking words",
   generic: "Custom",
   "kinetic-warp": "Kinetic warp",
+  "vertical-typewriter": "Vertical typewriter",
   "word-cloud": "Word cloud",
 };
 const ILLUSTRATION_KIND_CONTROL_CLASS =
@@ -59,7 +62,9 @@ export const TunerSectionSelector = ({
             </span>
           )}
         </div>
-        <p className="mt-1 max-h-16 overflow-auto text-sm leading-snug">{selectedSection.line}</p>
+        <p className="mt-1 max-h-16 overflow-auto whitespace-pre-wrap text-sm leading-snug">
+          {getLyricDisplayText(selectedSection.line)}
+        </p>
         {isLocked ? (
           <p className="mt-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
             Continuing previous illustration · time controls only
