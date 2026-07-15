@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useRef, type ReactNode } from "react";
 
 import { CaptionsFooter } from "./CaptionsFooter";
 import { ExperienceLoadingScreen } from "./ExperienceLoadingScreen";
@@ -10,11 +10,8 @@ import type { CustomIllustrationRenderer, LyricsSection } from "@entities/track/
 import { useLayoutHeights } from "../model/useLayoutHeights";
 import { usePlaybackController } from "../model/usePlaybackController";
 import { usePreloadedAudio } from "../model/usePreloadedAudio";
+import { useTrackReadiness } from "../model/useTrackReadiness";
 
-const AUDIO_PROGRESS_WEIGHT = 10;
-const CLOUD_PROGRESS_WEIGHT = 35;
-const FONT_PROGRESS_WEIGHT = 5;
-const PREWARM_PROGRESS_WEIGHT = 50;
 export type TrackExperienceProps<TCustomIllustration> = {
   audioSrc: string;
   headerTrailingContent?: ReactNode;
@@ -36,37 +33,13 @@ export const TrackExperience = <TCustomIllustration,>({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
-  const readyCloudIdsRef = useRef(new Set<number>());
-  const readyCloudUpdateFrameRef = useRef<number | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
-  const wordCloudCount = useMemo(
-    () =>
-      lyrics.filter((section, index) => typeof section.illustrateWith === "string" && !lyrics[index - 1]?.continuing)
-        .length,
-    [lyrics],
-  );
   const preloadedAudioSrc = usePreloadedAudio(audioSrc);
-  const [audioReady, setAudioReady] = useState(false);
-  const [fontReady, setFontReady] = useState(false);
-  const [prewarmProgress, setPrewarmProgress] = useState(0);
-  const [readyCloudCount, setReadyCloudCount] = useState(0);
-  const [timelinePrepared, setTimelinePrepared] = useState(false);
-  const cloudLayoutsReady = readyCloudCount === wordCloudCount;
-  const shouldPrewarm = audioReady && fontReady && cloudLayoutsReady && !timelinePrepared;
-  const isReady = audioReady && fontReady && cloudLayoutsReady && timelinePrepared;
-  const loadingProgress = Math.min(
-    100,
-    Math.round(
-      (audioReady ? AUDIO_PROGRESS_WEIGHT : 0) +
-        (fontReady ? FONT_PROGRESS_WEIGHT : 0) +
-        (wordCloudCount ? readyCloudCount / wordCloudCount : 1) * CLOUD_PROGRESS_WEIGHT +
-        prewarmProgress * PREWARM_PROGRESS_WEIGHT,
-    ),
-  );
+  const readiness = useTrackReadiness(lyrics);
   const playback = usePlaybackController({
     audioRef,
     canvasRef,
-    isReady,
+    isReady: readiness.isReady,
     playbackRef: headerRef,
     timelineRef,
   });
@@ -82,48 +55,14 @@ export const TrackExperience = <TCustomIllustration,>({
     replayPromptVisible: playback.replayPromptVisible,
   });
 
-  const handleWordCloudReady = useCallback((sectionId: number) => {
-    if (readyCloudIdsRef.current.has(sectionId)) return;
-
-    readyCloudIdsRef.current.add(sectionId);
-    readyCloudUpdateFrameRef.current ??= window.requestAnimationFrame(() => {
-      readyCloudUpdateFrameRef.current = null;
-      setReadyCloudCount(readyCloudIdsRef.current.size);
-    });
-  }, []);
-
-  const handlePrewarmProgress = useCallback((progress: number) => {
-    setPrewarmProgress(progress);
-  }, []);
-
-  const handleTimelinePrepared = useCallback(() => {
-    setPrewarmProgress(1);
-    setTimelinePrepared(true);
-  }, []);
   const renderIllustration = useCallback(
     (descriptor: unknown) => renderCustomIllustration(descriptor as TCustomIllustration),
     [renderCustomIllustration],
   );
 
-  useEffect(() => {
-    let disposed = false;
-
-    void document.fonts.ready.then(() => {
-      if (!disposed) setFontReady(true);
-    });
-
-    return () => {
-      disposed = true;
-      if (readyCloudUpdateFrameRef.current !== null) {
-        window.cancelAnimationFrame(readyCloudUpdateFrameRef.current);
-        readyCloudUpdateFrameRef.current = null;
-      }
-    };
-  }, []);
-
   return (
     <main
-      aria-busy={!isReady}
+      aria-busy={!readiness.isReady}
       className="relative isolate min-h-screen overflow-x-clip bg-(--color-bg) text-(--color-panel)"
       data-track-id={trackId}
       style={{ paddingBottom: layoutHeights.footer, paddingTop: layoutHeights.header }}
@@ -132,7 +71,7 @@ export const TrackExperience = <TCustomIllustration,>({
         ref={audioRef}
         src={preloadedAudioSrc}
         preload="auto"
-        onCanPlay={() => setAudioReady(true)}
+        onCanPlay={readiness.markAudioReady}
         onDurationChange={(event) => playback.setDuration(event.currentTarget.duration)}
         onEnded={playback.handleEnded}
         onTimeUpdate={playback.handleTimeUpdate}
@@ -144,7 +83,7 @@ export const TrackExperience = <TCustomIllustration,>({
         trailingContent={headerTrailingContent}
         headerRef={headerRef}
         isPlaying={playback.isPlaying}
-        isReady={isReady}
+        isReady={readiness.isReady}
         onSeek={playback.scrub}
         onTogglePlayback={handleTogglePlayback}
         onVolumeChange={playback.setVolume}
@@ -168,25 +107,25 @@ export const TrackExperience = <TCustomIllustration,>({
           hasStarted={playback.hasStarted}
           headerHeight={layoutHeights.header}
           lyrics={lyrics}
-          onPrewarmProgress={handlePrewarmProgress}
+          onPrewarmProgress={readiness.handlePrewarmProgress}
           onReplay={(autoplay) => void playback.replayFromStart(autoplay)}
           onStart={handleTogglePlayback}
-          onTimelinePrepared={handleTimelinePrepared}
-          onWordCloudReady={handleWordCloudReady}
+          onTimelinePrepared={readiness.handleTimelinePrepared}
+          onWordCloudReady={readiness.handleWordCloudReady}
           renderCustomIllustration={renderIllustration}
           replayPromptVisible={playback.replayPromptVisible}
           replaySequence={playback.replaySequence}
           sectionHeight={layoutHeights.section}
-          shouldPrewarm={shouldPrewarm}
+          shouldPrewarm={readiness.shouldPrewarm}
           timelineRef={timelineRef}
           tuningAdapter={tuningAdapter}
         />
       </Suspense>
 
-      {!isReady ? <ExperienceLoadingScreen progress={loadingProgress} /> : null}
+      {!readiness.isReady ? <ExperienceLoadingScreen progress={readiness.loadingProgress} /> : null}
       {tuningAdapter?.renderPanel?.({
         duration: playback.duration,
-        isLoading: !isReady,
+        isLoading: !readiness.isReady,
         isPlaying: playback.isPlaying,
         onSeek: (progress) => playback.seek(progress, { animatePage: false, continuePlaybackScroll: false }),
       })}

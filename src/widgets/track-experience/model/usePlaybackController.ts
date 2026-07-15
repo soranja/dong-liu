@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import { installPlaybackScrollSeek } from '@shared/lib/playbackScrollSeek';
 import { useAudioGsapTimeline } from './useAudioGsapTimeline';
+import { useDelayedPlaybackResume } from './useDelayedPlaybackResume';
 import { usePlaybackKeyboard } from './usePlaybackKeyboard';
+import { usePlaybackProgress } from './usePlaybackProgress';
 import { useReplayCountdown } from './useReplayCountdown';
 import { useSyncedRef } from './useSyncedRef';
 import { useWaveformAudio } from './useWaveformAudio';
@@ -22,7 +24,6 @@ type SeekOptions = {
 const PLAYBACK_END_EPSILON_SECONDS = 0.2;
 const KEYBOARD_SEEK_RESUME_DELAY_MS = 80;
 const POINTER_SEEK_RESUME_DELAY_MS = 500;
-const PLAYBACK_UI_UPDATE_INTERVAL_MS = 100;
 
 function isAtPlaybackEnd(audio: HTMLAudioElement) {
   return (
@@ -42,18 +43,20 @@ export function usePlaybackController({
   playbackRef,
   timelineRef,
 }: PlaybackControllerOptions) {
-  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [replayPromptVisible, setReplayPromptVisible] = useState(false);
   const [volume, setVolume] = useState(0.5);
-  const seekResumeActiveRef = useRef(false);
-  const seekResumeSequenceRef = useRef(0);
-  const seekResumeTimeoutRef = useRef<number | null>(null);
-  const playbackFrameRef = useRef<number | null>(null);
-  const playbackUiUpdateTimeRef = useRef(0);
+  const {
+    currentTime,
+    progress,
+    setCurrentTime,
+    setProgress,
+    start: startPlaybackFrameLoop,
+    stop: stopPlaybackFrameLoop,
+    sync: syncPlaybackStateFromAudio,
+  } = usePlaybackProgress(audioRef);
   const hasStartedRef = useSyncedRef(hasStarted);
   const isReadyRef = useSyncedRef(isReady);
   const replayPromptVisibleRef = useSyncedRef(replayPromptVisible);
@@ -74,6 +77,7 @@ export function usePlaybackController({
     },
     timelineRef,
   });
+  const seekResume = useDelayedPlaybackResume(resumeSeekPlayback);
   const seekBySecondsRef = useSyncedRef(seekBySeconds);
 
   usePlaybackKeyboard({
@@ -97,89 +101,20 @@ export function usePlaybackController({
     });
   }, [audioRef, hasStartedRef, isReadyRef, playbackRef, seekBySecondsRef]);
 
-  useEffect(
-    () => () => {
-      clearSeekResume();
-      stopPlaybackFrameLoop();
-    },
-    [],
-  );
-
-  function syncPlaybackStateFromAudio() {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    setCurrentTime(audio.currentTime);
-    if (audio.duration && Number.isFinite(audio.duration)) setProgress((audio.currentTime / audio.duration) * 100);
-  }
-
-  function schedulePlaybackFrame() {
-    if (playbackFrameRef.current !== null) return;
-
-    playbackFrameRef.current = window.requestAnimationFrame(updatePlaybackFrame);
-  }
-
-  function updatePlaybackFrame(timestamp: number) {
-    playbackFrameRef.current = null;
-
-    if (timestamp - playbackUiUpdateTimeRef.current >= PLAYBACK_UI_UPDATE_INTERVAL_MS) {
-      playbackUiUpdateTimeRef.current = timestamp;
-      syncPlaybackStateFromAudio();
-    }
-
-    if (!audioRef.current?.paused) schedulePlaybackFrame();
-  }
-
-  function startPlaybackFrameLoop() {
-    syncPlaybackStateFromAudio();
-    playbackUiUpdateTimeRef.current = performance.now();
-    schedulePlaybackFrame();
-  }
-
-  function stopPlaybackFrameLoop() {
-    playbackUiUpdateTimeRef.current = 0;
-    if (playbackFrameRef.current === null) return;
-
-    window.cancelAnimationFrame(playbackFrameRef.current);
-    playbackFrameRef.current = null;
-  }
-
-  function clearSeekResume() {
-    seekResumeSequenceRef.current += 1;
-    seekResumeActiveRef.current = false;
-
-    if (seekResumeTimeoutRef.current === null) return;
-
-    window.clearTimeout(seekResumeTimeoutRef.current);
-    seekResumeTimeoutRef.current = null;
-  }
-
-  function scheduleSeekResume(delayMs: number) {
-    clearSeekResume();
-    const resumeSequence = seekResumeSequenceRef.current + 1;
-    seekResumeSequenceRef.current = resumeSequence;
-    seekResumeActiveRef.current = true;
-
-    seekResumeTimeoutRef.current = window.setTimeout(() => {
-      seekResumeTimeoutRef.current = null;
-      void resumeSeekPlayback(resumeSequence);
-    }, delayMs);
-  }
-
   async function resumeSeekPlayback(resumeSequence: number) {
     const audio = audioRef.current;
     const hasEnded =
       audio?.ended ||
       Boolean(audio?.duration && Number.isFinite(audio.duration) && audio.currentTime >= audio.duration);
     if (!audio || replayPromptVisibleRef.current || hasEnded) {
-      if (resumeSequence === seekResumeSequenceRef.current) seekResumeActiveRef.current = false;
+      seekResume.finish(resumeSequence);
       return;
     }
 
     const graph = await getAudioGraph();
-    if (resumeSequence !== seekResumeSequenceRef.current) return;
+    if (!seekResume.isCurrent(resumeSequence)) return;
     if (!graph) {
-      seekResumeActiveRef.current = false;
+      seekResume.finish(resumeSequence);
       return;
     }
 
@@ -187,20 +122,20 @@ export function usePlaybackController({
       await graph.context.resume();
       void prepareScratchAudio();
       await audio.play();
-      if (resumeSequence !== seekResumeSequenceRef.current) {
+      if (!seekResume.isCurrent(resumeSequence)) {
         audio.pause();
         return;
       }
 
-      seekResumeActiveRef.current = false;
+      seekResume.finish(resumeSequence);
       setIsPlaying(true);
       startPlaybackFrameLoop();
       audioTimeline.startAudioSync();
       startPainting();
     } catch {
-      if (resumeSequence !== seekResumeSequenceRef.current) return;
+      if (!seekResume.isCurrent(resumeSequence)) return;
 
-      seekResumeActiveRef.current = false;
+      seekResume.finish(resumeSequence);
       setIsPlaying(false);
       stopPlaybackFrameLoop();
       stopPainting();
@@ -213,8 +148,8 @@ export function usePlaybackController({
     const audio = audioRef.current;
     if (!audio || !isReadyRef.current) return;
 
-    if (seekResumeActiveRef.current) {
-      clearSeekResume();
+    if (seekResume.isActive()) {
+      seekResume.clear();
       stopPlaybackFrameLoop();
       stopPainting();
       audioTimeline.stopAudioSync();
@@ -253,7 +188,7 @@ export function usePlaybackController({
       return;
     }
 
-    clearSeekResume();
+    seekResume.clear();
     audio.pause();
     stopPlaybackFrameLoop();
     syncPlaybackStateFromAudio();
@@ -267,7 +202,7 @@ export function usePlaybackController({
     const audio = audioRef.current;
     if (!audio || !isReadyRef.current) return;
 
-    clearSeekResume();
+    seekResume.clear();
     audio.currentTime = 0;
     setCurrentTime(0);
     setProgress(0);
@@ -337,7 +272,7 @@ export function usePlaybackController({
       return;
     }
 
-    if (shouldResumePlayback) scheduleSeekResume(resumeDelayMs);
+    if (shouldResumePlayback) seekResume.schedule(resumeDelayMs);
   }
 
   function scrub(value: number) {
@@ -358,17 +293,17 @@ export function usePlaybackController({
       return;
     }
 
-    if (shouldResumePlayback) scheduleSeekResume(POINTER_SEEK_RESUME_DELAY_MS);
+    if (shouldResumePlayback) seekResume.schedule(POINTER_SEEK_RESUME_DELAY_MS);
   }
 
   function interruptPlaybackForSeek() {
     const audio = audioRef.current;
     if (!audio) return false;
 
-    const shouldResumePlayback = !audio.paused || seekResumeActiveRef.current;
+    const shouldResumePlayback = !audio.paused || seekResume.isActive();
     if (!shouldResumePlayback) return false;
 
-    clearSeekResume();
+    seekResume.clear();
     audio.pause();
     stopPlaybackFrameLoop();
     stopPainting();
@@ -378,13 +313,13 @@ export function usePlaybackController({
   }
 
   function interruptManualScroll() {
-    if (interruptPlaybackForSeek()) scheduleSeekResume(POINTER_SEEK_RESUME_DELAY_MS);
+    if (interruptPlaybackForSeek()) seekResume.schedule(POINTER_SEEK_RESUME_DELAY_MS);
   }
 
   function handleEnded() {
     const audio = audioRef.current;
 
-    clearSeekResume();
+    seekResume.clear();
     stopPlaybackFrameLoop();
     stopPainting();
     audioTimeline.stopAudioSync();

@@ -60,62 +60,6 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('Registered');
   const selectedSection = session.lyrics[selectedIndex];
   const nextSection = session.lyrics[selectedIndex + 1];
-  const getCurrentSnapshot = useCallback((): Snapshot => {
-    const animation = getCurrentAnimation(session, draftAnimations, selectedSection.sectionId);
-
-    return {
-      animation,
-      continuing: getCurrentContinuing(session, draftContinuings, selectedSection.sectionId),
-      endTime: nextSection
-        ? getDraftStartTime(session, draftStartTimes, selectedIndex + 1)
-        : Number.isFinite(duration)
-          ? duration
-          : null,
-      fadeInMs: getCurrentFadeInMs(session, draftFadeInMs, selectedSection.sectionId),
-      fadeOutMs: getCurrentFadeOutMs(session, draftFadeOutMs, selectedSection.sectionId),
-      illustrationKind: getCurrentIllustrationKind(session, draftIllustrationKinds, selectedSection.sectionId),
-      illustrationVisibility: getCurrentIllustrationVisibility(
-        session,
-        draftIllustrationVisibilities,
-        selectedSection.sectionId,
-      ),
-      isOverlay: getCurrentOverlay(session, draftOverlays, selectedSection.sectionId),
-      sectionWidthPercent: getCurrentSectionWidthPercent(session, draftSectionWidthPercents, selectedSection.sectionId),
-      startTime: getDraftStartTime(session, draftStartTimes, selectedIndex),
-    };
-  }, [
-    draftAnimations,
-    draftContinuings,
-    draftFadeInMs,
-    draftFadeOutMs,
-    draftIllustrationKinds,
-    draftIllustrationVisibilities,
-    draftOverlays,
-    draftSectionWidthPercents,
-    draftStartTimes,
-    duration,
-    nextSection,
-    selectedIndex,
-    selectedSection.sectionId,
-    session,
-  ]);
-
-  const getCachedSnapshot = useCallback((): Snapshot => {
-    return {
-      animation: getSavedAnimation(session.lyrics, selectedSection.sectionId),
-      continuing: getSavedContinuing(session, selectedSection.sectionId),
-      endTime: nextSection ? getSavedStartTime(session, nextSection.sectionId) : null,
-      fadeInMs: getSavedFadeInMs(session, selectedSection.sectionId),
-      fadeOutMs: getSavedFadeOutMs(session, selectedSection.sectionId),
-      illustrationKind: getSavedIllustrationKind(session, selectedSection.sectionId),
-      illustrationVisibility: getSavedIllustrationVisibility(session, selectedSection.sectionId),
-      isOverlay: getSavedOverlay(session, selectedSection.sectionId),
-      sectionWidthPercent: getSavedSectionWidthPercent(session, selectedSection.sectionId),
-      startTime: getSavedStartTime(session, selectedSection.sectionId),
-    };
-  }, [nextSection, selectedSection.sectionId, session]);
-
-  const cacheSnapshot = getCachedSnapshot;
 
   const registerSnapshot = useCallback(async () => {
     const changes = Object.entries(pendingChanges);
@@ -142,7 +86,6 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
 
   const setAnimation = useCallback(
     (animation: DirtyAnimation) => {
-      cacheSnapshot();
       if (
         areDirtyAnimationsEqual(getCurrentAnimation(session, draftAnimations, selectedSection.sectionId), animation)
       ) {
@@ -154,12 +97,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { animation, hasAnimation: true });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftAnimations, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftAnimations, selectedSection.sectionId, session],
   );
 
   const setContinuing = useCallback(
     (continuing: boolean) => {
-      cacheSnapshot();
       if (getCurrentContinuing(session, draftContinuings, selectedSection.sectionId) === continuing) return;
 
       setDraftContinuings((current) => ({ ...current, [selectedSection.sectionId]: continuing }));
@@ -167,12 +109,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { continuing, hasContinuing: true });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftContinuings, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftContinuings, selectedSection.sectionId, session],
   );
 
   const setIllustrationKind = useCallback(
     (illustrationKind: TextIllustrationKind) => {
-      cacheSnapshot();
       if (getCurrentIllustrationKind(session, draftIllustrationKinds, selectedSection.sectionId) === illustrationKind) {
         return;
       }
@@ -182,12 +123,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { hasIllustrationKind: true, illustrationKind });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftIllustrationKinds, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftIllustrationKinds, selectedSection.sectionId, session],
   );
 
   const setIllustrationVisibility = useCallback(
     (illustrationVisibility: IllustrationVisibility) => {
-      cacheSnapshot();
       if (
         getCurrentOverlay(session, draftOverlays, selectedSection.sectionId) &&
         illustrationVisibility !== 'only-active'
@@ -211,18 +151,15 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     },
     [
       addPendingChange,
-      cacheSnapshot,
       draftIllustrationVisibilities,
       draftOverlays,
       selectedSection.sectionId,
       session,
-      setSaveStatus,
     ],
   );
 
   const setFadeInMs = useCallback(
     (fadeInMs: number) => {
-      cacheSnapshot();
       const nextFadeInMs = clampFadeDuration(fadeInMs);
       if (getCurrentFadeInMs(session, draftFadeInMs, selectedSection.sectionId) === nextFadeInMs) return;
 
@@ -231,12 +168,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { fadeInMs: nextFadeInMs, hasFadeInMs: true });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftFadeInMs, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftFadeInMs, selectedSection.sectionId, session],
   );
 
   const setFadeOutMs = useCallback(
     (fadeOutMs: number) => {
-      cacheSnapshot();
       const nextFadeOutMs = clampFadeDuration(fadeOutMs);
       if (getCurrentFadeOutMs(session, draftFadeOutMs, selectedSection.sectionId) === nextFadeOutMs) return;
 
@@ -245,12 +181,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { fadeOutMs: nextFadeOutMs, hasFadeOutMs: true });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftFadeOutMs, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftFadeOutMs, selectedSection.sectionId, session],
   );
 
   const setOverlay = useCallback(
     (isOverlay: boolean) => {
-      cacheSnapshot();
       if (getCurrentOverlay(session, draftOverlays, selectedSection.sectionId) === isOverlay) return;
 
       setDraftOverlays((current) => ({ ...current, [selectedSection.sectionId]: isOverlay }));
@@ -258,12 +193,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { hasOverlay: true, isOverlay });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftOverlays, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftOverlays, selectedSection.sectionId, session],
   );
 
   const setSectionWidthPercent = useCallback(
     (sectionWidthPercent: number) => {
-      cacheSnapshot();
       const nextSectionWidthPercent = clampSectionWidthPercent(sectionWidthPercent);
       if (
         getCurrentSectionWidthPercent(session, draftSectionWidthPercents, selectedSection.sectionId) ===
@@ -283,7 +217,7 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftSectionWidthPercents, selectedSection.sectionId, session, setSaveStatus],
+    [addPendingChange, draftSectionWidthPercents, selectedSection.sectionId, session],
   );
 
   const setStartTime = useCallback(
@@ -291,7 +225,6 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       const targetSection = session.lyrics[targetIndex];
       if (!targetSection) return;
 
-      cacheSnapshot();
       const previousStart = targetIndex > 0 ? getDraftStartTime(session, draftStartTimes, targetIndex - 1) : 0;
       const nextStart =
         targetIndex < session.lyrics.length - 1
@@ -308,11 +241,41 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(targetSection.sectionId, { timestamp: nextTime });
       setSaveStatus('Unsaved changes');
     },
-    [addPendingChange, cacheSnapshot, draftStartTimes, duration, session, setSaveStatus],
+    [addPendingChange, draftStartTimes, duration, session],
   );
 
-  const currentSnapshot = getCurrentSnapshot();
-  const cachedSnapshot = getCachedSnapshot();
+  const currentSnapshot: Snapshot = {
+    animation: getCurrentAnimation(session, draftAnimations, selectedSection.sectionId),
+    continuing: getCurrentContinuing(session, draftContinuings, selectedSection.sectionId),
+    endTime: nextSection
+      ? getDraftStartTime(session, draftStartTimes, selectedIndex + 1)
+      : Number.isFinite(duration)
+        ? duration
+        : null,
+    fadeInMs: getCurrentFadeInMs(session, draftFadeInMs, selectedSection.sectionId),
+    fadeOutMs: getCurrentFadeOutMs(session, draftFadeOutMs, selectedSection.sectionId),
+    illustrationKind: getCurrentIllustrationKind(session, draftIllustrationKinds, selectedSection.sectionId),
+    illustrationVisibility: getCurrentIllustrationVisibility(
+      session,
+      draftIllustrationVisibilities,
+      selectedSection.sectionId,
+    ),
+    isOverlay: getCurrentOverlay(session, draftOverlays, selectedSection.sectionId),
+    sectionWidthPercent: getCurrentSectionWidthPercent(session, draftSectionWidthPercents, selectedSection.sectionId),
+    startTime: getDraftStartTime(session, draftStartTimes, selectedIndex),
+  };
+  const cachedSnapshot: Snapshot = {
+    animation: getSavedAnimation(session.lyrics, selectedSection.sectionId),
+    continuing: getSavedContinuing(session, selectedSection.sectionId),
+    endTime: nextSection ? getSavedStartTime(session, nextSection.sectionId) : null,
+    fadeInMs: getSavedFadeInMs(session, selectedSection.sectionId),
+    fadeOutMs: getSavedFadeOutMs(session, selectedSection.sectionId),
+    illustrationKind: getSavedIllustrationKind(session, selectedSection.sectionId),
+    illustrationVisibility: getSavedIllustrationVisibility(session, selectedSection.sectionId),
+    isOverlay: getSavedOverlay(session, selectedSection.sectionId),
+    sectionWidthPercent: getSavedSectionWidthPercent(session, selectedSection.sectionId),
+    startTime: getSavedStartTime(session, selectedSection.sectionId),
+  };
   const selectedUsesCachedSnapshot =
     areDirtyAnimationsEqual(currentSnapshot.animation, cachedSnapshot.animation) &&
     currentSnapshot.continuing === cachedSnapshot.continuing &&

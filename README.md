@@ -12,9 +12,10 @@ pnpm typecheck
 pnpm lint
 pnpm fmt
 pnpm fmt:check
+pnpm build
 ```
 
-`pnpm build` exists for deployment work, but a production build is not the final validation step for routine structural changes.
+Use `pnpm build` after structural or bundling changes. It complements type, lint, and format checks rather than replacing them.
 
 ## Routing
 
@@ -46,8 +47,8 @@ src/
       ui/                          Ram Box-only illustrations/composition
   widgets/
     track-experience/
-      model/                       Playback and timeline lifecycle
-      ui/                          Reusable track experience UI
+      model/                       Focused playback, readiness, waveform, and timeline hooks/utilities
+      ui/                          Reusable, rendering-focused track experience UI
   features/
     illustration-tuning/
       model/                       Per-track session, selection, autosave
@@ -62,7 +63,7 @@ src/
     styles/                        Global and playback styles
     ui/illustration-animations/    Selectable text animations and registry
 tools/
-  tuning/                          Allowlisted Vite source-rewrite plugin
+  tuning/                          Tuning request validation, source editing, and Vite server wiring
 ```
 
 The dependency direction is:
@@ -134,7 +135,7 @@ The JSON body contains:
 }
 ```
 
-The request never contains a file path. `vite.config.ts` supplies an allowlisted map from track ID to lyrics source and export name. Unknown track IDs are rejected. The plugin is active only while serving development.
+The request never contains a file path. `vite.config.ts` supplies an allowlisted map from track ID to lyrics source and export name. Unknown track IDs are rejected. Request parsing, TypeScript source editing, and Vite server wiring are separate modules under `tools/tuning/`. The plugin is active only while serving development.
 
 Edits update the live preview but do not write to the lyrics source. Register writes every changed section in one request. Reset discards every unregistered change across all sections. Refreshing the page has the same effect as Reset.
 
@@ -156,7 +157,10 @@ Do not create a catch-all data-driven track route while track pages have distinc
 
 ## Maintenance rules
 
-- Prefer cohesion over arbitrary line limits. Long cohesive data, lyrics, configuration, and complex modules are acceptable. Split modules when they mix responsibilities or obscure ownership.
+- Keep components focused on rendering and light local UI state. Move substantial lifecycle/state coordination into hooks and pure calculations or DOM transformations into model/lib utilities.
+- Aim to keep implementation files below roughly 200–300 lines when responsibilities can be separated cleanly. Keep cohesive, field-oriented modules together when splitting would obscure the model; `pages/ram-box/model/lyrics.ts` is intentionally one such module.
+- Shorten logic with the platform or standard library first. Reuse an installed dependency or extract a shared helper only when logic is repeated or one self-contained block is large enough to justify ownership.
+- Prefer cohesion over arbitrary line limits: split mixed responsibilities, not files that are merely data-heavy.
 - Keep page-specific data and UI inside its page slice.
 - Keep reusable playback composition in widgets, user-facing capabilities in features, domain contracts/calculations in entities, and dependency-free reuse in shared.
 - Use relative imports within a slice and aliases across slices.
@@ -170,7 +174,7 @@ Do not create a catch-all data-driven track route while track pages have distinc
 - Use hooks only for React state, refs, effects, or cleanup. Keep pure calculations outside hooks.
 - Export only symbols consumed by another module.
 - Run React Router type generation, TypeScript, Oxlint, cycle checks, and `oxfmt --check` after structural changes.
-- Do not use a production build as the final routine validation step.
+- Run a production build when module boundaries, Vite tooling, routes, or bundling behavior change.
 
 ## Validation checklist
 
@@ -178,6 +182,7 @@ Do not create a catch-all data-driven track route while track pages have distinc
 pnpm typecheck
 pnpm lint
 pnpm fmt:check
+pnpm build
 ```
 
 Also smoke-test `/`, `/tracks/`, `/tracks/ram-box`, and an unknown path. For tuning changes, verify F4 opening, selection, preview, per-track state, autosave, reset/register, allowlist rejection, and a clean source diff after restoration.
