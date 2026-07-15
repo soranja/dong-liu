@@ -16,7 +16,7 @@ type AnimationSetting =
     };
 
 type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
-type TextIllustrationKind = "blinking-words" | "kinetic-warp" | "vertical-typewriter" | "word-cloud";
+type TextIllustrationKind = "blinking-words" | "kinetic-warp" | "vertical-typewriter" | "word-cloud" | "word-train";
 
 type AnimationChange = {
   continuing?: boolean;
@@ -145,7 +145,7 @@ function parseBoolean(value: unknown, propertyName: string) {
 }
 
 function parseIllustrationKind(value: unknown): TextIllustrationKind {
-  if (value === "blinking-words" || value === "kinetic-warp" || value === "vertical-typewriter" || value === "word-cloud") return value;
+  if (value === "blinking-words" || value === "kinetic-warp" || value === "vertical-typewriter" || value === "word-cloud" || value === "word-train") return value;
 
   throw new Error("Invalid illustration kind");
 }

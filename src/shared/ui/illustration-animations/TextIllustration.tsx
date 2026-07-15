@@ -4,6 +4,7 @@ import { BlinkingWordsTextAnimation } from "./BlinkingWordsTextAnimation";
 import { KineticWarpTextAnimation } from "./KineticWarpTextAnimation";
 import { LyricsWordCloud } from "./LyricsWordCloud";
 import { VerticalTypewriterTextAnimation } from "./VerticalTypewriterTextAnimation";
+import { WordTrainTextAnimation } from "./WordTrainTextAnimation";
 import type { TextIllustrationKind, TextIllustrationProps } from "./types";
 
 const TEXT_ILLUSTRATIONS = {
@@ -11,6 +12,7 @@ const TEXT_ILLUSTRATIONS = {
   "kinetic-warp": KineticWarpTextAnimation,
   "vertical-typewriter": VerticalTypewriterTextAnimation,
   "word-cloud": LyricsWordCloud,
+  "word-train": WordTrainTextAnimation,
 } satisfies Record<TextIllustrationKind, ComponentType<TextIllustrationProps>>;
 
 type TextIllustrationComponentProps = TextIllustrationProps & {

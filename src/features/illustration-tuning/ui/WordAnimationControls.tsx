@@ -45,7 +45,7 @@ function formatPercent(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
-const BlinkingWordsTimingControls = ({ onChange, rangeAnimation, words }: WordControlProps) => {
+const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProps) => {
   const barRef = useRef<HTMLDivElement>(null);
   const [draggedBoundary, setDraggedBoundary] = useState<number | null>(null);
   const minimumGap = getMinimumWordGap(words.length);
@@ -155,7 +155,7 @@ const BlinkingWordsTimingControls = ({ onChange, rangeAnimation, words }: WordCo
 };
 
 export const WordAnimationControls = ({ animation, illustrationKind, onChange, text }: Props) => {
-  if (illustrationKind !== "blinking-words") return null;
+  if (illustrationKind !== "blinking-words" && illustrationKind !== "word-cloud") return null;
   const words = getLyricWords(text);
   if (!words.length) return null;
   const rangeAnimation =
@@ -163,5 +163,5 @@ export const WordAnimationControls = ({ animation, illustrationKind, onChange, t
       ? animation
       : { animationLengthPercent: 100, endPercent: 100, startPercent: 0, variant: "range" as const };
 
-  return <BlinkingWordsTimingControls onChange={onChange} rangeAnimation={rangeAnimation} words={words} />;
+  return <WordTimingControls onChange={onChange} rangeAnimation={rangeAnimation} words={words} />;
 };

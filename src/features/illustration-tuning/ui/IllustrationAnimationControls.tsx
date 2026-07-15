@@ -8,8 +8,6 @@ type IllustrationAnimationControlsProps = {
   animationLengthPercent: number;
   canContinue: boolean;
   continuing: boolean;
-  enterDurationMs: number;
-  exitDurationMs: number;
   isOverlay: boolean;
   isRange: boolean;
   isVisibilityLocked: boolean;
@@ -18,9 +16,7 @@ type IllustrationAnimationControlsProps = {
   sectionWidthPercent: number;
   selectedAnimation: IllustrationAnimation | undefined;
   selectedVisibility: IllustrationVisibility;
-  onEnterDurationChange: (enterDurationMs: number) => void;
   onContinuingChange: (continuing: boolean) => void;
-  onExitDurationChange: (exitDurationMs: number) => void;
   onLengthChange: (animationLengthPercent: number) => void;
   onNoSlideByChange: (noSlideBy: boolean) => void;
   onOverlayChange: (isOverlay: boolean) => void;
@@ -44,15 +40,11 @@ export const IllustrationAnimationControls = ({
   animationLengthPercent,
   canContinue,
   continuing,
-  enterDurationMs,
-  exitDurationMs,
   isOverlay,
   isRange,
   isVisibilityLocked,
   noSlideBy,
-  onEnterDurationChange,
   onContinuingChange,
-  onExitDurationChange,
   onLengthChange,
   onNoSlideByChange,
   onOverlayChange,
@@ -149,11 +141,7 @@ export const IllustrationAnimationControls = ({
       </div>
 
       <SectionLayoutControls
-        enterDurationMs={enterDurationMs}
-        exitDurationMs={exitDurationMs}
         noSlideBy={noSlideBy}
-        onEnterDurationChange={onEnterDurationChange}
-        onExitDurationChange={onExitDurationChange}
         onNoSlideByChange={onNoSlideByChange}
         onSectionWidthChange={onSectionWidthChange}
         sectionWidthPercent={sectionWidthPercent}

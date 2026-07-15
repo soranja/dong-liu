@@ -20,6 +20,7 @@ const ILLUSTRATION_KIND_LABELS: Record<TimelineIllustrationKind, string> = {
   "kinetic-warp": "Kinetic warp",
   "vertical-typewriter": "Vertical typewriter",
   "word-cloud": "Word cloud",
+  "word-train": "Word train",
 };
 const ILLUSTRATION_KIND_CONTROL_CLASS =
   "h-7 min-w-0 flex-1 border border-(--color-border-strong) bg-(--color-panel) pl-4 font-mono text-[0.65rem] uppercase text-primary-text";

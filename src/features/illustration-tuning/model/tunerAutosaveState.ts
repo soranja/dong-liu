@@ -147,7 +147,7 @@ export function getSavedExitDurationMs(session: IllustrationTuningSession, secti
 export function getSavedSectionWidthPercent(session: IllustrationTuningSession, sectionId: number) {
   const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
-  return section ? getSavedSectionWidthPercentForSection(section) : 90;
+  return section ? getSavedSectionWidthPercentForSection(section) : 100;
 }
 
 export function getCurrentAnimation(

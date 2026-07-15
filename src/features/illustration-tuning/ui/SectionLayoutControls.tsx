@@ -1,26 +1,14 @@
-import {
-  SECTION_WIDTH_STEP_PERCENT,
-  SLIDE_MOTION_DURATION_MAX_MS,
-  SLIDE_MOTION_DURATION_STEP_MS,
-} from "@entities/track/model/layout";
+import { SECTION_WIDTH_STEP_PERCENT } from "@entities/track/model/layout";
 
 type SectionLayoutControlsProps = {
-  enterDurationMs: number;
-  exitDurationMs: number;
   noSlideBy: boolean;
   sectionWidthPercent: number;
-  onEnterDurationChange: (enterDurationMs: number) => void;
-  onExitDurationChange: (exitDurationMs: number) => void;
   onNoSlideByChange: (noSlideBy: boolean) => void;
   onSectionWidthChange: (sectionWidthPercent: number) => void;
 };
 
 export const SectionLayoutControls = ({
-  enterDurationMs,
-  exitDurationMs,
   noSlideBy,
-  onEnterDurationChange,
-  onExitDurationChange,
   onNoSlideByChange,
   onSectionWidthChange,
   sectionWidthPercent,
@@ -41,39 +29,6 @@ export const SectionLayoutControls = ({
         onChange={(event) => onSectionWidthChange(Number(event.currentTarget.value))}
       />
     </label>
-
-    <div className="grid grid-cols-2 gap-2">
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
-        <span className="mb-1 flex justify-between">
-          <span>Slide in</span>
-          <span>{enterDurationMs}ms</span>
-        </span>
-        <input
-          type="range"
-          min="0"
-          max={SLIDE_MOTION_DURATION_MAX_MS}
-          step={SLIDE_MOTION_DURATION_STEP_MS}
-          value={enterDurationMs}
-          className="w-full accent-(--color-control)"
-          onChange={(event) => onEnterDurationChange(Number(event.currentTarget.value))}
-        />
-      </label>
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
-        <span className="mb-1 flex justify-between">
-          <span>Slide out</span>
-          <span>{exitDurationMs}ms</span>
-        </span>
-        <input
-          type="range"
-          min="0"
-          max={SLIDE_MOTION_DURATION_MAX_MS}
-          step={SLIDE_MOTION_DURATION_STEP_MS}
-          value={exitDurationMs}
-          className="w-full accent-(--color-accent)"
-          onChange={(event) => onExitDurationChange(Number(event.currentTarget.value))}
-        />
-      </label>
-    </div>
 
     <button
       type="button"

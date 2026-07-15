@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
-import { installPlaybackScrollSeek } from "@shared/lib/playbackScrollSeek";
-import { useAudioGsapTimeline } from "./useAudioGsapTimeline";
-import { usePlaybackKeyboard } from "./usePlaybackKeyboard";
-import { useReplayCountdown } from "./useReplayCountdown";
-import { useSyncedRef } from "./useSyncedRef";
-import { useWaveformAudio } from "./useWaveformAudio";
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import { installPlaybackScrollSeek } from '@shared/lib/playbackScrollSeek';
+import { useAudioGsapTimeline } from './useAudioGsapTimeline';
+import { usePlaybackKeyboard } from './usePlaybackKeyboard';
+import { useReplayCountdown } from './useReplayCountdown';
+import { useSyncedRef } from './useSyncedRef';
+import { useWaveformAudio } from './useWaveformAudio';
 
 type PlaybackControllerOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -21,7 +21,7 @@ type SeekOptions = {
 
 const PLAYBACK_END_EPSILON_SECONDS = 0.2;
 const KEYBOARD_SEEK_RESUME_DELAY_MS = 80;
-const POINTER_SEEK_RESUME_DELAY_MS = 300;
+const POINTER_SEEK_RESUME_DELAY_MS = 500;
 const PLAYBACK_UI_UPDATE_INTERVAL_MS = 100;
 
 function isAtPlaybackEnd(audio: HTMLAudioElement) {
@@ -58,7 +58,11 @@ export function usePlaybackController({
   const isReadyRef = useSyncedRef(isReady);
   const replayPromptVisibleRef = useSyncedRef(replayPromptVisible);
   const replaySequence = useReplayCountdown(replayPromptVisible);
-  const { getAudioGraph, startPainting, stopPainting } = useWaveformAudio({ audioRef, canvasRef, volume });
+  const { getAudioGraph, prepareScratchAudio, scratch, startPainting, stopPainting } = useWaveformAudio({
+    audioRef,
+    canvasRef,
+    volume,
+  });
   const audioTimeline = useAudioGsapTimeline({
     audioRef,
     isEnabled: () => isReadyRef.current && hasStartedRef.current && !replayPromptVisibleRef.current,
@@ -181,6 +185,7 @@ export function usePlaybackController({
 
     try {
       await graph.context.resume();
+      void prepareScratchAudio();
       await audio.play();
       if (resumeSequence !== seekResumeSequenceRef.current) {
         audio.pause();
@@ -239,6 +244,7 @@ export function usePlaybackController({
       setHasStarted(true);
       setReplayPromptVisible(false);
       await graph.context.resume();
+      void prepareScratchAudio();
       await audio.play();
       setIsPlaying(true);
       startPlaybackFrameLoop();
@@ -286,6 +292,7 @@ export function usePlaybackController({
     hasStartedRef.current = true;
     setHasStarted(true);
     await graph.context.resume();
+    void prepareScratchAudio();
     await audio.play();
     setIsPlaying(true);
     startPlaybackFrameLoop();
@@ -317,12 +324,13 @@ export function usePlaybackController({
     if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
 
     const shouldResumePlayback = interruptPlaybackForSeek();
-
+    const previousTime = audio.currentTime;
     const nextTime = Math.min(audio.duration, Math.max(0, audio.currentTime + seconds));
     seek((nextTime / audio.duration) * 100, {
       animatePage: false,
       continuePlaybackScroll: false,
     });
+    void scratch(previousTime, nextTime);
 
     if (nextTime >= audio.duration) {
       handleEnded();
@@ -337,11 +345,13 @@ export function usePlaybackController({
     if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
 
     const shouldResumePlayback = interruptPlaybackForSeek();
-
+    const previousTime = audio.currentTime;
+    const nextTime = (value / 100) * audio.duration;
     seek(value, {
       animatePage: false,
       continuePlaybackScroll: false,
     });
+    void scratch(previousTime, nextTime);
 
     if (value >= 100) {
       handleEnded();

@@ -14,10 +14,14 @@ function blurActiveElement() {
   if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 }
 
-function isEditableTarget(target: EventTarget | null) {
+function isTextEntryTarget(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
-    Boolean(target.closest("button,input,select,textarea,[contenteditable]:not([contenteditable='false'])"))
+    Boolean(
+      target.closest(
+        "textarea,[contenteditable]:not([contenteditable='false']),input:not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='checkbox']):not([type='radio'])",
+      ),
+    )
   );
 }
 
@@ -28,9 +32,8 @@ export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep
 
   useEffect(() => {
     function handlePlaybackKey(event: KeyboardEvent) {
-      if (isEditableTarget(event.target)) return;
-
       if (event.code === "Space") {
+        if (isTextEntryTarget(event.target)) return;
         if (event.repeat) return;
 
         blurActiveElement();

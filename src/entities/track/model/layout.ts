@@ -1,9 +1,9 @@
 import type { LyricsSection } from "./types";
 
-export const DEFAULT_SECTION_WIDTH_PERCENT = 90;
+export const DEFAULT_SECTION_WIDTH_PERCENT = 100;
 export const SECTION_WIDTH_STEP_PERCENT = 5;
-export const DEFAULT_SLIDE_MOTION_DURATION_MS = 150;
-export const SLIDE_MOTION_DURATION_MAX_MS = 1000;
+export const DEFAULT_SLIDE_MOTION_DURATION_MS = 0;
+export const SLIDE_MOTION_DURATION_MAX_MS = 0;
 export const SLIDE_MOTION_DURATION_STEP_MS = 50;
 
 function clamp(value: number, min: number, max: number) {
@@ -18,22 +18,22 @@ export function clampSectionWidthPercent(sectionWidthPercent: number) {
   return clamp(roundToStep(sectionWidthPercent, SECTION_WIDTH_STEP_PERCENT), 0, 100);
 }
 
-export function clampSlideMotionDurationMs(durationMs: number) {
-  return clamp(Math.round(durationMs), 0, SLIDE_MOTION_DURATION_MAX_MS);
+export function clampSlideMotionDurationMs(_durationMs: number) {
+  return 0;
 }
 
 export function getSavedSectionWidthPercent(section: LyricsSection) {
   return clampSectionWidthPercent(section.sectionWidthPercent ?? DEFAULT_SECTION_WIDTH_PERCENT);
 }
 
-export function getSavedEnterDurationMs(section: LyricsSection) {
-  return clampSlideMotionDurationMs(section.enterDuration ?? DEFAULT_SLIDE_MOTION_DURATION_MS);
+export function getSavedEnterDurationMs(_section: LyricsSection) {
+  return 0;
 }
 
-export function getSavedExitDurationMs(section: LyricsSection) {
-  return clampSlideMotionDurationMs(section.exitDuration ?? DEFAULT_SLIDE_MOTION_DURATION_MS);
+export function getSavedExitDurationMs(_section: LyricsSection) {
+  return 0;
 }
 
-export function getSavedNoSlideBy(section: LyricsSection) {
-  return section.noSlideBy ?? false;
+export function getSavedNoSlideBy(_section: LyricsSection) {
+  return true;
 }

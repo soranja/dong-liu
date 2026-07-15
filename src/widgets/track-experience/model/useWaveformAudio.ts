@@ -1,12 +1,17 @@
-import { useEffect, useRef, type RefObject } from "react";
-import { getCssVariable } from "@shared/lib/cssVariables";
-import { drawWaveform } from "@shared/lib/waveform";
+import { useEffect, useRef, type RefObject } from 'react';
+import { getCssVariable } from '@shared/lib/cssVariables';
+import { drawWaveform } from '@shared/lib/waveform';
 
 type AudioGraph = {
   analyser: AnalyserNode;
   context: AudioContext;
   gain: GainNode;
   source: MediaElementAudioSourceNode;
+};
+
+type ScratchVoice = {
+  gain: GainNode;
+  source: AudioBufferSourceNode;
 };
 
 type WaveformAudioOptions = {
@@ -21,6 +26,11 @@ const WAVEFORM_DECAY_DURATION_MS = 1000;
 const WAVEFORM_DECAY_REST_INTENSITY = 0.01;
 const WAVEFORM_DECAY_SMOOTHNESS = 500;
 const WAVEFORM_SMOOTHNESS = 40;
+const SCRATCH_CROSSFADE_SECONDS = 0.045;
+const SCRATCH_FADE_IN_SECONDS = 0.3;
+const SCRATCH_FADE_OUT_SECONDS = 0.8;
+const SCRATCH_SOUND_SECONDS = 0.5;
+const SCRATCH_LEVEL = 1;
 
 export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioOptions) {
   const animationRef = useRef<number | null>(null);
@@ -28,8 +38,12 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
   const drawRestingWaveformRef = useRef<() => void>(() => {});
   const frequencyDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const graphRef = useRef<AudioGraph | null>(null);
+  const decodedAudioRef = useRef<AudioBuffer | null>(null);
+  const decodePromiseRef = useRef<Promise<AudioBuffer | null> | null>(null);
+  const scratchSequenceRef = useRef(0);
+  const scratchVoiceRef = useRef<ScratchVoice | null>(null);
   const intensityRef = useRef<number[]>([]);
-  const waveformColorsRef = useRef({ backgroundColor: "", color: "" });
+  const waveformColorsRef = useRef({ backgroundColor: '', color: '' });
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -44,6 +58,7 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
       if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
       canvasContextRef.current = null;
+      stopScratchVoice();
       void graphRef.current?.context.close();
     };
   }, []);
@@ -70,12 +85,12 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
     const resizeObserver = new ResizeObserver(scheduleRestingWaveform);
     if (canvasRef.current) resizeObserver.observe(canvasRef.current);
 
-    window.addEventListener("resize", scheduleRestingWaveform);
+    window.addEventListener('resize', scheduleRestingWaveform);
 
     return () => {
       if (restingFrame !== null) cancelAnimationFrame(restingFrame);
       resizeObserver.disconnect();
-      window.removeEventListener("resize", scheduleRestingWaveform);
+      window.removeEventListener('resize', scheduleRestingWaveform);
     };
   }, [canvasRef]);
 
@@ -87,8 +102,8 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
 
   function readWaveformColors() {
     waveformColorsRef.current = {
-      backgroundColor: getCssVariable("--color-panel"),
-      color: getCssVariable("--color-accent"),
+      backgroundColor: getCssVariable('--color-panel'),
+      color: getCssVariable('--color-accent'),
     };
   }
 
@@ -97,7 +112,7 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
     if (!canvas) return null;
 
     if (canvasContextRef.current?.canvas !== canvas) {
-      canvasContextRef.current = canvas.getContext("2d");
+      canvasContextRef.current = canvas.getContext('2d');
     }
 
     return canvasContextRef.current;
@@ -120,7 +135,7 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
       context,
       frequencyData,
       intensities: intensityRef.current,
-      position: "center",
+      position: 'center',
       smoothness,
     });
 
@@ -222,6 +237,105 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
     return graphRef.current;
   }
 
+  function stopScratchVoice() {
+    const voice = scratchVoiceRef.current;
+    if (!voice) return;
+
+    try {
+      voice.source.stop();
+    } catch {
+      // The source may already have naturally finished.
+    }
+    voice.source.disconnect();
+    voice.gain.disconnect();
+    scratchVoiceRef.current = null;
+  }
+
+  function crossfadeScratchVoice(now: number) {
+    const voice = scratchVoiceRef.current;
+    if (!voice) return;
+
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+    voice.gain.gain.exponentialRampToValueAtTime(0.0001, now + SCRATCH_CROSSFADE_SECONDS);
+    voice.source.stop(now + SCRATCH_CROSSFADE_SECONDS);
+    scratchVoiceRef.current = null;
+  }
+
+  async function prepareScratchAudio() {
+    if (decodedAudioRef.current) return decodedAudioRef.current;
+    if (decodePromiseRef.current) return decodePromiseRef.current;
+
+    decodePromiseRef.current = (async () => {
+      const audio = audioRef.current;
+      const graph = await getAudioGraph();
+      const sourceUrl = audio?.currentSrc || audio?.src;
+      if (!graph || !sourceUrl) return null;
+
+      try {
+        const response = await fetch(sourceUrl);
+        if (!response.ok) return null;
+        const decoded = await graph.context.decodeAudioData(await response.arrayBuffer());
+        decodedAudioRef.current = decoded;
+        return decoded;
+      } catch {
+        return null;
+      }
+    })();
+
+    return decodePromiseRef.current;
+  }
+
+  async function scratch(fromTime: number, toTime: number) {
+    const sequence = ++scratchSequenceRef.current;
+    const graph = await getAudioGraph();
+    if (!graph) return;
+    await graph.context.resume();
+
+    const decoded = await prepareScratchAudio();
+    if (!decoded || sequence !== scratchSequenceRef.current) return;
+
+    const direction = Math.sign(toTime - fromTime);
+    if (!direction) return;
+
+    const playbackRate = Math.min(2.2, Math.max(0.7, 0.65 + Math.sqrt(Math.abs(toTime - fromTime)) * 0.65));
+    const duration = Math.min(SCRATCH_SOUND_SECONDS * playbackRate, decoded.duration);
+    const startTime = Math.min(decoded.duration - duration, Math.max(0, direction > 0 ? fromTime : toTime));
+    const frameCount = Math.max(1, Math.floor(duration * decoded.sampleRate));
+    const grain = graph.context.createBuffer(decoded.numberOfChannels, frameCount, decoded.sampleRate);
+    const sourceFrame = Math.floor(startTime * decoded.sampleRate);
+
+    for (let channel = 0; channel < decoded.numberOfChannels; channel += 1) {
+      const sourceData = decoded.getChannelData(channel);
+      const grainData = grain.getChannelData(channel);
+      for (let frame = 0; frame < frameCount; frame += 1) {
+        const directedFrame = direction > 0 ? frame : frameCount - frame - 1;
+        grainData[frame] = sourceData[Math.min(sourceData.length - 1, sourceFrame + directedFrame)] ?? 0;
+      }
+    }
+
+    const source = graph.context.createBufferSource();
+    const scratchGain = graph.context.createGain();
+    const now = graph.context.currentTime;
+    const audibleDuration = duration / playbackRate;
+    crossfadeScratchVoice(now);
+    source.buffer = grain;
+    source.playbackRate.value = playbackRate;
+    scratchGain.gain.setValueAtTime(0.0001, now);
+    scratchGain.gain.exponentialRampToValueAtTime(SCRATCH_LEVEL, now + SCRATCH_FADE_IN_SECONDS);
+    scratchGain.gain.setValueAtTime(SCRATCH_LEVEL, now + audibleDuration - SCRATCH_FADE_OUT_SECONDS);
+    scratchGain.gain.exponentialRampToValueAtTime(0.0001, now + audibleDuration);
+    source.connect(scratchGain);
+    scratchGain.connect(graph.gain);
+    scratchVoiceRef.current = { gain: scratchGain, source };
+    source.onended = () => {
+      source.disconnect();
+      scratchGain.disconnect();
+      if (scratchVoiceRef.current?.source === source) scratchVoiceRef.current = null;
+    };
+    source.start(now);
+  }
+
   function startPainting() {
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
 
@@ -231,6 +345,8 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
 
   return {
     getAudioGraph,
+    prepareScratchAudio,
+    scratch,
     startPainting,
     stopPainting,
   };

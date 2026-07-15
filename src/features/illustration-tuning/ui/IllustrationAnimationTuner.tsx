@@ -95,16 +95,12 @@ export const IllustrationAnimationTuner = ({
             animationLengthPercent={panel.selectedAnimationLengthPercent}
             canContinue={tunerState.hasNextSection}
             continuing={tunerState.selectedContinuing}
-            enterDurationMs={tunerState.selectedEnterDurationMs}
-            exitDurationMs={tunerState.selectedExitDurationMs}
             isOverlay={tunerState.selectedIsOverlay}
             isRange={panel.selectedAnimation?.variant === "range"}
             isVisibilityLocked={tunerState.selectedIsOverlay}
             noSlideBy={tunerState.selectedNoSlideBy}
             onContinuingChange={tunerState.setContinuing}
             onLengthChange={panel.setAnimationLength}
-            onEnterDurationChange={tunerState.setEnterDurationMs}
-            onExitDurationChange={tunerState.setExitDurationMs}
             onNoSlideByChange={tunerState.setNoSlideBy}
             onOverlayChange={tunerState.setOverlay}
             onRegisterSnapshot={tunerState.registerSnapshot}
