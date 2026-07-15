@@ -1,36 +1,31 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
-import { normalizePath, type Plugin } from "vite";
-import * as ts from "typescript";
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { normalizePath, type Plugin } from 'vite';
+import * as ts from 'typescript';
 
 type AnimationSetting =
   | {
-      variant: "instant";
+      variant: 'instant';
     }
   | {
       animationLengthPercent: number;
       endPercent: number;
       startPercent: number;
-      variant: "range";
+      variant: 'range';
       wordStartPercents?: number[];
     };
 
-type IllustrationVisibility = "adjacent" | "only-active" | "start-active" | "active-end";
-type TextIllustrationKind = "blinking-words" | "kinetic-warp" | "vertical-typewriter" | "word-cloud" | "word-train";
+type IllustrationVisibility = 'adjacent' | 'only-active' | 'start-active' | 'active-end';
+type TextIllustrationKind = 'blinking-words' | 'kinetic-warp' | 'vertical-typewriter' | 'word-cloud' | 'word-train';
 
 type AnimationChange = {
   continuing?: boolean;
-  enterDuration?: number;
-  exitDuration?: number;
   hasIllustrationAnimation: boolean;
   hasContinuing: boolean;
-  hasEnterDuration: boolean;
-  hasExitDuration: boolean;
   hasIllustrationFadeIn: boolean;
   hasIllustrationFadeOut: boolean;
   hasIllustrationKind: boolean;
   hasIllustrationVisibility: boolean;
-  hasNoSlideBy: boolean;
   hasOverlay: boolean;
   hasSectionWidth: boolean;
   illustrationAnimation: AnimationSetting | null;
@@ -39,7 +34,6 @@ type AnimationChange = {
   illustrationKind?: TextIllustrationKind;
   illustrationVisibility?: IllustrationVisibility;
   isOverlay?: boolean;
-  noSlideBy?: boolean;
   sectionId: number;
   sectionWidthPercent?: number;
   timestamp?: string;
@@ -67,48 +61,57 @@ type TuningTarget = {
   normalizedLyricsFile: string;
 };
 
-const TUNING_ENDPOINT = "/__dong-liu/illustration-animation-settings";
+const TUNING_ENDPOINT = '/__dong-liu/illustration-animation-settings';
 const FADE_TIMING_MAX_MS = 1000;
 const DEFAULT_SECTION_WIDTH_PERCENT = 90;
-const SLIDE_MOTION_DURATION_MAX_MS = 1000;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === 'object' && value !== null;
 }
 
 function parseAnimation(value: unknown): AnimationSetting | null {
   if (value === null) return null;
-  if (!isRecord(value) || typeof value.variant !== "string") throw new Error("Invalid animation setting");
-  if (value.variant === "instant") return { variant: "instant" };
-  if (value.variant !== "range") throw new Error("Invalid animation variant");
+  if (!isRecord(value) || typeof value.variant !== 'string') throw new Error('Invalid animation setting');
+  if (value.variant === 'instant') return { variant: 'instant' };
+  if (value.variant !== 'range') throw new Error('Invalid animation variant');
 
   const startPercent = Number(value.startPercent);
   const endPercent = Number(value.endPercent);
   const animationLengthPercent =
     value.animationLengthPercent === undefined ? 100 : Number(value.animationLengthPercent);
   if (!Number.isFinite(startPercent) || startPercent < 0 || startPercent > 50) {
-    throw new Error("startPercent must be 0-50");
+    throw new Error('startPercent must be 0-50');
   }
   if (!Number.isFinite(endPercent) || endPercent < 51 || endPercent > 100) {
-    throw new Error("endPercent must be 51-100");
+    throw new Error('endPercent must be 51-100');
   }
   if (!Number.isFinite(animationLengthPercent) || animationLengthPercent < 0 || animationLengthPercent > 100) {
-    throw new Error("animationLengthPercent must be 0-100");
+    throw new Error('animationLengthPercent must be 0-100');
   }
 
   const wordStartPercents = value.wordStartPercents === undefined ? undefined : value.wordStartPercents;
-  if (wordStartPercents !== undefined && (!Array.isArray(wordStartPercents) || wordStartPercents.some((item) => !Number.isFinite(Number(item)) || Number(item) < 0 || Number(item) > 100))) {
-    throw new Error("wordStartPercents must contain percentages from 0-100");
+  if (
+    wordStartPercents !== undefined &&
+    (!Array.isArray(wordStartPercents) ||
+      wordStartPercents.some((item) => !Number.isFinite(Number(item)) || Number(item) < 0 || Number(item) > 100))
+  ) {
+    throw new Error('wordStartPercents must contain percentages from 0-100');
   }
-  return { animationLengthPercent, endPercent, startPercent, variant: "range", wordStartPercents: wordStartPercents?.map(Number) };
+  return {
+    animationLengthPercent,
+    endPercent,
+    startPercent,
+    variant: 'range',
+    wordStartPercents: wordStartPercents?.map(Number),
+  };
 }
 
 function parseIllustrationVisibility(value: unknown): IllustrationVisibility {
-  if (value === "adjacent" || value === "only-active" || value === "start-active" || value === "active-end") {
+  if (value === 'adjacent' || value === 'only-active' || value === 'start-active' || value === 'active-end') {
     return value;
   }
 
-  throw new Error("Invalid illustration visibility");
+  throw new Error('Invalid illustration visibility');
 }
 
 function parseFadeDuration(value: unknown, propertyName: string) {
@@ -120,117 +123,103 @@ function parseFadeDuration(value: unknown, propertyName: string) {
   return duration;
 }
 
-function parseSlideMotionDuration(value: unknown, propertyName: string) {
-  const duration = Number(value);
-  if (!Number.isInteger(duration) || duration < 0 || duration > SLIDE_MOTION_DURATION_MAX_MS) {
-    throw new Error(`${propertyName} must be 0-${SLIDE_MOTION_DURATION_MAX_MS}`);
-  }
-
-  return duration;
-}
-
 function parsePercent(value: unknown, propertyName: string, min: number, max: number, step = 1) {
   const percent = Number(value);
   if (!Number.isInteger(percent) || percent < min || percent > max || percent % step !== 0) {
-    throw new Error(`${propertyName} must be ${min}-${max}${step > 1 ? ` in ${step}% steps` : ""}`);
+    throw new Error(`${propertyName} must be ${min}-${max}${step > 1 ? ` in ${step}% steps` : ''}`);
   }
 
   return percent;
 }
 
 function parseBoolean(value: unknown, propertyName: string) {
-  if (typeof value === "boolean") return value;
+  if (typeof value === 'boolean') return value;
 
   throw new Error(`${propertyName} must be a boolean`);
 }
 
 function parseIllustrationKind(value: unknown): TextIllustrationKind {
-  if (value === "blinking-words" || value === "kinetic-warp" || value === "vertical-typewriter" || value === "word-cloud" || value === "word-train") return value;
+  if (
+    value === 'blinking-words' ||
+    value === 'kinetic-warp' ||
+    value === 'vertical-typewriter' ||
+    value === 'word-cloud' ||
+    value === 'word-train'
+  )
+    return value;
 
-  throw new Error("Invalid illustration kind");
+  throw new Error('Invalid illustration kind');
 }
 
 function parseTimestamp(value: unknown) {
-  if (typeof value !== "string") throw new Error("timestamp must be a string");
+  if (typeof value !== 'string') throw new Error('timestamp must be a string');
 
-  const [minutes, seconds] = value.split(":").map(Number);
+  const [minutes, seconds] = value.split(':').map(Number);
   if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) {
-    throw new Error("Invalid timestamp");
+    throw new Error('Invalid timestamp');
   }
 
   return value;
 }
 
 function parseRequest(value: unknown) {
-  if (!isRecord(value) || !Array.isArray(value.changes)) throw new Error("Expected changes array");
-  if (typeof value.trackId !== "string" || !value.trackId) throw new Error("Expected trackId");
+  if (!isRecord(value) || !Array.isArray(value.changes)) throw new Error('Expected changes array');
+  if (typeof value.trackId !== 'string' || !value.trackId) throw new Error('Expected trackId');
 
   const changes = value.changes.map((entry) => {
-    if (!isRecord(entry)) throw new Error("Invalid change");
+    if (!isRecord(entry)) throw new Error('Invalid change');
 
     const sectionId = Number(entry.sectionId);
-    if (!Number.isInteger(sectionId) || sectionId <= 0) throw new Error("Invalid sectionId");
+    if (!Number.isInteger(sectionId) || sectionId <= 0) throw new Error('Invalid sectionId');
 
-    const hasIllustrationAnimation = Object.hasOwn(entry, "illustrationAnimation");
-    const hasContinuing = Object.hasOwn(entry, "continuing");
-    const hasEnterDuration = Object.hasOwn(entry, "enterDuration");
-    const hasExitDuration = Object.hasOwn(entry, "exitDuration");
-    const hasIllustrationFadeIn = Object.hasOwn(entry, "illustrationFadeInMs");
-    const hasIllustrationFadeOut = Object.hasOwn(entry, "illustrationFadeOutMs");
-    const hasIllustrationKind = Object.hasOwn(entry, "illustrationKind");
-    const hasIllustrationVisibility = Object.hasOwn(entry, "illustrationVisibility");
-    const hasNoSlideBy = Object.hasOwn(entry, "noSlideBy");
-    const hasOverlay = Object.hasOwn(entry, "isOverlay");
-    const hasSectionWidth = Object.hasOwn(entry, "sectionWidthPercent");
-    const hasTimestamp = Object.hasOwn(entry, "timestamp");
+    const hasIllustrationAnimation = Object.hasOwn(entry, 'illustrationAnimation');
+    const hasContinuing = Object.hasOwn(entry, 'continuing');
+    const hasIllustrationFadeIn = Object.hasOwn(entry, 'illustrationFadeInMs');
+    const hasIllustrationFadeOut = Object.hasOwn(entry, 'illustrationFadeOutMs');
+    const hasIllustrationKind = Object.hasOwn(entry, 'illustrationKind');
+    const hasIllustrationVisibility = Object.hasOwn(entry, 'illustrationVisibility');
+    const hasOverlay = Object.hasOwn(entry, 'isOverlay');
+    const hasSectionWidth = Object.hasOwn(entry, 'sectionWidthPercent');
+    const hasTimestamp = Object.hasOwn(entry, 'timestamp');
     if (
       !hasIllustrationAnimation &&
       !hasContinuing &&
-      !hasEnterDuration &&
-      !hasExitDuration &&
       !hasIllustrationFadeIn &&
       !hasIllustrationFadeOut &&
       !hasIllustrationKind &&
       !hasIllustrationVisibility &&
-      !hasNoSlideBy &&
       !hasOverlay &&
       !hasSectionWidth &&
       !hasTimestamp
     ) {
-      throw new Error("Change must include a tuning value");
+      throw new Error('Change must include a tuning value');
     }
 
     return {
-      continuing: hasContinuing ? parseBoolean(entry.continuing, "continuing") : undefined,
-      enterDuration: hasEnterDuration ? parseSlideMotionDuration(entry.enterDuration, "enterDuration") : undefined,
-      exitDuration: hasExitDuration ? parseSlideMotionDuration(entry.exitDuration, "exitDuration") : undefined,
+      continuing: hasContinuing ? parseBoolean(entry.continuing, 'continuing') : undefined,
       hasIllustrationAnimation,
       hasContinuing,
-      hasEnterDuration,
-      hasExitDuration,
       hasIllustrationFadeIn,
       hasIllustrationFadeOut,
       hasIllustrationKind,
       hasIllustrationVisibility,
-      hasNoSlideBy,
       hasOverlay,
       hasSectionWidth,
       illustrationAnimation: hasIllustrationAnimation ? parseAnimation(entry.illustrationAnimation) : null,
       illustrationFadeInMs: hasIllustrationFadeIn
-        ? parseFadeDuration(entry.illustrationFadeInMs, "illustrationFadeInMs")
+        ? parseFadeDuration(entry.illustrationFadeInMs, 'illustrationFadeInMs')
         : undefined,
       illustrationFadeOutMs: hasIllustrationFadeOut
-        ? parseFadeDuration(entry.illustrationFadeOutMs, "illustrationFadeOutMs")
+        ? parseFadeDuration(entry.illustrationFadeOutMs, 'illustrationFadeOutMs')
         : undefined,
       illustrationKind: hasIllustrationKind ? parseIllustrationKind(entry.illustrationKind) : undefined,
       illustrationVisibility: hasIllustrationVisibility
         ? parseIllustrationVisibility(entry.illustrationVisibility)
         : undefined,
-      isOverlay: hasOverlay ? parseBoolean(entry.isOverlay, "isOverlay") : undefined,
-      noSlideBy: hasNoSlideBy ? parseBoolean(entry.noSlideBy, "noSlideBy") : undefined,
+      isOverlay: hasOverlay ? parseBoolean(entry.isOverlay, 'isOverlay') : undefined,
       sectionId,
       sectionWidthPercent: hasSectionWidth
-        ? parsePercent(entry.sectionWidthPercent, "sectionWidthPercent", 0, 100, 5)
+        ? parsePercent(entry.sectionWidthPercent, 'sectionWidthPercent', 0, 100, 5)
         : undefined,
       timestamp: hasTimestamp ? parseTimestamp(entry.timestamp) : undefined,
     };
@@ -274,40 +263,42 @@ function findLyricsArray(sourceFile: ts.SourceFile, lyricsExport: string) {
 }
 
 function getSectionId(sectionObject: ts.ObjectLiteralExpression) {
-  const property = sectionObject.properties.find((candidate) => getPropertyName(candidate) === "sectionId");
+  const property = sectionObject.properties.find((candidate) => getPropertyName(candidate) === 'sectionId');
   if (!property || !ts.isPropertyAssignment(property) || !ts.isNumericLiteral(property.initializer)) return null;
 
   return Number(property.initializer.text);
 }
 
 function getLineStart(text: string, position: number) {
-  return text.lastIndexOf("\n", position - 1) + 1;
+  return text.lastIndexOf('\n', position - 1) + 1;
 }
 
 function getLineEndIncludingNewline(text: string, position: number) {
-  const newlineIndex = text.indexOf("\n", position);
+  const newlineIndex = text.indexOf('\n', position);
 
   return newlineIndex === -1 ? text.length : newlineIndex + 1;
 }
 
 function getEndIncludingComma(text: string, position: number) {
   let cursor = position;
-  while (/\s/.test(text[cursor] ?? "")) cursor += 1;
+  while (/\s/.test(text[cursor] ?? '')) cursor += 1;
 
-  return text[cursor] === "," ? cursor + 1 : position;
+  return text[cursor] === ',' ? cursor + 1 : position;
 }
 
 function getLineIndent(text: string, position: number) {
   const lineStart = getLineStart(text, position);
   const match = /^\s*/.exec(text.slice(lineStart, position));
 
-  return match?.[0] ?? "";
+  return match?.[0] ?? '';
 }
 
 function formatAnimation(animation: AnimationSetting) {
-  if (animation.variant === "instant") return '{ variant: "instant" }';
+  if (animation.variant === 'instant') return '{ variant: "instant" }';
 
-  const wordStarts = animation.wordStartPercents ? `, wordStartPercents: [${animation.wordStartPercents.join(", ")}]` : "";
+  const wordStarts = animation.wordStartPercents
+    ? `, wordStartPercents: [${animation.wordStartPercents.join(', ')}]`
+    : '';
   return `{ variant: "range", startPercent: ${animation.startPercent}, endPercent: ${animation.endPercent}, animationLengthPercent: ${animation.animationLengthPercent}${wordStarts} }`;
 }
 
@@ -330,7 +321,7 @@ function updateStringProperty(
     return;
   }
 
-  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === 'sectionId');
   if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
 
   const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
@@ -356,7 +347,7 @@ function updateOptionalNumberProperty(
   if (existing && value === defaultValue) {
     const start = getLineStart(text, existing.getStart(sourceFile));
     const end = getLineEndIncludingNewline(text, getEndIncludingComma(text, existing.end));
-    edits.push({ end, start, text: "" });
+    edits.push({ end, start, text: '' });
     return;
   }
   if (!existing && value === defaultValue) return;
@@ -369,38 +360,7 @@ function updateOptionalNumberProperty(
     return;
   }
 
-  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
-  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
-
-  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
-  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
-  edits.push({
-    end: insertAt,
-    start: insertAt,
-    text: `${indent}${propertyName}: ${value},\n`,
-  });
-}
-
-function updateNumberProperty(
-  sourceFile: ts.SourceFile,
-  text: string,
-  sectionObject: ts.ObjectLiteralExpression,
-  sectionId: number,
-  propertyName: string,
-  value: number,
-  edits: TextEdit[],
-) {
-  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
-  if (existing) {
-    edits.push({
-      end: getEndIncludingComma(text, existing.end),
-      start: existing.getStart(sourceFile),
-      text: `${propertyName}: ${value},`,
-    });
-    return;
-  }
-
-  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === 'sectionId');
   if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
 
   const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
@@ -420,7 +380,7 @@ function updateIllustrationKind(
   illustrationKind: TextIllustrationKind,
   edits: TextEdit[],
 ) {
-  updateStringProperty(sourceFile, text, sectionObject, sectionId, "illustrationKind", illustrationKind, edits);
+  updateStringProperty(sourceFile, text, sectionObject, sectionId, 'illustrationKind', illustrationKind, edits);
 }
 
 function updateIllustrationVisibility(
@@ -436,7 +396,7 @@ function updateIllustrationVisibility(
     text,
     sectionObject,
     sectionId,
-    "illustrationVisibility",
+    'illustrationVisibility',
     illustrationVisibility,
     edits,
   );
@@ -455,7 +415,7 @@ function updateOptionalTrueBooleanProperty(
   if (!value && existing) {
     const start = getLineStart(text, existing.getStart(sourceFile));
     const end = getLineEndIncludingNewline(text, getEndIncludingComma(text, existing.end));
-    edits.push({ end, start, text: "" });
+    edits.push({ end, start, text: '' });
     return;
   }
   if (!value) return;
@@ -468,39 +428,12 @@ function updateOptionalTrueBooleanProperty(
     return;
   }
 
-  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === 'sectionId');
   if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
 
   const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
   const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
   edits.push({ end: insertAt, start: insertAt, text: `${indent}${propertyName}: true,\n` });
-}
-
-function updateBooleanProperty(
-  sourceFile: ts.SourceFile,
-  text: string,
-  sectionObject: ts.ObjectLiteralExpression,
-  sectionId: number,
-  propertyName: string,
-  value: boolean,
-  edits: TextEdit[],
-) {
-  const existing = sectionObject.properties.find((property) => getPropertyName(property) === propertyName);
-  if (existing) {
-    edits.push({
-      end: getEndIncludingComma(text, existing.end),
-      start: existing.getStart(sourceFile),
-      text: `${propertyName}: ${value},`,
-    });
-    return;
-  }
-
-  const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
-  if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
-
-  const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
-  const indent = getLineIndent(text, sectionIdProperty.getStart(sourceFile));
-  edits.push({ end: insertAt, start: insertAt, text: `${indent}${propertyName}: ${value},\n` });
 }
 
 function updateOverlay(
@@ -511,7 +444,7 @@ function updateOverlay(
   isOverlay: boolean,
   edits: TextEdit[],
 ) {
-  updateOptionalTrueBooleanProperty(sourceFile, text, sectionObject, sectionId, "isOverlay", isOverlay, edits);
+  updateOptionalTrueBooleanProperty(sourceFile, text, sectionObject, sectionId, 'isOverlay', isOverlay, edits);
 }
 
 function updateTimestamp(
@@ -521,7 +454,7 @@ function updateTimestamp(
   timestamp: string,
   edits: TextEdit[],
 ) {
-  const existing = sectionObject.properties.find((property) => getPropertyName(property) === "timestamp");
+  const existing = sectionObject.properties.find((property) => getPropertyName(property) === 'timestamp');
   if (!existing || !ts.isPropertyAssignment(existing) || !ts.isStringLiteral(existing.initializer)) {
     throw new Error(`timestamp property missing for section ${sectionId}`);
   }
@@ -541,17 +474,12 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
   changes.forEach((change) => {
     const {
       continuing,
-      enterDuration,
-      exitDuration,
-      hasEnterDuration,
-      hasExitDuration,
       hasIllustrationAnimation,
       hasContinuing,
       hasIllustrationFadeIn,
       hasIllustrationFadeOut,
       hasIllustrationKind,
       hasIllustrationVisibility,
-      hasNoSlideBy,
       hasOverlay,
       hasSectionWidth,
       illustrationAnimation,
@@ -560,7 +488,6 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
       illustrationKind,
       illustrationVisibility,
       isOverlay,
-      noSlideBy,
       sectionId,
       sectionWidthPercent,
       timestamp,
@@ -578,16 +505,10 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
         text,
         sectionObject,
         sectionId,
-        "continuing",
+        'continuing',
         Boolean(continuing),
         edits,
       );
-    }
-    if (hasEnterDuration) {
-      updateNumberProperty(sourceFile, text, sectionObject, sectionId, "enterDuration", enterDuration ?? 0, edits);
-    }
-    if (hasExitDuration) {
-      updateNumberProperty(sourceFile, text, sectionObject, sectionId, "exitDuration", exitDuration ?? 0, edits);
     }
     if (hasIllustrationKind) {
       if (!illustrationKind) throw new Error(`illustrationKind missing for section ${sectionId}`);
@@ -599,7 +520,7 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
         text,
         sectionObject,
         sectionId,
-        "illustrationFadeInMs",
+        'illustrationFadeInMs',
         illustrationFadeInMs ?? 0,
         0,
         edits,
@@ -611,7 +532,7 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
         text,
         sectionObject,
         sectionId,
-        "illustrationFadeOutMs",
+        'illustrationFadeOutMs',
         illustrationFadeOutMs ?? 0,
         0,
         edits,
@@ -622,16 +543,13 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
       updateIllustrationVisibility(sourceFile, text, sectionObject, sectionId, illustrationVisibility, edits);
     }
     if (hasOverlay) updateOverlay(sourceFile, text, sectionObject, sectionId, Boolean(isOverlay), edits);
-    if (hasNoSlideBy) {
-      updateBooleanProperty(sourceFile, text, sectionObject, sectionId, "noSlideBy", Boolean(noSlideBy), edits);
-    }
     if (hasSectionWidth) {
       updateOptionalNumberProperty(
         sourceFile,
         text,
         sectionObject,
         sectionId,
-        "sectionWidthPercent",
+        'sectionWidthPercent',
         sectionWidthPercent ?? DEFAULT_SECTION_WIDTH_PERCENT,
         DEFAULT_SECTION_WIDTH_PERCENT,
         edits,
@@ -639,12 +557,12 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
     }
     if (!hasIllustrationAnimation) return;
 
-    const existing = sectionObject.properties.find((property) => getPropertyName(property) === "illustrationAnimation");
+    const existing = sectionObject.properties.find((property) => getPropertyName(property) === 'illustrationAnimation');
 
     if (existing && illustrationAnimation === null) {
       const start = getLineStart(text, existing.getStart(sourceFile));
       const end = getLineEndIncludingNewline(text, getEndIncludingComma(text, existing.end));
-      edits.push({ end, start, text: "" });
+      edits.push({ end, start, text: '' });
       return;
     }
 
@@ -658,7 +576,7 @@ function updateLyricsSource(text: string, changes: AnimationChange[], target: Tu
     }
 
     if (!existing && illustrationAnimation) {
-      const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === "sectionId");
+      const sectionIdProperty = sectionObject.properties.find((property) => getPropertyName(property) === 'sectionId');
       if (!sectionIdProperty) throw new Error(`sectionId property missing for section ${sectionId}`);
 
       const insertAt = getLineEndIncludingNewline(text, sectionIdProperty.end);
@@ -694,33 +612,33 @@ export function illustrationAnimationTuningPlugin(options: IllustrationAnimation
   );
 
   return {
-    apply: "serve",
+    apply: 'serve',
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        if (request.method !== "POST" || request.url?.split("?")[0] !== TUNING_ENDPOINT) {
+        if (request.method !== 'POST' || request.url?.split('?')[0] !== TUNING_ENDPOINT) {
           next();
           return;
         }
 
-        let body = "";
-        request.setEncoding("utf8");
-        request.on("data", (chunk: string) => {
+        let body = '';
+        request.setEncoding('utf8');
+        request.on('data', (chunk: string) => {
           body += chunk;
         });
-        request.on("end", () => {
+        request.on('end', () => {
           try {
             const { changes, trackId } = parseRequest(JSON.parse(body));
             const target = targets.get(trackId);
             if (!target) throw new Error(`Track "${trackId}" is not enabled for tuning`);
 
-            const source = readFileSync(target.lyricsFile, "utf8");
+            const source = readFileSync(target.lyricsFile, 'utf8');
             writeFileSync(target.lyricsFile, updateLyricsSource(source, changes, target));
-            response.setHeader("Content-Type", "application/json");
+            response.setHeader('Content-Type', 'application/json');
             response.end(JSON.stringify({ ok: true }));
           } catch (error) {
             response.statusCode = 400;
-            response.setHeader("Content-Type", "application/json");
-            response.end(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }));
+            response.setHeader('Content-Type', 'application/json');
+            response.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }));
           }
         });
       });
@@ -733,6 +651,6 @@ export function illustrationAnimationTuningPlugin(options: IllustrationAnimation
       const normalizedFile = normalizePath(options.file);
       if ([...targets.values()].some((target) => target.normalizedLyricsFile === normalizedFile)) return [];
     },
-    name: "dong-liu-illustration-animation-tuning",
+    name: 'dong-liu-illustration-animation-tuning',
   };
 }

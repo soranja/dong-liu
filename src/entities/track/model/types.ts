@@ -6,7 +6,6 @@ export type TrackSummary = {
   id: string;
   trackNo: number;
   route: `/tracks/${string}`;
-  slug: string;
   title: string;
   cover: {
     alt: string;
@@ -53,10 +52,6 @@ export type TextSizeLevel = 1 | 2 | 3 | 4 | 5;
 
 export type LyricsSection<TCustomIllustration = unknown> = {
   continuing?: boolean;
-  /** @deprecated Slide motion is disabled and no longer tunable. */
-  enterDuration: number;
-  /** @deprecated Slide motion is disabled and no longer tunable. */
-  exitDuration: number;
   fullBleedIllustration?: boolean;
   illustrateWith: LyricsIllustration<TCustomIllustration>;
   illustrationAnimation?: IllustrationAnimation;
@@ -66,9 +61,6 @@ export type LyricsSection<TCustomIllustration = unknown> = {
   illustrationVisibility?: IllustrationVisibility;
   isOverlay?: boolean;
   line: string;
-  noSlideBy?: boolean;
-  /** @deprecated Slide motion is disabled and this value is ignored. */
-  offsetEnter: number;
   sectionId: number;
   sectionWidthPercent?: number;
   sizeLevel?: TextSizeLevel;

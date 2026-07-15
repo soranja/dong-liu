@@ -5,10 +5,9 @@ export const TRACKS = [
     id: 'ram-box',
     trackNo: 1,
     route: '/tracks/ram-box',
-    slug: 'ram-box',
     title: 'RAM — Бокс · prod. by disqonnect',
     cover: {
-      alt: 'RAM — Бокс cover artwork',
+      alt: 'RAM — Бокс',
       src: '/images/covers/ram-box.webp',
     },
   },

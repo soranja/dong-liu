@@ -90,7 +90,7 @@ Aliases are configured in TypeScript and Vite. Oxlint prevents reverse-layer ali
 
 `entities/track` owns neutral contracts:
 
-- `TrackSummary`: ID, slug, title, and route.
+- `TrackSummary`: ID, title, and route.
 - `LyricsSection<TCustomIllustration>`: lyric timing, layout, animation metadata, and serializable illustration data.
 - `TrackExperienceProps<TCustomIllustration>`: track ID, audio, lyrics, custom renderer, and optional tuning adapter.
 - `TextIllustrationKind`: derived from the shared animation registry.
@@ -108,7 +108,7 @@ Tuning is development-only:
 3. The track widget receives that session through its optional tuning adapter.
 4. Production renders the plain track widget without importing the tuning feature.
 
-Press `F4` after the experience is ready to open the tuner. It supports section selection, live preview, loop ranges, line timing, animation range/length, illustration selection, visibility, overlays, section width, slide motion, fades, continuation, reset, and register.
+Press `F4` after the experience is ready to open the tuner. It supports section selection, live preview, loop ranges, line timing, animation range/length, illustration selection, visibility, overlays, section width, fades, continuation, reset, and register.
 
 Drafts, progress subscriptions, and panel state are scoped to the track session. Drafts are kept only in memory and are discarded on refresh. No global progress events or global draft maps are used.
 

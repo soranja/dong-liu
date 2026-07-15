@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { clampSectionWidthPercent, clampSlideMotionDurationMs } from '@entities/track/model/layout';
+import { clampSectionWidthPercent } from '@entities/track/model/layout';
 import type { IllustrationVisibility } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import {
@@ -15,24 +15,18 @@ import {
   clampTime,
   getCurrentAnimation,
   getCurrentContinuing,
-  getCurrentEnterDurationMs,
-  getCurrentExitDurationMs,
   getCurrentFadeInMs,
   getCurrentFadeOutMs,
   getCurrentIllustrationKind,
   getCurrentIllustrationVisibility,
-  getCurrentNoSlideBy,
   getCurrentOverlay,
   getCurrentSectionWidthPercent,
   getDraftStartTime,
   getSavedContinuing,
-  getSavedEnterDurationMs,
-  getSavedExitDurationMs,
   getSavedFadeInMs,
   getSavedFadeOutMs,
   getSavedIllustrationKind,
   getSavedIllustrationVisibility,
-  getSavedNoSlideBy,
   getSavedOverlay,
   getSavedSectionWidthPercent,
   getSavedStartTime,
@@ -43,8 +37,6 @@ import {
   type DraftContinuings,
   type DraftIllustrationKinds,
   type DraftIllustrationVisibilities,
-  type DraftMotionDurations,
-  type DraftNoSlideBys,
   type DraftOverlays,
   type DraftSectionWidthPercents,
   type DraftStartTimes,
@@ -57,13 +49,10 @@ import {
 export function useTunerAutosave(session: IllustrationTuningSession, selectedIndex: number, duration: number) {
   const [draftAnimations, setDraftAnimations] = useState<DirtyAnimations>({});
   const [draftContinuings, setDraftContinuings] = useState<DraftContinuings>({});
-  const [draftEnterDurationMs, setDraftEnterDurationMs] = useState<DraftMotionDurations>({});
-  const [draftExitDurationMs, setDraftExitDurationMs] = useState<DraftMotionDurations>({});
   const [draftFadeInMs, setDraftFadeInMs] = useState<DraftFadeDurations>({});
   const [draftFadeOutMs, setDraftFadeOutMs] = useState<DraftFadeDurations>({});
   const [draftIllustrationKinds, setDraftIllustrationKinds] = useState<DraftIllustrationKinds>({});
   const [draftIllustrationVisibilities, setDraftIllustrationVisibilities] = useState<DraftIllustrationVisibilities>({});
-  const [draftNoSlideBys, setDraftNoSlideBys] = useState<DraftNoSlideBys>({});
   const [draftOverlays, setDraftOverlays] = useState<DraftOverlays>({});
   const [draftSectionWidthPercents, setDraftSectionWidthPercents] = useState<DraftSectionWidthPercents>({});
   const [draftStartTimes, setDraftStartTimes] = useState<DraftStartTimes>({});
@@ -82,8 +71,6 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
         : Number.isFinite(duration)
           ? duration
           : null,
-      enterDuration: getCurrentEnterDurationMs(session, draftEnterDurationMs, selectedSection.sectionId),
-      exitDuration: getCurrentExitDurationMs(session, draftExitDurationMs, selectedSection.sectionId),
       fadeInMs: getCurrentFadeInMs(session, draftFadeInMs, selectedSection.sectionId),
       fadeOutMs: getCurrentFadeOutMs(session, draftFadeOutMs, selectedSection.sectionId),
       illustrationKind: getCurrentIllustrationKind(session, draftIllustrationKinds, selectedSection.sectionId),
@@ -93,20 +80,16 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
         selectedSection.sectionId,
       ),
       isOverlay: getCurrentOverlay(session, draftOverlays, selectedSection.sectionId),
-      noSlideBy: getCurrentNoSlideBy(session, draftNoSlideBys, selectedSection.sectionId),
       sectionWidthPercent: getCurrentSectionWidthPercent(session, draftSectionWidthPercents, selectedSection.sectionId),
       startTime: getDraftStartTime(session, draftStartTimes, selectedIndex),
     };
   }, [
     draftAnimations,
     draftContinuings,
-    draftEnterDurationMs,
-    draftExitDurationMs,
     draftFadeInMs,
     draftFadeOutMs,
     draftIllustrationKinds,
     draftIllustrationVisibilities,
-    draftNoSlideBys,
     draftOverlays,
     draftSectionWidthPercents,
     draftStartTimes,
@@ -122,14 +105,11 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       animation: getSavedAnimation(session.lyrics, selectedSection.sectionId),
       continuing: getSavedContinuing(session, selectedSection.sectionId),
       endTime: nextSection ? getSavedStartTime(session, nextSection.sectionId) : null,
-      enterDuration: getSavedEnterDurationMs(session, selectedSection.sectionId),
-      exitDuration: getSavedExitDurationMs(session, selectedSection.sectionId),
       fadeInMs: getSavedFadeInMs(session, selectedSection.sectionId),
       fadeOutMs: getSavedFadeOutMs(session, selectedSection.sectionId),
       illustrationKind: getSavedIllustrationKind(session, selectedSection.sectionId),
       illustrationVisibility: getSavedIllustrationVisibility(session, selectedSection.sectionId),
       isOverlay: getSavedOverlay(session, selectedSection.sectionId),
-      noSlideBy: getSavedNoSlideBy(session, selectedSection.sectionId),
       sectionWidthPercent: getSavedSectionWidthPercent(session, selectedSection.sectionId),
       startTime: getSavedStartTime(session, selectedSection.sectionId),
     };
@@ -281,57 +261,6 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     [addPendingChange, cacheSnapshot, draftOverlays, selectedSection.sectionId, session, setSaveStatus],
   );
 
-  const setNoSlideBy = useCallback(
-    (noSlideBy: boolean) => {
-      cacheSnapshot();
-      if (getCurrentNoSlideBy(session, draftNoSlideBys, selectedSection.sectionId) === noSlideBy) return;
-
-      setDraftNoSlideBys((current) => ({ ...current, [selectedSection.sectionId]: noSlideBy }));
-      session.setDraftSectionNoSlideBy(selectedSection.sectionId, noSlideBy);
-      addPendingChange(selectedSection.sectionId, { hasNoSlideBy: true, noSlideBy });
-      setSaveStatus('Unsaved changes');
-    },
-    [addPendingChange, cacheSnapshot, draftNoSlideBys, selectedSection.sectionId, session, setSaveStatus],
-  );
-
-  const setEnterDurationMs = useCallback(
-    (enterDurationMs: number) => {
-      cacheSnapshot();
-      const nextEnterDurationMs = clampSlideMotionDurationMs(enterDurationMs);
-      if (getCurrentEnterDurationMs(session, draftEnterDurationMs, selectedSection.sectionId) === nextEnterDurationMs) {
-        return;
-      }
-
-      setDraftEnterDurationMs((current) => ({ ...current, [selectedSection.sectionId]: nextEnterDurationMs }));
-      session.setDraftSectionEnterDurationMs(selectedSection.sectionId, nextEnterDurationMs);
-      addPendingChange(selectedSection.sectionId, {
-        enterDuration: nextEnterDurationMs,
-        hasEnterDuration: true,
-      });
-      setSaveStatus('Unsaved changes');
-    },
-    [addPendingChange, cacheSnapshot, draftEnterDurationMs, selectedSection.sectionId, session, setSaveStatus],
-  );
-
-  const setExitDurationMs = useCallback(
-    (exitDurationMs: number) => {
-      cacheSnapshot();
-      const nextExitDurationMs = clampSlideMotionDurationMs(exitDurationMs);
-      if (getCurrentExitDurationMs(session, draftExitDurationMs, selectedSection.sectionId) === nextExitDurationMs) {
-        return;
-      }
-
-      setDraftExitDurationMs((current) => ({ ...current, [selectedSection.sectionId]: nextExitDurationMs }));
-      session.setDraftSectionExitDurationMs(selectedSection.sectionId, nextExitDurationMs);
-      addPendingChange(selectedSection.sectionId, {
-        exitDuration: nextExitDurationMs,
-        hasExitDuration: true,
-      });
-      setSaveStatus('Unsaved changes');
-    },
-    [addPendingChange, cacheSnapshot, draftExitDurationMs, selectedSection.sectionId, session, setSaveStatus],
-  );
-
   const setSectionWidthPercent = useCallback(
     (sectionWidthPercent: number) => {
       cacheSnapshot();
@@ -387,30 +316,24 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   const selectedUsesCachedSnapshot =
     areDirtyAnimationsEqual(currentSnapshot.animation, cachedSnapshot.animation) &&
     currentSnapshot.continuing === cachedSnapshot.continuing &&
-    currentSnapshot.enterDuration === cachedSnapshot.enterDuration &&
-    currentSnapshot.exitDuration === cachedSnapshot.exitDuration &&
     currentSnapshot.fadeInMs === cachedSnapshot.fadeInMs &&
     currentSnapshot.fadeOutMs === cachedSnapshot.fadeOutMs &&
     currentSnapshot.illustrationKind === cachedSnapshot.illustrationKind &&
     currentSnapshot.illustrationVisibility === cachedSnapshot.illustrationVisibility &&
     currentSnapshot.isOverlay === cachedSnapshot.isOverlay &&
-    currentSnapshot.noSlideBy === cachedSnapshot.noSlideBy &&
     currentSnapshot.sectionWidthPercent === cachedSnapshot.sectionWidthPercent &&
     currentSnapshot.startTime === cachedSnapshot.startTime &&
     currentSnapshot.endTime === cachedSnapshot.endTime;
   const selectedSaveStatus =
     selectedUsesCachedSnapshot && !Object.keys(pendingChanges).length ? saveStatus : 'Unsaved changes';
 
-  const resetAllSnapshots = useCallback(() => {
+  const resetAllDrafts = useCallback(() => {
     setDraftAnimations({});
     setDraftContinuings({});
-    setDraftEnterDurationMs({});
-    setDraftExitDurationMs({});
     setDraftFadeInMs({});
     setDraftFadeOutMs({});
     setDraftIllustrationKinds({});
     setDraftIllustrationVisibilities({});
-    setDraftNoSlideBys({});
     setDraftOverlays({});
     setDraftSectionWidthPercents({});
     setDraftStartTimes({});
@@ -422,33 +345,27 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   return {
     hasNextSection: Boolean(nextSection),
     registerSnapshot,
-    resetSnapshot: resetAllSnapshots,
+    resetSnapshot: resetAllDrafts,
     saveStatus: selectedSaveStatus,
     selectedAnimation: getEffectiveAnimation(session.lyrics, draftAnimations, selectedSection.sectionId),
     selectedContinuing: currentSnapshot.continuing,
-    selectedEnterDurationMs: currentSnapshot.enterDuration,
-    selectedExitDurationMs: currentSnapshot.exitDuration,
     selectedFadeInMs: currentSnapshot.fadeInMs,
     selectedFadeOutMs: currentSnapshot.fadeOutMs,
     selectedIllustrationKind: session.getIllustrationKind(selectedSection),
     selectedIllustrationVisibility: session.getIllustrationVisibility(selectedSection),
     selectedIsOverlay: currentSnapshot.isOverlay,
     selectedIsLocked: selectedIndex > 0 && session.getSectionContinuing(session.lyrics[selectedIndex - 1]),
-    selectedNoSlideBy: currentSnapshot.noSlideBy,
     selectedSectionWidthPercent: currentSnapshot.sectionWidthPercent,
     selectedEndTime: currentSnapshot.endTime ?? currentSnapshot.startTime,
     selectedStartTime: currentSnapshot.startTime,
     setAnimation,
     setContinuing,
-    setEnterDurationMs,
-    setExitDurationMs,
     setFadeInMs,
     setFadeOutMs,
     setIllustrationKind,
     setIllustrationVisibility,
     setLineEndTime: (startTime: number) => setStartTime(selectedIndex + 1, startTime),
     setLineStartTime: (startTime: number) => setStartTime(selectedIndex, startTime),
-    setNoSlideBy,
     setOverlay,
     setSectionWidthPercent,
   };

@@ -1,6 +1,6 @@
-import { getRangeAnimation } from "@entities/track/model/animation";
-import type { IllustrationAnimation, IllustrationVisibility } from "@entities/track/model/types";
-import { SectionLayoutControls } from "./SectionLayoutControls";
+import { getRangeAnimation } from '@entities/track/model/animation';
+import type { IllustrationAnimation, IllustrationVisibility } from '@entities/track/model/types';
+import { SectionLayoutControls } from './SectionLayoutControls';
 
 type DirtyAnimation = IllustrationAnimation | null;
 
@@ -11,14 +11,12 @@ type IllustrationAnimationControlsProps = {
   isOverlay: boolean;
   isRange: boolean;
   isVisibilityLocked: boolean;
-  noSlideBy: boolean;
   saveStatus: string;
   sectionWidthPercent: number;
   selectedAnimation: IllustrationAnimation | undefined;
   selectedVisibility: IllustrationVisibility;
   onContinuingChange: (continuing: boolean) => void;
   onLengthChange: (animationLengthPercent: number) => void;
-  onNoSlideByChange: (noSlideBy: boolean) => void;
   onOverlayChange: (isOverlay: boolean) => void;
   onRegisterSnapshot: () => void;
   onResetAnimation: () => void;
@@ -28,12 +26,12 @@ type IllustrationAnimationControlsProps = {
 };
 
 const TOGGLE_BUTTON_CLASS =
-  "border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)";
+  'border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)';
 const VISIBILITY_OPTIONS = [
-  { label: "Adjacent", value: "adjacent" },
-  { label: "Only active", value: "only-active" },
-  { label: "Start + active", value: "start-active" },
-  { label: "Active + end", value: "active-end" },
+  { label: 'Adjacent', value: 'adjacent' },
+  { label: 'Only active', value: 'only-active' },
+  { label: 'Start + active', value: 'start-active' },
+  { label: 'Active + end', value: 'active-end' },
 ] satisfies Array<{ label: string; value: IllustrationVisibility }>;
 
 export const IllustrationAnimationControls = ({
@@ -43,10 +41,8 @@ export const IllustrationAnimationControls = ({
   isOverlay,
   isRange,
   isVisibilityLocked,
-  noSlideBy,
   onContinuingChange,
   onLengthChange,
-  onNoSlideByChange,
   onOverlayChange,
   onRegisterSnapshot,
   onResetAnimation,
@@ -58,7 +54,7 @@ export const IllustrationAnimationControls = ({
   selectedAnimation,
   selectedVisibility,
 }: IllustrationAnimationControlsProps) => {
-  const visibility = isVisibilityLocked ? "only-active" : selectedVisibility;
+  const visibility = isVisibilityLocked ? 'only-active' : selectedVisibility;
 
   return (
     <>
@@ -85,15 +81,15 @@ export const IllustrationAnimationControls = ({
             <button
               type="button"
               className={TOGGLE_BUTTON_CLASS}
-              data-active={selectedAnimation?.variant !== "range"}
-              onClick={() => onSelectAnimation({ variant: "instant" })}
+              data-active={selectedAnimation?.variant !== 'range'}
+              onClick={() => onSelectAnimation({ variant: 'instant' })}
             >
               Instant
             </button>
             <button
               type="button"
               className={TOGGLE_BUTTON_CLASS}
-              data-active={selectedAnimation?.variant === "range"}
+              data-active={selectedAnimation?.variant === 'range'}
               onClick={() => onSelectAnimation(getRangeAnimation(0, 100))}
             >
               Range
@@ -105,7 +101,7 @@ export const IllustrationAnimationControls = ({
           <p className="mb-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Visibility</p>
           <div className="grid grid-cols-2 gap-1">
             {VISIBILITY_OPTIONS.map((option) => {
-              const isDisabled = isVisibilityLocked && option.value !== "only-active";
+              const isDisabled = isVisibilityLocked && option.value !== 'only-active';
 
               return (
                 <button
@@ -114,7 +110,7 @@ export const IllustrationAnimationControls = ({
                   className={`${TOGGLE_BUTTON_CLASS} min-h-10 disabled:cursor-not-allowed disabled:opacity-40`}
                   data-active={visibility === option.value}
                   disabled={isDisabled}
-                  title={isDisabled ? "Overlay sections are always only-active" : undefined}
+                  title={isDisabled ? 'Overlay sections are always only-active' : undefined}
                   onClick={() => onVisibilityChange(option.value)}
                 >
                   {option.label}
@@ -140,12 +136,7 @@ export const IllustrationAnimationControls = ({
         </button>
       </div>
 
-      <SectionLayoutControls
-        noSlideBy={noSlideBy}
-        onNoSlideByChange={onNoSlideByChange}
-        onSectionWidthChange={onSectionWidthChange}
-        sectionWidthPercent={sectionWidthPercent}
-      />
+      <SectionLayoutControls onSectionWidthChange={onSectionWidthChange} sectionWidthPercent={sectionWidthPercent} />
 
       {isRange ? (
         <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">

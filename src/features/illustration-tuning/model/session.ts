@@ -4,14 +4,7 @@ import {
   type TimelineProgressDetail,
   type TrackTuningAdapter,
 } from '@entities/track/model/tuning';
-import {
-  clampSectionWidthPercent,
-  clampSlideMotionDurationMs,
-  getSavedEnterDurationMs,
-  getSavedExitDurationMs,
-  getSavedNoSlideBy,
-  getSavedSectionWidthPercent,
-} from '@entities/track/model/layout';
+import { clampSectionWidthPercent, getSavedSectionWidthPercent } from '@entities/track/model/layout';
 import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
@@ -28,9 +21,6 @@ export type IllustrationTuningSession = Omit<TrackTuningAdapter, 'renderPanel'> 
   setDraftIllustrationKind: (sectionId: number, illustrationKind: TextIllustrationKind) => void;
   setDraftIllustrationVisibility: (sectionId: number, visibility: IllustrationVisibility) => void;
   setDraftSectionContinuing: (sectionId: number, continuing: boolean) => void;
-  setDraftSectionEnterDurationMs: (sectionId: number, enterDurationMs: number) => void;
-  setDraftSectionExitDurationMs: (sectionId: number, exitDurationMs: number) => void;
-  setDraftSectionNoSlideBy: (sectionId: number, noSlideBy: boolean) => void;
   setDraftSectionOverlay: (sectionId: number, isOverlay: boolean) => void;
   setDraftSectionStart: (sectionId: number, startTime: number) => void;
   setDraftSectionWidthPercent: (sectionId: number, sectionWidthPercent: number) => void;
@@ -44,12 +34,9 @@ export function createIllustrationTuningSession(
 ): IllustrationTuningSession {
   const draftAnimations = new Map<number, DraftAnimation>();
   const draftContinuing = new Map<number, boolean>();
-  const draftEnterDurationMs = new Map<number, number>();
-  const draftExitDurationMs = new Map<number, number>();
   const draftFadeInMs = new Map<number, number>();
   const draftFadeOutMs = new Map<number, number>();
   const draftIllustrationKinds = new Map<number, TextIllustrationKind>();
-  const draftNoSlideBys = new Map<number, boolean>();
   const draftOverlays = new Map<number, boolean>();
   const draftSectionStarts = new Map<number, number>();
   const draftSectionWidthPercents = new Map<number, number>();
@@ -69,12 +56,9 @@ export function createIllustrationTuningSession(
     clearDrafts() {
       draftAnimations.clear();
       draftContinuing.clear();
-      draftEnterDurationMs.clear();
-      draftExitDurationMs.clear();
       draftFadeInMs.clear();
       draftFadeOutMs.clear();
       draftIllustrationKinds.clear();
-      draftNoSlideBys.clear();
       draftOverlays.clear();
       draftSectionStarts.clear();
       draftSectionWidthPercents.clear();
@@ -104,15 +88,6 @@ export function createIllustrationTuningSession(
     },
     getSectionContinuing(section) {
       return draftContinuing.get(section.sectionId) ?? Boolean(section.continuing);
-    },
-    getSectionEnterDurationMs(section) {
-      return draftEnterDurationMs.get(section.sectionId) ?? getSavedEnterDurationMs(section);
-    },
-    getSectionExitDurationMs(section) {
-      return draftExitDurationMs.get(section.sectionId) ?? getSavedExitDurationMs(section);
-    },
-    getSectionNoSlideBy(section) {
-      return draftNoSlideBys.get(section.sectionId) ?? getSavedNoSlideBy(section);
     },
     getSectionOverlay(section) {
       return draftOverlays.get(section.sectionId) ?? Boolean(section.isOverlay);
@@ -144,15 +119,6 @@ export function createIllustrationTuningSession(
     },
     setDraftSectionContinuing(sectionId, continuing) {
       setDraft(draftContinuing, sectionId, continuing);
-    },
-    setDraftSectionEnterDurationMs(sectionId, enterDurationMs) {
-      setDraft(draftEnterDurationMs, sectionId, clampSlideMotionDurationMs(enterDurationMs));
-    },
-    setDraftSectionExitDurationMs(sectionId, exitDurationMs) {
-      setDraft(draftExitDurationMs, sectionId, clampSlideMotionDurationMs(exitDurationMs));
-    },
-    setDraftSectionNoSlideBy(sectionId, noSlideBy) {
-      setDraft(draftNoSlideBys, sectionId, noSlideBy);
     },
     setDraftSectionOverlay(sectionId, isOverlay) {
       setDraft(draftOverlays, sectionId, isOverlay);

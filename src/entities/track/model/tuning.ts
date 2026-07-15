@@ -1,16 +1,11 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import { getLyricWords } from "@shared/ui/illustration-animations/lib/lyricText";
-import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
-import {
-  getSavedEnterDurationMs,
-  getSavedExitDurationMs,
-  getSavedNoSlideBy,
-  getSavedSectionWidthPercent,
-} from "./layout";
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from "./types";
+import { getLyricWords } from '@shared/ui/illustration-animations/lib/lyricText';
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
+import { getSavedSectionWidthPercent } from './layout';
+import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from './types';
 
-export type TimelineIllustrationKind = TextIllustrationKind | "generic";
+export type TimelineIllustrationKind = TextIllustrationKind | 'generic';
 
 export type TimelineProgressDetail = {
   activeIndex: number;
@@ -34,9 +29,6 @@ export type TrackTuningAdapter = {
   getIllustrationKind: (section: LyricsSection) => TimelineIllustrationKind;
   getIllustrationVisibility: (section: LyricsSection) => IllustrationVisibility;
   getSectionContinuing: (section: LyricsSection) => boolean;
-  getSectionEnterDurationMs: (section: LyricsSection) => number;
-  getSectionExitDurationMs: (section: LyricsSection) => number;
-  getSectionNoSlideBy: (section: LyricsSection) => boolean;
   getSectionOverlay: (section: LyricsSection) => boolean;
   getSectionStart: (section: LyricsSection) => number;
   getSectionWidthPercent: (section: LyricsSection) => number;
@@ -46,7 +38,7 @@ export type TrackTuningAdapter = {
 };
 
 export function parseLyricsTimestamp(timestamp: string) {
-  const [minutes, seconds] = timestamp.split(":").map(Number);
+  const [minutes, seconds] = timestamp.split(':').map(Number);
 
   return minutes * 60 + seconds;
 }
@@ -60,7 +52,7 @@ export function getAutomaticTimelineIllustrationKind(
   let previousWarpSectionIndex = -2;
 
   lyrics.forEach((section, sectionIndex) => {
-    if (typeof section.illustrateWith !== "string" || getLyricWords(section.illustrateWith).length <= 1) return;
+    if (typeof section.illustrateWith !== 'string' || getLyricWords(section.illustrateWith).length <= 1) return;
 
     const isThirdEligibleSection = eligibleWarpIndex % 3 === 2;
     if (isThirdEligibleSection && sectionIndex - previousWarpSectionIndex > 1) {
@@ -70,14 +62,14 @@ export function getAutomaticTimelineIllustrationKind(
     eligibleWarpIndex += 1;
   });
 
-  return kineticWarpSectionIds.has(targetSection.sectionId) ? "kinetic-warp" : "word-cloud";
+  return kineticWarpSectionIds.has(targetSection.sectionId) ? 'kinetic-warp' : 'word-cloud';
 }
 
 export function getSavedTimelineIllustrationKind(
   lyrics: readonly LyricsSection[],
   section: LyricsSection,
 ): TimelineIllustrationKind {
-  if (typeof section.illustrateWith !== "string") return "generic";
+  if (typeof section.illustrateWith !== 'string') return 'generic';
 
   return section.illustrationKind ?? getAutomaticTimelineIllustrationKind(lyrics, section);
 }
@@ -103,25 +95,13 @@ export function resolveIllustrationKind(
 }
 
 export function resolveIllustrationVisibility(section: LyricsSection, adapter?: TrackTuningAdapter) {
-  if (resolveSectionOverlay(section, adapter)) return "only-active";
+  if (resolveSectionOverlay(section, adapter)) return 'only-active';
 
-  return adapter?.getIllustrationVisibility(section) ?? section.illustrationVisibility ?? "adjacent";
+  return adapter?.getIllustrationVisibility(section) ?? section.illustrationVisibility ?? 'adjacent';
 }
 
 export function resolveSectionContinuing(section: LyricsSection, adapter?: TrackTuningAdapter) {
   return adapter?.getSectionContinuing(section) ?? Boolean(section.continuing);
-}
-
-export function resolveSectionEnterDurationMs(section: LyricsSection, adapter?: TrackTuningAdapter) {
-  return adapter?.getSectionEnterDurationMs(section) ?? getSavedEnterDurationMs(section);
-}
-
-export function resolveSectionExitDurationMs(section: LyricsSection, adapter?: TrackTuningAdapter) {
-  return adapter?.getSectionExitDurationMs(section) ?? getSavedExitDurationMs(section);
-}
-
-export function resolveSectionNoSlideBy(section: LyricsSection, adapter?: TrackTuningAdapter) {
-  return adapter?.getSectionNoSlideBy(section) ?? getSavedNoSlideBy(section);
 }
 
 export function resolveSectionOverlay(section: LyricsSection, adapter?: TrackTuningAdapter) {
