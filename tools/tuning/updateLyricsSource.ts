@@ -1,9 +1,8 @@
 import * as ts from 'typescript';
+import { DEFAULT_SECTION_WIDTH_PERCENT } from '../../src/shared/config/tuning';
 import type { AnimationChange, AnimationSetting, TuningTarget } from './types';
 
 type TextEdit = { end: number; start: number; text: string };
-
-const DEFAULT_SECTION_WIDTH_PERCENT = 90;
 
 function getPropertyName(property: ts.ObjectLiteralElementLike) {
   if (!ts.isPropertyAssignment(property)) return null;

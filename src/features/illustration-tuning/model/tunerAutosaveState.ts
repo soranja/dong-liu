@@ -1,9 +1,13 @@
-import { formatLyricsTimestamp, parseLyricsTimestamp } from '@entities/track/lib/lyrics';
+import { formatLyricsTimestamp, parseLyricsTimestamp } from '@entities/track/lib/timestamp';
 import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from '@entities/track/model/tuning';
 import type { IllustrationVisibility } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import { getDirtyAnimation, getSavedAnimation, type DirtyAnimation, type DirtyAnimations } from './animationSelection';
-import { getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection } from '@entities/track/model/layout';
+import {
+  DEFAULT_SECTION_WIDTH_PERCENT,
+  getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection,
+} from '@entities/track/model/layout';
+import { FADE_TIMING_MAX_MS } from '@shared/config/tuning';
 import type { IllustrationTuningSession } from './session';
 
 export type DraftIllustrationKinds = Record<number, TextIllustrationKind>;
@@ -47,8 +51,7 @@ export type Snapshot = {
 };
 export type SaveStatus = 'Register failed' | 'Registering' | 'Registered' | 'Reset' | 'Unsaved changes';
 
-export const SAVE_ENDPOINT = '/__dong-liu/illustration-animation-settings';
-export const FADE_TIMING_MAX_MS = 1000;
+export { FADE_TIMING_MAX_MS } from '@shared/config/tuning';
 export const LINE_TIMING_STEP_SECONDS = 0.005;
 
 export function clampFadeDuration(durationMs: number) {
@@ -97,7 +100,7 @@ export function getSavedFadeOutMs(session: IllustrationTuningSession, sectionId:
 export function getSavedSectionWidthPercent(session: IllustrationTuningSession, sectionId: number) {
   const section = session.lyrics.find((candidate) => candidate.sectionId === sectionId);
 
-  return section ? getSavedSectionWidthPercentForSection(section) : 100;
+  return section ? getSavedSectionWidthPercentForSection(section) : DEFAULT_SECTION_WIDTH_PERCENT;
 }
 
 export function getCurrentAnimation(

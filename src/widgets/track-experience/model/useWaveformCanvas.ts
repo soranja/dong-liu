@@ -2,7 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { getCssVariable } from '@shared/lib/cssVariables';
 import { drawWaveform } from '@shared/lib/waveform';
 
-type WaveformPainterOptions = {
+type WaveformCanvasOptions = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   getAnalyser: () => AnalyserNode | null;
 };
@@ -14,7 +14,7 @@ const WAVEFORM_DECAY_REST_INTENSITY = 0.01;
 const WAVEFORM_DECAY_SMOOTHNESS = 500;
 const WAVEFORM_SMOOTHNESS = 40;
 
-export function useWaveformPainter({ canvasRef, getAnalyser }: WaveformPainterOptions) {
+export function useWaveformCanvas({ canvasRef, getAnalyser }: WaveformCanvasOptions) {
   const animationRef = useRef<number | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawRestingWaveformRef = useRef<() => void>(() => {});

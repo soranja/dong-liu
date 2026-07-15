@@ -1,12 +1,14 @@
-import { useRef, useState, type PointerEvent } from "react";
-import type { IllustrationAnimation } from "@entities/track/model/types";
-import { getLyricWords } from "@shared/ui/illustration-animations/lib/lyricText";
-import type { TextIllustrationKind } from "@shared/ui/illustration-animations/types";
+import { useRef, useState, type PointerEvent } from 'react';
+import { DEFAULT_ANIMATION_LENGTH_PERCENT } from '@entities/track/model/animation';
+import type { IllustrationAnimation } from '@entities/track/model/types';
+import { TUNING_PERCENT_MAX, TUNING_PERCENT_MIN } from '@shared/config/tuning';
+import { getLyricWords } from '@shared/ui/illustration-animations/lib/lyricText';
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
-type RangeAnimation = Extract<IllustrationAnimation, { variant: "range" }>;
+type RangeAnimation = Extract<IllustrationAnimation, { variant: 'range' }>;
 type Props = {
   animation: IllustrationAnimation | null | undefined;
-  illustrationKind: TextIllustrationKind | "generic";
+  illustrationKind: TextIllustrationKind | 'generic';
   onChange: (animation: IllustrationAnimation) => void;
   text: string;
 };
@@ -16,25 +18,25 @@ type WordControlProps = {
   words: string[];
 };
 
-const COLORS = ["#7c8178", "#8b392b", "#566e79", "#76617b", "#7a653d", "#486d5d"];
+const COLORS = ['#7c8178', '#8b392b', '#566e79', '#76617b', '#7a653d', '#486d5d'];
 
 function getMinimumWordGap(wordCount: number) {
-  return Math.min(1, 100 / Math.max(1, wordCount));
+  return Math.min(1, TUNING_PERCENT_MAX / Math.max(1, wordCount));
 }
 
 function getWordStarts(wordCount: number, savedStarts: number[] | undefined): number[] {
   const minimumGap = getMinimumWordGap(wordCount);
   const starts = Array.from({ length: wordCount }, (_, index) => {
     const savedStart = savedStarts?.[index];
-    return typeof savedStart === "number" && Number.isFinite(savedStart)
+    return typeof savedStart === 'number' && Number.isFinite(savedStart)
       ? savedStart
-      : Math.round((index / wordCount) * 100);
+      : Math.round((index / wordCount) * TUNING_PERCENT_MAX);
   });
-  if (starts.length) starts[0] = 0;
+  if (starts.length) starts[0] = TUNING_PERCENT_MIN;
 
   for (let index = 1; index < starts.length; index += 1) {
-    const min = (starts[index - 1] ?? 0) + minimumGap;
-    const max = 100 - minimumGap * (starts.length - index);
+    const min = (starts[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap;
+    const max = TUNING_PERCENT_MAX - minimumGap * (starts.length - index);
     starts[index] = Math.max(min, Math.min(max, starts[index] ?? min));
   }
 
@@ -54,16 +56,21 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
   const updateBoundary = (index: number, value: number) => {
     const next = [...starts];
     next[index] = Math.max(
-      (next[index - 1] ?? 0) + minimumGap,
-      Math.min(index + 1 < next.length ? (next[index + 1] ?? 100) - minimumGap : 100 - minimumGap, value),
+      (next[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap,
+      Math.min(
+        index + 1 < next.length
+          ? (next[index + 1] ?? TUNING_PERCENT_MAX) - minimumGap
+          : TUNING_PERCENT_MAX - minimumGap,
+        value,
+      ),
     );
     onChange({ ...rangeAnimation, wordStartPercents: next });
   };
   const getPercent = (clientX: number) => {
     const bar = barRef.current?.getBoundingClientRect();
-    if (!bar?.width) return 0;
+    if (!bar?.width) return TUNING_PERCENT_MIN;
 
-    return Math.round(((clientX - bar.left) / bar.width) * 100);
+    return Math.round(((clientX - bar.left) / bar.width) * TUNING_PERCENT_MAX);
   };
   const startDrag = (index: number, event: PointerEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -88,8 +95,8 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
       >
         <div className="absolute inset-x-0 top-0 flex h-8 overflow-hidden border border-(--color-border-strong)">
           {words.map((word, index) => {
-            const end = starts[index + 1] ?? 100;
-            const start = starts[index] ?? 0;
+            const end = starts[index + 1] ?? TUNING_PERCENT_MAX;
+            const start = starts[index] ?? TUNING_PERCENT_MIN;
 
             return (
               <div
@@ -109,23 +116,30 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
           return (
             <button
               key={index}
-              aria-label={`${words[index - 1] ?? ""} / ${words[index] ?? ""} boundary at ${formatPercent(start)}%`}
+              aria-label={`${words[index - 1] ?? ''} / ${words[index] ?? ''} boundary at ${formatPercent(start)}%`}
               aria-orientation="horizontal"
-              aria-valuemax={index + 1 < starts.length ? (starts[index + 1] ?? 100) - minimumGap : 100 - minimumGap}
-              aria-valuemin={(starts[index - 1] ?? 0) + minimumGap}
+              aria-valuemax={
+                index + 1 < starts.length
+                  ? (starts[index + 1] ?? TUNING_PERCENT_MAX) - minimumGap
+                  : TUNING_PERCENT_MAX - minimumGap
+              }
+              aria-valuemin={(starts[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap}
               aria-valuenow={start}
               className="word-timing-boundary absolute top-0 z-10 h-8 w-3 -translate-x-1/2 cursor-ew-resize bg-(--color-accent)"
               onKeyDown={(event) => {
-                const min = (starts[index - 1] ?? 0) + minimumGap;
-                const max = index + 1 < starts.length ? (starts[index + 1] ?? 100) - minimumGap : 100 - minimumGap;
+                const min = (starts[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap;
+                const max =
+                  index + 1 < starts.length
+                    ? (starts[index + 1] ?? TUNING_PERCENT_MAX) - minimumGap
+                    : TUNING_PERCENT_MAX - minimumGap;
                 const nextValue =
-                  event.key === "ArrowLeft"
+                  event.key === 'ArrowLeft'
                     ? start - minimumGap
-                    : event.key === "ArrowRight"
+                    : event.key === 'ArrowRight'
                       ? start + minimumGap
-                      : event.key === "Home"
+                      : event.key === 'Home'
                         ? min
-                        : event.key === "End"
+                        : event.key === 'End'
                           ? max
                           : null;
                 if (nextValue === null) return;
@@ -135,19 +149,19 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
               onPointerDown={(event) => startDrag(index, event)}
               role="slider"
               style={{ left: `${start}%` }}
-              title={`${words[index - 1] ?? ""} / ${words[index] ?? ""}: ${formatPercent(start)}%`}
+              title={`${words[index - 1] ?? ''} / ${words[index] ?? ''}: ${formatPercent(start)}%`}
               type="button"
             />
           );
         })}
         <div className="absolute inset-x-0 top-10 font-mono text-[0.62rem] text-(--color-text-muted)">
-          <span className="absolute left-0">0%</span>
+          <span className="absolute left-0">{TUNING_PERCENT_MIN}%</span>
           {starts.slice(1).map((start, index) => (
             <span key={index} className="absolute -translate-x-1/2" style={{ left: `${start}%` }}>
               {formatPercent(start)}%
             </span>
           ))}
-          <span className="absolute right-0">100%</span>
+          <span className="absolute right-0">{TUNING_PERCENT_MAX}%</span>
         </div>
       </div>
     </section>
@@ -155,13 +169,18 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
 };
 
 export const WordAnimationControls = ({ animation, illustrationKind, onChange, text }: Props) => {
-  if (illustrationKind !== "blinking-words" && illustrationKind !== "word-cloud") return null;
+  if (illustrationKind !== 'blinking-words' && illustrationKind !== 'word-cloud') return null;
   const words = getLyricWords(text);
   if (!words.length) return null;
   const rangeAnimation =
-    animation?.variant === "range"
+    animation?.variant === 'range'
       ? animation
-      : { animationLengthPercent: 100, endPercent: 100, startPercent: 0, variant: "range" as const };
+      : {
+          animationLengthPercent: DEFAULT_ANIMATION_LENGTH_PERCENT,
+          endPercent: TUNING_PERCENT_MAX,
+          startPercent: TUNING_PERCENT_MIN,
+          variant: 'range' as const,
+        };
 
   return <WordTimingControls onChange={onChange} rangeAnimation={rangeAnimation} words={words} />;
 };

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { getLyricWords } from '@shared/ui/illustration-animations/lib/lyricText';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
+import { parseLyricsTimestamp } from '../lib/timestamp';
 import { getSavedSectionWidthPercent } from './layout';
 import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from './types';
 
@@ -36,12 +37,6 @@ export type TrackTuningAdapter = {
   renderPanel?: (props: TrackTuningPanelProps) => ReactNode;
   subscribe: (listener: () => void) => () => void;
 };
-
-export function parseLyricsTimestamp(timestamp: string) {
-  const [minutes, seconds] = timestamp.split(':').map(Number);
-
-  return minutes * 60 + seconds;
-}
 
 export function getAutomaticTimelineIllustrationKind(
   lyrics: readonly LyricsSection[],

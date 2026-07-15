@@ -1,15 +1,16 @@
-import { DEFAULT_ANIMATION_LENGTH_PERCENT } from "@entities/track/model/animation";
-import type { IllustrationAnimation, LyricsSection } from "@entities/track/model/types";
+import { DEFAULT_ANIMATION_LENGTH_PERCENT } from '@entities/track/model/animation';
+import type { IllustrationAnimation, LyricsSection } from '@entities/track/model/types';
+import { TUNING_PERCENT_MAX, TUNING_PERCENT_MIN } from '@shared/config/tuning';
 
 export type DirtyAnimation = IllustrationAnimation | null;
 export type DirtyAnimations = Record<number, DirtyAnimation>;
 
 const DEFAULT_RANGE = {
   animationLengthPercent: DEFAULT_ANIMATION_LENGTH_PERCENT,
-  endPercent: 100,
-  startPercent: 0,
-  variant: "range",
-} satisfies Extract<IllustrationAnimation, { variant: "range" }>;
+  endPercent: TUNING_PERCENT_MAX,
+  startPercent: TUNING_PERCENT_MIN,
+  variant: 'range',
+} satisfies Extract<IllustrationAnimation, { variant: 'range' }>;
 
 export function getDirtyAnimation(dirtyAnimations: DirtyAnimations, sectionId: number) {
   return Object.hasOwn(dirtyAnimations, sectionId) ? dirtyAnimations[sectionId] : undefined;
@@ -31,7 +32,7 @@ export function getEffectiveAnimation(
 }
 
 export function getRangeValues(animation: IllustrationAnimation | undefined) {
-  return animation?.variant === "range" ? animation : DEFAULT_RANGE;
+  return animation?.variant === 'range' ? animation : DEFAULT_RANGE;
 }
 
 function areArraysEqual<T>(left: readonly T[] | undefined, right: readonly T[] | undefined) {
@@ -46,7 +47,7 @@ export function areDirtyAnimationsEqual(left: DirtyAnimation | undefined, right:
   const rightAnimation = right ?? null;
   if (leftAnimation === null || rightAnimation === null) return leftAnimation === rightAnimation;
   if (leftAnimation.variant !== rightAnimation.variant) return false;
-  if (leftAnimation.variant !== "range" || rightAnimation.variant !== "range") return true;
+  if (leftAnimation.variant !== 'range' || rightAnimation.variant !== 'range') return true;
 
   return (
     leftAnimation.startPercent === rightAnimation.startPercent &&

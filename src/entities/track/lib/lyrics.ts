@@ -1,25 +1,11 @@
-import { getLyricDisplayText } from "@shared/ui/illustration-animations/lib/lyricText";
-import type { LyricsSection } from "../model/types";
-import { resolveSectionStart, type TrackTuningAdapter } from "../model/tuning";
+import { getLyricDisplayText } from '@shared/ui/illustration-animations/lib/lyricText';
+import type { LyricsSection } from '../model/types';
+import { resolveSectionStart, type TrackTuningAdapter } from '../model/tuning';
 
 type LyricLinePart = {
   isItalic: boolean;
   text: string;
 };
-
-export function parseLyricsTimestamp(timestamp: string) {
-  const [minutes, seconds] = timestamp.split(":").map(Number);
-
-  return minutes * 60 + seconds;
-}
-
-export function formatLyricsTimestamp(time: number) {
-  const boundedTime = Math.max(0, time);
-  const minutes = Math.floor(boundedTime / 60);
-  const seconds = boundedTime - minutes * 60;
-
-  return `${String(minutes).padStart(2, "0")}:${seconds.toFixed(3).padStart(6, "0")}`;
-}
 
 export function getLyricsSectionStart(
   lyrics: readonly LyricsSection[],
@@ -77,5 +63,5 @@ export function getLyricLineParts(line: string) {
 export function getLyricPlainText(line: string) {
   return getLyricLineParts(line)
     .map((part) => part.text)
-    .join("");
+    .join('');
 }

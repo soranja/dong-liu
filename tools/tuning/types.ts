@@ -1,20 +1,13 @@
-export type AnimationSetting =
-  | { variant: 'instant' }
-  | {
-      animationLengthPercent: number;
-      endPercent: number;
-      startPercent: number;
-      variant: 'range';
-      wordStartPercents?: number[];
-    };
+import type { IllustrationAnimation, IllustrationVisibility } from '../../src/shared/config/tuning';
+import type { TextIllustrationKind } from '../../src/shared/ui/illustration-animations/kinds';
 
-export type IllustrationVisibility = 'adjacent' | 'only-active' | 'start-active' | 'active-end';
-export type TextIllustrationKind =
-  | 'blinking-words'
-  | 'kinetic-warp'
-  | 'vertical-typewriter'
-  | 'word-cloud'
-  | 'word-train';
+export type AnimationSetting =
+  | Extract<IllustrationAnimation, { variant: 'instant' }>
+  | (Omit<Extract<IllustrationAnimation, { variant: 'range' }>, 'animationLengthPercent'> & {
+      animationLengthPercent: number;
+    });
+
+export type { IllustrationVisibility, TextIllustrationKind };
 
 export type AnimationChange = {
   continuing?: boolean;

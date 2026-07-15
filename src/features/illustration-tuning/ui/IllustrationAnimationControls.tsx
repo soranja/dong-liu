@@ -1,5 +1,6 @@
 import { getRangeAnimation } from '@entities/track/model/animation';
-import type { IllustrationAnimation, IllustrationVisibility } from '@entities/track/model/types';
+import { type IllustrationAnimation, type IllustrationVisibility } from '@entities/track/model/types';
+import { ILLUSTRATION_VISIBILITIES, TUNING_PERCENT_MAX, TUNING_PERCENT_MIN } from '@shared/config/tuning';
 import { SectionLayoutControls } from './SectionLayoutControls';
 
 type DirtyAnimation = IllustrationAnimation | null;
@@ -27,12 +28,13 @@ type IllustrationAnimationControlsProps = {
 
 const TOGGLE_BUTTON_CLASS =
   'border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)';
-const VISIBILITY_OPTIONS = [
-  { label: 'Adjacent', value: 'adjacent' },
-  { label: 'Only active', value: 'only-active' },
-  { label: 'Start + active', value: 'start-active' },
-  { label: 'Active + end', value: 'active-end' },
-] satisfies Array<{ label: string; value: IllustrationVisibility }>;
+const VISIBILITY_LABELS = {
+  adjacent: 'Adjacent',
+  'only-active': 'Only active',
+  'start-active': 'Start + active',
+  'active-end': 'Active + end',
+} satisfies Record<IllustrationVisibility, string>;
+const VISIBILITY_OPTIONS = ILLUSTRATION_VISIBILITIES.map((value) => ({ label: VISIBILITY_LABELS[value], value }));
 
 export const IllustrationAnimationControls = ({
   animationLengthPercent,
@@ -90,7 +92,7 @@ export const IllustrationAnimationControls = ({
               type="button"
               className={TOGGLE_BUTTON_CLASS}
               data-active={selectedAnimation?.variant === 'range'}
-              onClick={() => onSelectAnimation(getRangeAnimation(0, 100))}
+              onClick={() => onSelectAnimation(getRangeAnimation(TUNING_PERCENT_MIN, TUNING_PERCENT_MAX))}
             >
               Range
             </button>
@@ -146,8 +148,8 @@ export const IllustrationAnimationControls = ({
           </span>
           <input
             type="range"
-            min="0"
-            max="100"
+            min={TUNING_PERCENT_MIN}
+            max={TUNING_PERCENT_MAX}
             value={animationLengthPercent}
             className="w-full accent-(--color-tuner-length)"
             onChange={(event) => onLengthChange(Number(event.currentTarget.value))}

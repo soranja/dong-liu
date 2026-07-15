@@ -1,4 +1,5 @@
 import { SECTION_WIDTH_STEP_PERCENT } from '@entities/track/model/layout';
+import { TUNING_PERCENT_MAX, TUNING_PERCENT_MIN } from '@shared/config/tuning';
 
 type SectionLayoutControlsProps = {
   sectionWidthPercent: number;
@@ -14,8 +15,8 @@ export const SectionLayoutControls = ({ onSectionWidthChange, sectionWidthPercen
       </span>
       <input
         type="range"
-        min="0"
-        max="100"
+        min={TUNING_PERCENT_MIN}
+        max={TUNING_PERCENT_MAX}
         step={SECTION_WIDTH_STEP_PERCENT}
         value={sectionWidthPercent}
         className="w-full accent-(--color-tuner-length)"

@@ -1,19 +1,16 @@
-import type { AnimationChange, AnimationSetting, IllustrationVisibility, TextIllustrationKind } from './types';
-
-const FADE_TIMING_MAX_MS = 1000;
-const ILLUSTRATION_KINDS = [
-  'blinking-words',
-  'kinetic-warp',
-  'vertical-typewriter',
-  'word-cloud',
-  'word-train',
-] as const satisfies readonly TextIllustrationKind[];
-const ILLUSTRATION_VISIBILITIES = [
-  'adjacent',
-  'only-active',
-  'start-active',
-  'active-end',
-] as const satisfies readonly IllustrationVisibility[];
+import { parseLyricsTimestamp } from '../../src/entities/track/lib/timestamp';
+import {
+  ANIMATION_END_PERCENT_MIN,
+  ANIMATION_START_PERCENT_MAX,
+  DEFAULT_ANIMATION_LENGTH_PERCENT,
+  FADE_TIMING_MAX_MS,
+  ILLUSTRATION_VISIBILITIES,
+  SECTION_WIDTH_STEP_PERCENT,
+  TUNING_PERCENT_MAX,
+  TUNING_PERCENT_MIN,
+} from '../../src/shared/config/tuning';
+import { TEXT_ILLUSTRATION_KINDS } from '../../src/shared/ui/illustration-animations/kinds';
+import type { AnimationChange, AnimationSetting } from './types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -28,24 +25,37 @@ function parseAnimation(value: unknown): AnimationSetting | null {
   const startPercent = Number(value.startPercent);
   const endPercent = Number(value.endPercent);
   const animationLengthPercent =
-    value.animationLengthPercent === undefined ? 100 : Number(value.animationLengthPercent);
-  if (!Number.isFinite(startPercent) || startPercent < 0 || startPercent > 50) {
-    throw new Error('startPercent must be 0-50');
+    value.animationLengthPercent === undefined
+      ? DEFAULT_ANIMATION_LENGTH_PERCENT
+      : Number(value.animationLengthPercent);
+  if (
+    !Number.isFinite(startPercent) ||
+    startPercent < TUNING_PERCENT_MIN ||
+    startPercent > ANIMATION_START_PERCENT_MAX
+  ) {
+    throw new Error(`startPercent must be ${TUNING_PERCENT_MIN}-${ANIMATION_START_PERCENT_MAX}`);
   }
-  if (!Number.isFinite(endPercent) || endPercent < 51 || endPercent > 100) {
-    throw new Error('endPercent must be 51-100');
+  if (!Number.isFinite(endPercent) || endPercent < ANIMATION_END_PERCENT_MIN || endPercent > TUNING_PERCENT_MAX) {
+    throw new Error(`endPercent must be ${ANIMATION_END_PERCENT_MIN}-${TUNING_PERCENT_MAX}`);
   }
-  if (!Number.isFinite(animationLengthPercent) || animationLengthPercent < 0 || animationLengthPercent > 100) {
-    throw new Error('animationLengthPercent must be 0-100');
+  if (
+    !Number.isFinite(animationLengthPercent) ||
+    animationLengthPercent < TUNING_PERCENT_MIN ||
+    animationLengthPercent > TUNING_PERCENT_MAX
+  ) {
+    throw new Error(`animationLengthPercent must be ${TUNING_PERCENT_MIN}-${TUNING_PERCENT_MAX}`);
   }
 
   const wordStartPercents = value.wordStartPercents;
   if (
     wordStartPercents !== undefined &&
     (!Array.isArray(wordStartPercents) ||
-      wordStartPercents.some((item) => !Number.isFinite(Number(item)) || Number(item) < 0 || Number(item) > 100))
+      wordStartPercents.some(
+        (item) =>
+          !Number.isFinite(Number(item)) || Number(item) < TUNING_PERCENT_MIN || Number(item) > TUNING_PERCENT_MAX,
+      ))
   ) {
-    throw new Error('wordStartPercents must contain percentages from 0-100');
+    throw new Error(`wordStartPercents must contain percentages from ${TUNING_PERCENT_MIN}-${TUNING_PERCENT_MAX}`);
   }
 
   return {
@@ -88,12 +98,7 @@ function parseBoolean(value: unknown, propertyName: string) {
 }
 
 function parseTimestamp(value: unknown) {
-  if (typeof value !== 'string') throw new Error('timestamp must be a string');
-
-  const [minutes, seconds] = value.split(':').map(Number);
-  if (!Number.isFinite(minutes) || !Number.isFinite(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) {
-    throw new Error('Invalid timestamp');
-  }
+  if (typeof value !== 'string' || !Number.isFinite(parseLyricsTimestamp(value))) throw new Error('Invalid timestamp');
 
   return value;
 }
@@ -145,7 +150,7 @@ function parseChange(entry: unknown): AnimationChange {
       ? parseFadeDuration(entry.illustrationFadeOutMs, 'illustrationFadeOutMs')
       : undefined,
     illustrationKind: hasIllustrationKind
-      ? parseEnum(entry.illustrationKind, ILLUSTRATION_KINDS, 'Invalid illustration kind')
+      ? parseEnum(entry.illustrationKind, TEXT_ILLUSTRATION_KINDS, 'Invalid illustration kind')
       : undefined,
     illustrationVisibility: hasIllustrationVisibility
       ? parseEnum(entry.illustrationVisibility, ILLUSTRATION_VISIBILITIES, 'Invalid illustration visibility')
@@ -153,7 +158,13 @@ function parseChange(entry: unknown): AnimationChange {
     isOverlay: hasOverlay ? parseBoolean(entry.isOverlay, 'isOverlay') : undefined,
     sectionId,
     sectionWidthPercent: hasSectionWidth
-      ? parsePercent(entry.sectionWidthPercent, 'sectionWidthPercent', 0, 100, 5)
+      ? parsePercent(
+          entry.sectionWidthPercent,
+          'sectionWidthPercent',
+          TUNING_PERCENT_MIN,
+          TUNING_PERCENT_MAX,
+          SECTION_WIDTH_STEP_PERCENT,
+        )
       : undefined,
     timestamp: hasTimestamp ? parseTimestamp(entry.timestamp) : undefined,
   };

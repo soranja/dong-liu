@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
-import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
+import type { IllustrationAnimation, IllustrationVisibility } from '@shared/config/tuning';
+import type { TextIllustrationKind } from '@shared/ui/illustration-animations/kinds';
+
+export type { IllustrationAnimation, IllustrationVisibility } from '@shared/config/tuning';
 
 export type TrackSummary = {
   id: string;
@@ -35,19 +38,6 @@ export type LyricsIllustration<TCustomIllustration = unknown> =
   | LyricsMedia
   | string;
 
-export type IllustrationAnimation =
-  | {
-      variant: 'instant';
-    }
-  | {
-      animationLengthPercent?: number;
-      endPercent: number;
-      startPercent: number;
-      variant: 'range';
-      wordStartPercents?: number[];
-    };
-
-export type IllustrationVisibility = 'adjacent' | 'only-active' | 'start-active' | 'active-end';
 export type TextSizeLevel = 1 | 2 | 3 | 4 | 5;
 
 export type LyricsSection<TCustomIllustration = unknown> = {

@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { installPlaybackScrollSeek } from '@shared/lib/playbackScrollSeek';
-import { useAudioGsapTimeline } from './useAudioGsapTimeline';
+import { useAudioScrollSync } from './useAudioScrollSync';
 import { useDelayedPlaybackResume } from './useDelayedPlaybackResume';
 import { usePlaybackKeyboard } from './usePlaybackKeyboard';
 import { usePlaybackProgress } from './usePlaybackProgress';
@@ -66,7 +66,7 @@ export function usePlaybackController({
     canvasRef,
     volume,
   });
-  const audioTimeline = useAudioGsapTimeline({
+  const audioScrollSync = useAudioScrollSync({
     audioRef,
     isEnabled: () => isReadyRef.current && hasStartedRef.current && !replayPromptVisibleRef.current,
     isTimelineReady: isReady,
@@ -130,7 +130,7 @@ export function usePlaybackController({
       seekResume.finish(resumeSequence);
       setIsPlaying(true);
       startPlaybackFrameLoop();
-      audioTimeline.startAudioSync();
+      audioScrollSync.startAudioSync();
       startPainting();
     } catch {
       if (!seekResume.isCurrent(resumeSequence)) return;
@@ -139,8 +139,8 @@ export function usePlaybackController({
       setIsPlaying(false);
       stopPlaybackFrameLoop();
       stopPainting();
-      audioTimeline.stopAudioSync();
-      audioTimeline.syncToAudio({ animatePage: true });
+      audioScrollSync.stopAudioSync();
+      audioScrollSync.syncToAudio({ animatePage: true });
     }
   }
 
@@ -152,8 +152,8 @@ export function usePlaybackController({
       seekResume.clear();
       stopPlaybackFrameLoop();
       stopPainting();
-      audioTimeline.stopAudioSync();
-      audioTimeline.syncToAudio({ animatePage: true });
+      audioScrollSync.stopAudioSync();
+      audioScrollSync.syncToAudio({ animatePage: true });
       setIsPlaying(false);
       return;
     }
@@ -183,7 +183,7 @@ export function usePlaybackController({
       await audio.play();
       setIsPlaying(true);
       startPlaybackFrameLoop();
-      audioTimeline.startAudioSync();
+      audioScrollSync.startAudioSync();
       startPainting();
       return;
     }
@@ -193,8 +193,8 @@ export function usePlaybackController({
     stopPlaybackFrameLoop();
     syncPlaybackStateFromAudio();
     stopPainting();
-    audioTimeline.stopAudioSync();
-    audioTimeline.syncToAudio({ animatePage: true });
+    audioScrollSync.stopAudioSync();
+    audioScrollSync.syncToAudio({ animatePage: true });
     setIsPlaying(false);
   }
 
@@ -214,7 +214,7 @@ export function usePlaybackController({
       audio.pause();
       stopPlaybackFrameLoop();
       stopPainting();
-      audioTimeline.stopAudioSync();
+      audioScrollSync.stopAudioSync();
       hasStartedRef.current = false;
       setHasStarted(false);
       setIsPlaying(false);
@@ -231,7 +231,7 @@ export function usePlaybackController({
     await audio.play();
     setIsPlaying(true);
     startPlaybackFrameLoop();
-    audioTimeline.startAudioSync();
+    audioScrollSync.startAudioSync();
     startPainting();
   }
 
@@ -248,7 +248,7 @@ export function usePlaybackController({
     audio.currentTime = nextTime;
     setCurrentTime(nextTime);
     setProgress(value);
-    audioTimeline.syncToAudio({
+    audioScrollSync.syncToAudio({
       animatePage: options.animatePage ?? audio.paused,
       continuePlaybackScroll: options.continuePlaybackScroll ?? !audio.paused,
     });
@@ -307,7 +307,7 @@ export function usePlaybackController({
     audio.pause();
     stopPlaybackFrameLoop();
     stopPainting();
-    audioTimeline.stopAudioSync();
+    audioScrollSync.stopAudioSync();
     setIsPlaying(false);
     return true;
   }
@@ -322,16 +322,15 @@ export function usePlaybackController({
     seekResume.clear();
     stopPlaybackFrameLoop();
     stopPainting();
-    audioTimeline.stopAudioSync();
+    audioScrollSync.stopAudioSync();
     setIsPlaying(false);
     setCurrentTime(audio?.duration || audio?.currentTime || 0);
     setReplayPromptVisible(true);
-    audioTimeline.syncToAudio({ animatePage: true });
+    audioScrollSync.syncToAudio({ animatePage: true });
   }
 
   function handleTimeUpdate() {
     syncPlaybackStateFromAudio();
-    audioTimeline.syncVisualsToAudio();
   }
 
   return {

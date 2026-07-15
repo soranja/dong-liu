@@ -1,9 +1,9 @@
 import {
   getSavedTimelineIllustrationKind,
-  parseLyricsTimestamp,
   type TimelineProgressDetail,
   type TrackTuningAdapter,
 } from '@entities/track/model/tuning';
+import { parseLyricsTimestamp } from '@entities/track/lib/timestamp';
 import { clampSectionWidthPercent, getSavedSectionWidthPercent } from '@entities/track/model/layout';
 import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';

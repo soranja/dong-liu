@@ -1,5 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
-import { useWaveformPainter } from './useWaveformPainter';
+import { useWaveformCanvas } from './useWaveformCanvas';
 
 type AudioGraph = {
   analyser: AnalyserNode;
@@ -28,7 +28,7 @@ export function useWaveformAudio({ audioRef, canvasRef, volume }: WaveformAudioO
   const decodePromiseRef = useRef<Promise<AudioBuffer | null> | null>(null);
   const scratchSequenceRef = useRef(0);
   const scratchVoiceRef = useRef<ScratchVoice | null>(null);
-  const { startPainting, stopPainting } = useWaveformPainter({
+  const { startPainting, stopPainting } = useWaveformCanvas({
     canvasRef,
     getAnalyser: () => graphRef.current?.analyser ?? null,
   });

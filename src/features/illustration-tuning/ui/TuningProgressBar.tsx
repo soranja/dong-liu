@@ -1,7 +1,13 @@
-import { useRef, useState, type PointerEvent } from "react";
-import { getAnimationLengthPercent, getRangeAnimationEndPercent } from "@entities/track/model/animation";
+import { useRef, useState, type PointerEvent } from 'react';
+import { getAnimationLengthPercent, getRangeAnimationEndPercent } from '@entities/track/model/animation';
+import {
+  ANIMATION_END_PERCENT_MIN,
+  ANIMATION_START_PERCENT_MAX,
+  TUNING_PERCENT_MAX,
+  TUNING_PERCENT_MIN,
+} from '@shared/config/tuning';
 
-type DragTarget = "end" | "playhead" | "start";
+type DragTarget = 'end' | 'playhead' | 'start';
 
 type TuningProgressBarProps = {
   animationLengthPercent: number;
@@ -35,19 +41,27 @@ export const TuningProgressBar = ({
 
   const getPercent = (clientX: number) => {
     const rect = barRef.current?.getBoundingClientRect();
-    if (!rect?.width) return 0;
+    if (!rect?.width) return TUNING_PERCENT_MIN;
 
-    return clamp(Math.round(((clientX - rect.left) / rect.width) * 100), 0, 100);
+    return clamp(
+      Math.round(((clientX - rect.left) / rect.width) * TUNING_PERCENT_MAX),
+      TUNING_PERCENT_MIN,
+      TUNING_PERCENT_MAX,
+    );
   };
 
   const updateDrag = (target: DragTarget, percent: number) => {
-    if (target === "playhead") {
+    if (target === 'playhead') {
       onPlayheadChange(percent);
       return;
     }
     if (!isRange) return;
-    if (target === "start") onRangeChange(clamp(percent, 0, 50), endPercent);
-    if (target === "end") onRangeChange(startPercent, clamp(percent, 51, 100));
+    if (target === 'start') {
+      onRangeChange(clamp(percent, TUNING_PERCENT_MIN, ANIMATION_START_PERCENT_MAX), endPercent);
+    }
+    if (target === 'end') {
+      onRangeChange(startPercent, clamp(percent, ANIMATION_END_PERCENT_MIN, TUNING_PERCENT_MAX));
+    }
   };
 
   const startDrag = (target: DragTarget, event: PointerEvent<HTMLButtonElement>) => {
@@ -64,19 +78,23 @@ export const TuningProgressBar = ({
   };
 
   const stopDrag = () => {
-    if (dragTarget === "playhead") onPlayheadRelease();
+    if (dragTarget === 'playhead') onPlayheadRelease();
     setDragTarget(null);
   };
-  const firstSegmentEnd = Math.min(50, endPercent);
-  const secondSegmentStart = Math.max(50, startPercent);
+  const firstSegmentEnd = Math.min(ANIMATION_START_PERCENT_MAX, endPercent);
+  const secondSegmentStart = Math.max(ANIMATION_START_PERCENT_MAX, startPercent);
   const clampedAnimationLengthPercent = getAnimationLengthPercent(animationLengthPercent);
   const animationEndPercent = getRangeAnimationEndPercent(startPercent, endPercent, clampedAnimationLengthPercent);
 
   return (
     <div className="space-y-2">
       <div className="flex justify-between font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
-        <span>Start 0-50</span>
-        <span>End 51-100</span>
+        <span>
+          Start {TUNING_PERCENT_MIN}-{ANIMATION_START_PERCENT_MAX}
+        </span>
+        <span>
+          End {ANIMATION_END_PERCENT_MIN}-{TUNING_PERCENT_MAX}
+        </span>
       </div>
       <div
         ref={barRef}
@@ -92,7 +110,7 @@ export const TuningProgressBar = ({
             aria-label="Drag playback playhead"
             className="absolute top-0 h-8 w-4 -translate-x-1/2 cursor-ew-resize"
             style={{ left: `${playheadPercent}%`, opacity: isSelectedActive ? 1 : 0.55 }}
-            onPointerDown={(event) => startDrag("playhead", event)}
+            onPointerDown={(event) => startDrag('playhead', event)}
           >
             <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-tuner-playhead)" />
           </button>
@@ -122,7 +140,7 @@ export const TuningProgressBar = ({
                 aria-label="Drag animation start"
                 className="absolute top-[-0.25rem] h-10 w-4 -translate-x-1/2 cursor-ew-resize"
                 style={{ left: `${startPercent}%` }}
-                onPointerDown={(event) => startDrag("start", event)}
+                onPointerDown={(event) => startDrag('start', event)}
               >
                 <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-control)" />
               </button>
@@ -131,7 +149,7 @@ export const TuningProgressBar = ({
                 aria-label="Drag animation end"
                 className="absolute top-[-0.25rem] h-10 w-4 -translate-x-1/2 cursor-ew-resize"
                 style={{ left: `${endPercent}%` }}
-                onPointerDown={(event) => startDrag("end", event)}
+                onPointerDown={(event) => startDrag('end', event)}
               >
                 <span className="absolute top-0 bottom-0 left-1/2 border-l-2 border-(--color-accent)" />
               </button>
@@ -140,11 +158,11 @@ export const TuningProgressBar = ({
         </div>
       </div>
       <div className="flex justify-between font-mono text-[0.65rem] text-(--color-text-muted)">
-        <span>0%</span>
+        <span>{TUNING_PERCENT_MIN}%</span>
         <span>
-          Playhead {Math.round(playheadPercent)}%{isRange ? ` / Length ${clampedAnimationLengthPercent}%` : ""}
+          Playhead {Math.round(playheadPercent)}%{isRange ? ` / Length ${clampedAnimationLengthPercent}%` : ''}
         </span>
-        <span>100%</span>
+        <span>{TUNING_PERCENT_MAX}%</span>
       </div>
     </div>
   );

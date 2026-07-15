@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { clampSectionWidthPercent } from '@entities/track/model/layout';
+import { ILLUSTRATION_TUNING_ENDPOINT } from '@shared/config/tuning';
 import type { IllustrationVisibility } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import {
@@ -31,7 +32,6 @@ import {
   getSavedSectionWidthPercent,
   getSavedStartTime,
   LINE_TIMING_STEP_SECONDS,
-  SAVE_ENDPOINT,
   createSaveBody,
   type DraftFadeDurations,
   type DraftContinuings,
@@ -67,7 +67,7 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
 
     setSaveStatus('Registering');
     try {
-      const response = await fetch(SAVE_ENDPOINT, {
+      const response = await fetch(ILLUSTRATION_TUNING_ENDPOINT, {
         body: createSaveBody(session.trackId, changes),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -149,13 +149,7 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
       addPendingChange(selectedSection.sectionId, { hasIllustrationVisibility: true, illustrationVisibility });
       setSaveStatus('Unsaved changes');
     },
-    [
-      addPendingChange,
-      draftIllustrationVisibilities,
-      draftOverlays,
-      selectedSection.sectionId,
-      session,
-    ],
+    [addPendingChange, draftIllustrationVisibilities, draftOverlays, selectedSection.sectionId, session],
   );
 
   const setFadeInMs = useCallback(

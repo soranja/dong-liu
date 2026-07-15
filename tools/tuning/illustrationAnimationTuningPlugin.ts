@@ -1,11 +1,10 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { normalizePath, type Plugin } from 'vite';
+import { ILLUSTRATION_TUNING_ENDPOINT } from '../../src/shared/config/tuning';
 import { parseTuningRequest } from './parseTuningRequest';
 import type { IllustrationAnimationTuningPluginOptions, TuningTarget } from './types';
 import { updateLyricsSource } from './updateLyricsSource';
-
-const TUNING_ENDPOINT = '/__dong-liu/illustration-animation-settings';
 
 export function illustrationAnimationTuningPlugin(options: IllustrationAnimationTuningPluginOptions): Plugin {
   const targets = new Map<string, TuningTarget>(
@@ -29,7 +28,7 @@ export function illustrationAnimationTuningPlugin(options: IllustrationAnimation
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        if (request.method !== 'POST' || request.url?.split('?')[0] !== TUNING_ENDPOINT) {
+        if (request.method !== 'POST' || request.url?.split('?')[0] !== ILLUSTRATION_TUNING_ENDPOINT) {
           next();
           return;
         }
