@@ -5,6 +5,7 @@ import type { TextIllustrationKind } from '@shared/ui/illustration-animations/ty
 import {
   areDirtyAnimationsEqual,
   getEffectiveAnimation,
+  getSavedAnimation,
   type DirtyAnimation,
   type DirtyAnimations,
 } from './animationSelection';
@@ -24,7 +25,6 @@ import {
   getCurrentOverlay,
   getCurrentSectionWidthPercent,
   getDraftStartTime,
-  getSavedAnimation,
   getSavedContinuing,
   getSavedEnterDurationMs,
   getSavedExitDurationMs,
@@ -51,9 +51,8 @@ import {
   type PendingChange,
   type PendingChanges,
   type Snapshot,
+  type SaveStatus,
 } from './tunerAutosaveState';
-
-export { LINE_TIMING_STEP_SECONDS } from './tunerAutosaveState';
 
 export function useTunerAutosave(session: IllustrationTuningSession, selectedIndex: number, duration: number) {
   const [draftAnimations, setDraftAnimations] = useState<DirtyAnimations>({});
@@ -69,9 +68,7 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   const [draftSectionWidthPercents, setDraftSectionWidthPercents] = useState<DraftSectionWidthPercents>({});
   const [draftStartTimes, setDraftStartTimes] = useState<DraftStartTimes>({});
   const [pendingChanges, setPendingChanges] = useState<PendingChanges>({});
-  const [saveStatus, setSaveStatus] = useState<
-    'Register failed' | 'Registering' | 'Registered' | 'Reset' | 'Unsaved changes'
-  >('Registered');
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('Registered');
   const selectedSection = session.lyrics[selectedIndex];
   const nextSection = session.lyrics[selectedIndex + 1];
   const getCurrentSnapshot = useCallback((): Snapshot => {

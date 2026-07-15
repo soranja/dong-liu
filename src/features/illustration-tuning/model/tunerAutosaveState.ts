@@ -20,8 +20,6 @@ import {
 } from '@entities/track/model/layout';
 import type { IllustrationTuningSession } from './session';
 
-export { getSavedAnimation } from './animationSelection';
-
 export type DraftIllustrationKinds = Record<number, TextIllustrationKind>;
 export type DraftIllustrationVisibilities = Record<number, IllustrationVisibility>;
 export type DraftContinuings = Record<number, boolean>;

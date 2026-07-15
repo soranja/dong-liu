@@ -165,7 +165,7 @@ Do not create a catch-all data-driven track route while track pages have distinc
 - Keep the F4 tuner development-only and detached from page-specific data.
 - Scope tuning state, storage, progress, and autosave by track ID.
 - Keep source rewriting behind the Vite plugin’s fixed allowlist; never accept request-provided paths.
-- Preserve unused Pisse assets and potentially intentional unused UI unless removal is explicitly requested.
+- Remove assets and UI once import/reference tracing proves they are unreachable.
 - Keep project colors in CSS variables rather than JSX or TypeScript literals.
 - Use hooks only for React state, refs, effects, or cleanup. Keep pure calculations outside hooks.
 - Export only symbols consumed by another module.
