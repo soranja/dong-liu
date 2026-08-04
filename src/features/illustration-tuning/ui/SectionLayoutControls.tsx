@@ -8,7 +8,7 @@ type SectionLayoutControlsProps = {
 
 export const SectionLayoutControls = ({ onSectionWidthChange, sectionWidthPercent }: SectionLayoutControlsProps) => (
   <div className="space-y-2">
-    <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+    <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
       <span className="mb-1 flex justify-between">
         <span>Section width</span>
         <span>{sectionWidthPercent}%</span>
@@ -19,7 +19,7 @@ export const SectionLayoutControls = ({ onSectionWidthChange, sectionWidthPercen
         max={TUNING_PERCENT_MAX}
         step={SECTION_WIDTH_STEP_PERCENT}
         value={sectionWidthPercent}
-        className="w-full accent-(--color-tuner-length)"
+        className="w-full accent-pumpkin"
         onChange={(event) => onSectionWidthChange(Number(event.currentTarget.value))}
       />
     </label>

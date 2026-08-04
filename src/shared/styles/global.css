@@ -5,36 +5,29 @@
 @import './waveform.css';
 
 @theme inline {
-  --color-panel-raised: #292929;
-  --color-primary-bg: var(--color-dark-gray);
-  --color-primary-text: var(--color-cream-white);
-  --font-hanyi-pagoda: 'Hanyi Pagoda', var(--font-sans);
-}
-
-:root {
   --color-cream-white: #e7e7d8;
   --color-dark-gray: #141414;
   --color-toxic-carrot: #ea4125;
   --color-arterial-red: #ae1425;
-  --color-bg: var(--color-primary-bg);
-  --color-text: var(--color-primary-text);
+  --color-panel-raised: #292929;
   --color-text-muted: #9d9d93;
   --color-pumpkin: #f59e0b;
   --color-panel: #1e1e1e;
   --color-panel-chip: #252525;
   --color-panel-hover: #333333;
-  --color-control: var(--color-cream-white);
   --color-control-hover: #d4d4c5;
-  --color-accent: var(--color-toxic-carrot);
-  --color-border: #000000;
   --color-border-soft: #393939;
   --color-border-strong: #505050;
   --color-footer-shadow: rgb(0 0 0 / 0.25);
+}
+
+:root {
+  --color-text: var(--color-cream-white);
   font: 18px/145% var(--font-sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--color-dark-gray);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

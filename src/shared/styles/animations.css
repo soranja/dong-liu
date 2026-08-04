@@ -175,7 +175,7 @@
   top: -2rem;
   z-index: 1;
   background-color: currentColor;
-  color: var(--color-accent);
+  color: var(--color-toxic-carrot);
   mask: url('/icons/drop.svg') center / contain no-repeat;
   opacity: 1;
   -webkit-mask: url('/icons/drop.svg') center / contain no-repeat;

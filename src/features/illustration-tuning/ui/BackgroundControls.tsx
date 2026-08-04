@@ -49,11 +49,11 @@ export const BackgroundControls = ({
 
   return (
     <div className="space-y-2">
-      <p className="font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Background</p>
+      <p className="font-mono text-[0.65rem] uppercase text-text-muted">Background</p>
       <div className="flex gap-2">
         <select
           aria-label="Background"
-          className="h-7 min-w-0 flex-1 border border-(--color-border-strong) bg-(--color-panel) px-2 font-mono text-[0.65rem] uppercase text-primary-text disabled:opacity-40"
+          className="h-7 min-w-0 flex-1 border border-border-strong bg-panel px-2 font-mono text-[0.65rem] uppercase text-cream-white disabled:opacity-40"
           disabled={inherited}
           value={value}
           onChange={(event) => {
@@ -76,7 +76,7 @@ export const BackgroundControls = ({
           <option value="image">IMAGE</option>
           <option value="video">VIDEO</option>
         </select>
-        <label className="flex h-7 items-center gap-2 border border-(--color-border-strong) px-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+        <label className="flex h-7 items-center gap-2 border border-border-strong px-2 font-mono text-[0.65rem] uppercase text-text-muted">
           <input
             type="checkbox"
             checked={shared}
@@ -87,13 +87,13 @@ export const BackgroundControls = ({
         </label>
       </div>
       {inherited ? (
-        <p className="font-mono text-[0.6rem] uppercase text-(--color-text-muted)">Inherited from previous line</p>
+        <p className="font-mono text-[0.6rem] uppercase text-text-muted">Inherited from previous line</p>
       ) : null}
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 block">Text color</span>
         <select
           aria-label="Text color"
-          className="h-7 w-full border border-(--color-border-strong) bg-(--color-panel) px-2 font-mono text-[0.65rem] uppercase text-primary-text"
+          className="h-7 w-full border border-border-strong bg-panel px-2 font-mono text-[0.65rem] uppercase text-cream-white"
           value={textColor ?? 'none'}
           onChange={(event) =>
             onTextColorChange(
@@ -109,11 +109,11 @@ export const BackgroundControls = ({
           ))}
         </select>
       </label>
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 block">Text background</span>
         <select
           aria-label="Text background"
-          className="h-7 w-full border border-(--color-border-strong) bg-(--color-panel) px-2 font-mono text-[0.65rem] uppercase text-primary-text"
+          className="h-7 w-full border border-border-strong bg-panel px-2 font-mono text-[0.65rem] uppercase text-cream-white"
           value={textBackgroundColor ?? 'none'}
           onChange={(event) =>
             onTextBackgroundColorChange(
@@ -129,7 +129,7 @@ export const BackgroundControls = ({
           ))}
         </select>
       </label>
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 flex justify-between">
           <span>Text background padding</span>
           <span>{textBackgroundPaddingPx}px</span>

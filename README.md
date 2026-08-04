@@ -184,7 +184,7 @@ Do not create a catch-all data-driven track route while track pages have distinc
 - Scope tuning state, storage, progress, and autosave by track ID.
 - Keep source rewriting behind the Vite plugin’s fixed allowlist; never accept request-provided paths.
 - Remove assets and UI once import/reference tracing proves they are unreachable.
-- Keep project colors in CSS variables rather than JSX or TypeScript literals.
+- Register reusable design tokens in Tailwind's `@theme` and use their generated utilities (for example, `text-cream-white` and `bg-arterial-red`) instead of arbitrary CSS-variable utilities such as `text-(--color-cream-white)`. Keep runtime- or selector-scoped custom properties outside `@theme`, and keep color literals out of JSX and TypeScript.
 - Use hooks only for React state, refs, effects, or cleanup. Keep pure calculations outside hooks.
 - Export only symbols consumed by another module.
 - Run React Router type generation, TypeScript, Oxlint, cycle checks, and `oxfmt --check` after structural changes.

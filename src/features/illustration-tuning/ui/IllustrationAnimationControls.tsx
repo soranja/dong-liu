@@ -27,7 +27,7 @@ type IllustrationAnimationControlsProps = {
 };
 
 const TOGGLE_BUTTON_CLASS =
-  'border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-(--color-control) data-[active=true]:text-(--color-panel)';
+  'border border-border-strong bg-panel-raised px-3 py-2 font-mono text-xs uppercase data-[active=true]:bg-cream-white data-[active=true]:text-panel';
 const VISIBILITY_LABELS = {
   adjacent: 'Adjacent',
   'only-active': 'Only active',
@@ -65,20 +65,20 @@ export const IllustrationAnimationControls = ({
           type="button"
           role="checkbox"
           aria-checked={continuing}
-          className="flex min-h-10 w-full items-center justify-between gap-3 border border-(--color-border-soft) bg-(--color-panel-chip) px-3 py-2 font-mono text-xs uppercase text-(--color-text-muted) disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex min-h-10 w-full items-center justify-between gap-3 border border-border-soft bg-panel-chip px-3 py-2 font-mono text-xs uppercase text-text-muted disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!canContinue}
           onClick={() => onContinuingChange(!continuing)}
         >
           <span>Continuing</span>
           <span
             aria-hidden="true"
-            className="h-4 w-4 border-2 border-(--color-text-muted) bg-transparent data-[active=true]:bg-(--color-control)"
+            className="h-4 w-4 border-2 border-text-muted bg-transparent data-[active=true]:bg-cream-white"
             data-active={continuing}
           />
         </button>
 
         <div>
-          <p className="mb-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Variant</p>
+          <p className="mb-2 font-mono text-[0.65rem] uppercase text-text-muted">Variant</p>
           <div className="grid grid-cols-2 gap-1">
             <button
               type="button"
@@ -100,7 +100,7 @@ export const IllustrationAnimationControls = ({
         </div>
 
         <div>
-          <p className="mb-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Visibility</p>
+          <p className="mb-2 font-mono text-[0.65rem] uppercase text-text-muted">Visibility</p>
           <div className="grid grid-cols-2 gap-1">
             {VISIBILITY_OPTIONS.map((option) => {
               const isDisabled = isVisibilityLocked && option.value !== 'only-active';
@@ -126,13 +126,13 @@ export const IllustrationAnimationControls = ({
           type="button"
           role="checkbox"
           aria-checked={isOverlay}
-          className="flex min-h-10 w-full items-center justify-between gap-3 border border-(--color-border-soft) bg-(--color-panel-chip) px-3 py-2 font-mono text-xs uppercase text-(--color-text-muted)"
+          className="flex min-h-10 w-full items-center justify-between gap-3 border border-border-soft bg-panel-chip px-3 py-2 font-mono text-xs uppercase text-text-muted"
           onClick={() => onOverlayChange(!isOverlay)}
         >
           <span>Overlay</span>
           <span
             aria-hidden="true"
-            className="h-4 w-4 border-2 border-(--color-text-muted) bg-transparent data-[active=true]:bg-(--color-control)"
+            className="h-4 w-4 border-2 border-text-muted bg-transparent data-[active=true]:bg-cream-white"
             data-active={isOverlay}
           />
         </button>
@@ -141,7 +141,7 @@ export const IllustrationAnimationControls = ({
       <SectionLayoutControls onSectionWidthChange={onSectionWidthChange} sectionWidthPercent={sectionWidthPercent} />
 
       {isRange ? (
-        <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+        <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
           <span className="mb-1 flex justify-between">
             <span>Animation length</span>
             <span>{animationLengthPercent}%</span>
@@ -151,7 +151,7 @@ export const IllustrationAnimationControls = ({
             min={TUNING_PERCENT_MIN}
             max={TUNING_PERCENT_MAX}
             value={animationLengthPercent}
-            className="w-full accent-(--color-tuner-length)"
+            className="w-full accent-pumpkin"
             onChange={(event) => onLengthChange(Number(event.currentTarget.value))}
           />
         </label>
@@ -160,21 +160,21 @@ export const IllustrationAnimationControls = ({
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          className="border border-(--color-border-strong) px-3 py-2 font-mono text-xs uppercase"
+          className="border border-border-strong px-3 py-2 font-mono text-xs uppercase"
           onClick={onResetAnimation}
         >
           Reset
         </button>
         <button
           type="button"
-          className="border border-(--color-border-strong) px-3 py-2 font-mono text-xs uppercase"
+          className="border border-border-strong px-3 py-2 font-mono text-xs uppercase"
           onClick={onRegisterSnapshot}
         >
           Register
         </button>
       </div>
       <div>
-        <p className="flex min-h-10 items-center justify-center border border-(--color-border-soft) bg-(--color-panel-chip) px-3 text-center font-mono text-xs uppercase leading-none text-(--color-text-muted)">
+        <p className="flex min-h-10 items-center justify-center border border-border-soft bg-panel-chip px-3 text-center font-mono text-xs uppercase leading-none text-text-muted">
           {saveStatus}
         </p>
       </div>

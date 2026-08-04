@@ -23,7 +23,7 @@ const ILLUSTRATION_KIND_LABELS: Record<TimelineIllustrationKind, string> = {
   'word-train': 'Word train',
 };
 const ILLUSTRATION_KIND_CONTROL_CLASS =
-  'h-7 min-w-0 flex-1 border border-(--color-border-strong) bg-(--color-panel) pl-4 font-mono text-[0.65rem] uppercase text-primary-text';
+  'h-7 min-w-0 flex-1 border border-border-strong bg-panel pl-4 font-mono text-[0.65rem] uppercase text-cream-white';
 
 export const TunerSectionSelector = ({
   followActive,
@@ -39,8 +39,8 @@ export const TunerSectionSelector = ({
 
   return (
     <>
-      <div className="border border-(--color-border-soft) bg-(--color-panel-chip) p-3">
-        <div className="flex items-center gap-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <div className="border border-border-soft bg-panel-chip p-3">
+        <div className="flex items-center gap-2 font-mono text-[0.65rem] uppercase text-text-muted">
           <span>#{selectedSection.sectionId}</span>
           <span>/</span>
           {canSwapIllustration ? (
@@ -67,7 +67,7 @@ export const TunerSectionSelector = ({
           {getLyricDisplayText(selectedSection.line)}
         </p>
         {isLocked ? (
-          <p className="mt-2 font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+          <p className="mt-2 font-mono text-[0.65rem] uppercase text-text-muted">
             Continuing previous illustration · time controls only
           </p>
         ) : null}
@@ -76,21 +76,21 @@ export const TunerSectionSelector = ({
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          className="border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
+          className="border border-border-strong bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
           onClick={onPrevious}
         >
           Previous
         </button>
         <button
           type="button"
-          className="border border-(--color-border-strong) bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
+          className="border border-border-strong bg-panel-raised px-3 py-2 font-mono text-xs uppercase"
           onClick={onNext}
         >
           Next
         </button>
       </div>
 
-      <label className="flex items-center gap-2 font-mono text-xs uppercase text-(--color-text-muted)">
+      <label className="flex items-center gap-2 font-mono text-xs uppercase text-text-muted">
         <input
           type="checkbox"
           checked={followActive}

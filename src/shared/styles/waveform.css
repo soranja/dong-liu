@@ -11,8 +11,8 @@
   border-radius: 999px;
   background: linear-gradient(
     to right,
-    var(--color-control) 0%,
-    var(--color-control) var(--slider-progress),
+    var(--color-cream-white) 0%,
+    var(--color-cream-white) var(--slider-progress),
     var(--color-panel) var(--slider-progress),
     var(--color-panel) 100%
   );
@@ -27,7 +27,7 @@
 .wave-slider::-moz-range-progress {
   height: 4px;
   border-radius: 999px;
-  background: var(--color-control);
+  background: var(--color-cream-white);
 }
 
 .wave-slider::-webkit-slider-thumb {
@@ -35,7 +35,7 @@
   height: 14px;
   margin-top: -5px;
   border-radius: 999px;
-  background: var(--color-control);
+  background: var(--color-cream-white);
   appearance: none;
   opacity: 0;
   transition: opacity 160ms ease;
@@ -47,7 +47,7 @@
   margin-top: -5px;
   border: 0;
   border-radius: 999px;
-  background: var(--color-control);
+  background: var(--color-cream-white);
   opacity: 0;
   transition: opacity 160ms ease;
 }

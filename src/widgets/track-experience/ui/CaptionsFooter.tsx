@@ -97,7 +97,7 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible, lyrics, tuni
   return (
     <footer
       ref={footerRef}
-      className="fixed inset-x-0 bottom-0 z-20 flex h-16 items-center bg-(--color-bg) px-4 text-primary-text shadow-[0_-25px_50px_-12px_var(--color-footer-shadow)]"
+      className="fixed inset-x-0 bottom-0 z-20 flex h-16 items-center bg-dark-gray px-4 text-cream-white shadow-[0_-25px_50px_-12px_var(--color-footer-shadow)]"
     >
       <div
         ref={wrapperRef}
@@ -108,7 +108,7 @@ export const CaptionsFooter = ({ currentTime, footerRef, isVisible, lyrics, tuni
           aria-atomic="true"
           aria-hidden={!isVisible}
           aria-live="polite"
-          className="max-w-full whitespace-pre text-center [font-family:var(--font-unbounded)] tracking-wide text-primary-text transition-opacity"
+          className="max-w-full whitespace-pre text-center font-unbounded tracking-wide text-cream-white transition-opacity"
           data-captions-line
           style={{ fontSize, opacity: isVisible ? 1 : 0 }}
         >

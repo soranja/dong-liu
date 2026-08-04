@@ -14,7 +14,7 @@ type PlaybackIconsProps = {
   icon: PlaybackIconName;
 };
 
-export const PlaybackIcons = ({ className = "h-8 w-8 text-(--color-accent)", icon }: PlaybackIconsProps) => {
+export const PlaybackIcons = ({ className = "h-8 w-8 text-toxic-carrot", icon }: PlaybackIconsProps) => {
   const iconUrl = playbackIconSources[icon];
   const maskStyle = {
     WebkitMaskImage: `url("${iconUrl}")`,

@@ -179,8 +179,8 @@ export const GeneralTimeline = memo(
               type="button"
             >
               <span className="timeline-start-prompt__visual">
-                <span className="block font-mono text-xs uppercase text-(--color-text-muted)">Timeline locked</span>
-                <span className="mt-3 block font-mono text-3xl font-bold uppercase leading-tight text-primary-text">
+                <span className="block font-mono text-xs uppercase text-text-muted">Timeline locked</span>
+                <span className="mt-3 block font-mono text-3xl font-bold uppercase leading-tight text-cream-white">
                   Press play to start
                 </span>
               </span>
@@ -193,8 +193,8 @@ export const GeneralTimeline = memo(
             className="fixed inset-x-0 z-10 flex items-center justify-center px-6 text-center"
             style={{ bottom: footerHeight, top: headerHeight }}
           >
-            <div className="max-w-md p-6 text-primary-text">
-              <p className="font-mono text-xs uppercase text-(--color-text-muted)">
+            <div className="max-w-md p-6 text-cream-white">
+              <p className="font-mono text-xs uppercase text-text-muted">
                 {replaySequence > 0 ? `Replay prompt in ${replaySequence}` : "Timeline complete"}
               </p>
               {replaySequence === 0 ? (
@@ -204,14 +204,14 @@ export const GeneralTimeline = memo(
                     <button
                       type="button"
                       onClick={() => onReplay(true)}
-                      className="h-11 border border-(--color-control) bg-(--color-control) px-6 font-mono text-sm font-bold uppercase text-(--color-panel) transition hover:bg-(--color-control-hover)"
+                      className="h-11 border border-cream-white bg-cream-white px-6 font-mono text-sm font-bold uppercase text-panel transition hover:bg-control-hover"
                     >
                       Yes
                     </button>
                     <button
                       type="button"
                       onClick={() => onReplay(false)}
-                      className="h-11 border border-(--color-border-strong) bg-panel-raised px-6 font-mono text-sm font-bold uppercase text-primary-text transition hover:bg-(--color-panel-hover)"
+                      className="h-11 border border-border-strong bg-panel-raised px-6 font-mono text-sm font-bold uppercase text-cream-white transition hover:bg-panel-hover"
                     >
                       No
                     </button>

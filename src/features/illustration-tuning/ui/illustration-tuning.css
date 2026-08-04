@@ -1,7 +1,35 @@
 [data-illustration-tuner] {
   --color-tuner-cut: #3a3a37;
-  --color-tuner-start: color-mix(in srgb, var(--color-control) 36%, var(--color-panel-chip));
-  --color-tuner-end: color-mix(in srgb, var(--color-accent) 46%, var(--color-panel-chip));
-  --color-tuner-length: var(--color-pumpkin);
-  --color-tuner-playhead: var(--color-pumpkin);
+  --color-tuner-start: color-mix(in srgb, var(--color-cream-white) 36%, var(--color-panel-chip));
+  --color-tuner-end: color-mix(in srgb, var(--color-toxic-carrot) 46%, var(--color-panel-chip));
+  --color-tuner-word-1: #7c8178;
+  --color-tuner-word-2: #8b392b;
+  --color-tuner-word-3: #566e79;
+  --color-tuner-word-4: #76617b;
+  --color-tuner-word-5: #7a653d;
+  --color-tuner-word-6: #486d5d;
+}
+
+[data-word-timing-segment]:nth-child(6n + 1) {
+  background: var(--color-tuner-word-1);
+}
+
+[data-word-timing-segment]:nth-child(6n + 2) {
+  background: var(--color-tuner-word-2);
+}
+
+[data-word-timing-segment]:nth-child(6n + 3) {
+  background: var(--color-tuner-word-3);
+}
+
+[data-word-timing-segment]:nth-child(6n + 4) {
+  background: var(--color-tuner-word-4);
+}
+
+[data-word-timing-segment]:nth-child(6n + 5) {
+  background: var(--color-tuner-word-5);
+}
+
+[data-word-timing-segment]:nth-child(6n) {
+  background: var(--color-tuner-word-6);
 }

@@ -21,7 +21,7 @@ const HomeRoute = () => {
   }, [activeTrackId]);
 
   return (
-    <main className="min-h-screen bg-(--color-bg) px-16 pt-16 text-primary-text">
+    <main className="min-h-screen bg-dark-gray px-16 pt-16 text-cream-white">
       <div className="mx-auto flex w-full max-w-6xl flex-col text-center">
         <header className="mb-14">
           <h1 aria-label="Dong Liu" className="dong-liu-title mx-auto mt-4"></h1>
@@ -31,7 +31,7 @@ const HomeRoute = () => {
           {TRACKS.map((track) => (
             <li key={track.id}>
               <Link
-                className="group relative isolate flex min-h-28 items-center gap-6 overflow-hidden px-4 py-6 before:absolute before:inset-0 before:-z-10 before:bg-(--color-accent) before:[clip-path:inset(0_100%_0_0)] before:transition-[clip-path] before:duration-500 before:ease-in hover:before:[clip-path:inset(0_0_0_0)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--color-accent) focus-visible:before:[clip-path:inset(0_0_0_0)]"
+                className="group relative isolate flex min-h-28 items-center gap-6 overflow-hidden px-4 py-6 before:absolute before:inset-0 before:-z-10 before:bg-toxic-carrot before:[clip-path:inset(0_100%_0_0)] before:transition-[clip-path] before:duration-500 before:ease-in hover:before:[clip-path:inset(0_0_0_0)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-toxic-carrot focus-visible:before:[clip-path:inset(0_0_0_0)]"
                 onBlur={() => setActiveTrackId(null)}
                 onFocus={() => setActiveTrackId(track.id)}
                 onPointerEnter={() => setActiveTrackId(track.id)}
@@ -39,7 +39,7 @@ const HomeRoute = () => {
                 prefetch="intent"
                 to={track.route}
               >
-                <span className="font-mono text-xs text-(--color-text-muted)">
+                <span className="font-mono text-xs text-text-muted">
                   {track.trackNo >= 10 ? track.trackNo : `0${track.trackNo}`}
                 </span>
 
@@ -50,17 +50,17 @@ const HomeRoute = () => {
                   src={track.cover.src}
                 />
 
-                <span className="[font-family:var(--font-unbounded)] text-4xl font-bold uppercase">
+                <span className="font-unbounded text-4xl font-bold uppercase">
                   {track.title}
                 </span>
 
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 z-10 flex items-center gap-6 px-4 py-6 text-(--color-bg) [clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-500 ease-in group-hover:[clip-path:inset(0_0_0_0)] group-focus-visible:[clip-path:inset(0_0_0_0)]"
+                  className="pointer-events-none absolute inset-0 z-10 flex items-center gap-6 px-4 py-6 text-dark-gray [clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-500 ease-in group-hover:[clip-path:inset(0_0_0_0)] group-focus-visible:[clip-path:inset(0_0_0_0)]"
                 >
                   <span className="font-mono text-xs">{track.trackNo >= 10 ? track.trackNo : `0${track.trackNo}`}</span>
                   <span className="size-24 shrink-0" />
-                  <span className="[font-family:var(--font-unbounded)] text-4xl font-bold uppercase">
+                  <span className="font-unbounded text-4xl font-bold uppercase">
                     {track.title}
                   </span>
                 </span>

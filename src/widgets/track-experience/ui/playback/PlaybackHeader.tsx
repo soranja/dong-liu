@@ -59,12 +59,12 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
   return (
     <header
       ref={headerRef}
-      className="fixed inset-x-0 top-0 z-20 flex h-16 items-center bg-(--color-bg) text-primary-text shadow-2xl"
+      className="fixed inset-x-0 top-0 z-20 flex h-16 items-center bg-dark-gray text-cream-white shadow-2xl"
     >
       <div className="flex h-full w-full max-w-7xl items-center gap-10 mx-auto">
         <PlaybackButtons isPlaying={isPlaying} isReady={isReady} onTogglePlayback={onTogglePlayback} />
 
-        <div className="w-full flex items-center gap-8 text-[12px] text-(--color-text-muted) font-mono">
+        <div className="w-full flex items-center gap-8 text-[12px] text-text-muted font-mono">
           <div className="flex w-full items-center gap-2">
             <span>{formatTime((progress / 100) * duration)}</span>
 
@@ -110,7 +110,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
               disabled={!isReady}
               onMouseDown={(event) => event.preventDefault()}
               onClick={handleToggleVolume}
-              className="flex h-7 w-7 shrink-0 items-center justify-center text-(--color-text-muted) transition hover:text-(--color-accent)"
+              className="flex h-7 w-7 shrink-0 items-center justify-center text-text-muted transition hover:text-toxic-carrot"
             >
               <PlaybackIcons icon={volume === 0 ? "mute" : "volume"} className="h-5 w-5" />
             </button>
@@ -131,7 +131,7 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
           </div>
         </div>
 
-        <div className="h-full w-54 shrink-0 overflow-hidden bg-(--color-panel)">
+        <div className="h-full w-54 shrink-0 overflow-hidden bg-panel">
           <canvas ref={canvasRef} className="h-full w-full" />
         </div>
 

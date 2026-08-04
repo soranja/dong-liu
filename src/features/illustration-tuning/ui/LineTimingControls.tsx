@@ -20,23 +20,23 @@ export const LineTimingControls = ({
   selectedStartTime,
 }: LineTimingControlsProps) => (
   <div className="space-y-2">
-    <p className="font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Line time</p>
+    <p className="font-mono text-[0.65rem] uppercase text-text-muted">Line time</p>
     <div className="grid grid-cols-2 gap-2">
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 block">Start</span>
         <input
           type="number"
           min="0"
           step={LINE_TIMING_STEP_SECONDS}
           value={formatTimeInput(selectedStartTime)}
-          className="w-full border border-(--color-border-strong) bg-panel-raised px-2 py-2 text-primary-text"
+          className="w-full border border-border-strong bg-panel-raised px-2 py-2 text-cream-white"
           onChange={(event) => {
             if (event.currentTarget.value === '') return;
             onStartTimeChange(Number(event.currentTarget.value));
           }}
         />
       </label>
-      <label className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 block">End</span>
         <input
           type="number"
@@ -44,7 +44,7 @@ export const LineTimingControls = ({
           step={LINE_TIMING_STEP_SECONDS}
           value={formatTimeInput(selectedEndTime)}
           disabled={!hasNextSection}
-          className="w-full border border-(--color-border-strong) bg-panel-raised px-2 py-2 text-primary-text disabled:opacity-40"
+          className="w-full border border-border-strong bg-panel-raised px-2 py-2 text-cream-white disabled:opacity-40"
           onChange={(event) => {
             if (event.currentTarget.value === '') return;
             onEndTimeChange(Number(event.currentTarget.value));

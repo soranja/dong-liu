@@ -65,7 +65,7 @@ export const TrackExperience = <TCustomIllustration,>({
   return (
     <main
       aria-busy={!readiness.isReady}
-      className="relative isolate min-h-screen overflow-x-clip bg-(--color-bg) text-(--color-panel)"
+      className="relative isolate min-h-screen overflow-x-clip bg-dark-gray text-panel"
       data-track-id={trackId}
       style={{ paddingBottom: layoutHeights.footer, paddingTop: layoutHeights.header }}
     >

@@ -17,12 +17,12 @@ export const FadeTimingControls = ({
   onFadeOutChange,
 }: FadeTimingControlsProps) => (
   <div className="space-y-2">
-    <p className="font-mono text-[0.65rem] uppercase text-(--color-text-muted)">Fade</p>
+    <p className="font-mono text-[0.65rem] uppercase text-text-muted">Fade</p>
     {[
       { label: "Fade in", onChange: onFadeInChange, value: fadeInMs },
       { label: "Fade out", onChange: onFadeOutChange, value: fadeOutMs },
     ].map((control) => (
-      <label key={control.label} className="block font-mono text-[0.65rem] uppercase text-(--color-text-muted)">
+      <label key={control.label} className="block font-mono text-[0.65rem] uppercase text-text-muted">
         <span className="mb-1 flex justify-between">
           <span>{control.label}</span>
           <span>{control.value}ms</span>
@@ -34,7 +34,7 @@ export const FadeTimingControls = ({
           step={FADE_TIMING_STEP_MS}
           value={control.value}
           list="illustration-fade-ticks"
-          className="w-full accent-(--color-tuner-length)"
+          className="w-full accent-pumpkin"
           onChange={(event) => control.onChange(Number(event.currentTarget.value))}
         />
       </label>

@@ -76,7 +76,7 @@ export const GeneralTimelineSection = memo(
     const contentClassName = isFullBleed
       ? "h-full w-full overflow-hidden"
       : isText
-        ? "h-full w-full overflow-hidden [font-family:var(--font-unbounded)]"
+        ? "h-full w-full overflow-hidden font-unbounded"
         : "flex h-full w-full items-center justify-center overflow-hidden py-6 transition-opacity duration-150";
 
     useEffect(

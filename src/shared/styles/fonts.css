@@ -18,8 +18,8 @@
   font-display: swap;
 }
 
-:root {
+@theme inline {
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-unbounded: 'Unbounded', var(--font-sans);
-  --font-most-wanted: 'Most Wanted', var(--font-sans);
+  --font-hanyi-pagoda: 'Hanyi Pagoda', var(--font-sans);
 }

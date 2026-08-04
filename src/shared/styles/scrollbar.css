@@ -20,7 +20,7 @@
   width: 0;
   height: 0;
   border: 0;
-  background: var(--color-bg);
+  background: var(--color-dark-gray);
 }
 
 *::-webkit-scrollbar-thumb {

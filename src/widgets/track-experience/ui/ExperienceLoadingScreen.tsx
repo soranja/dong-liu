@@ -12,7 +12,7 @@ export const ExperienceLoadingScreen = ({ progress }: ExperienceLoadingScreenPro
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-primary-bg px-6 text-primary-text"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-dark-gray px-6 text-cream-white"
       role="status"
     >
       <div className="w-full max-w-lg font-mono flex-col flex gap-4 justify-center items-center">

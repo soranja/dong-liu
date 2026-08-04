@@ -18,8 +18,6 @@ type WordControlProps = {
   words: string[];
 };
 
-const COLORS = ['#7c8178', '#8b392b', '#566e79', '#76617b', '#7a653d', '#486d5d'];
-
 function getMinimumWordGap(wordCount: number) {
   return Math.min(1, TUNING_PERCENT_MAX / Math.max(1, wordCount));
 }
@@ -80,7 +78,7 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
   };
 
   return (
-    <section className="border border-(--color-border-strong) bg-(--color-panel-soft) p-3">
+    <section className="border border-border-strong p-3">
       <div
         ref={barRef}
         className="relative h-16 touch-none"
@@ -93,7 +91,7 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
         }}
         onPointerUp={() => setDraggedBoundary(null)}
       >
-        <div className="absolute inset-x-0 top-0 flex h-8 overflow-hidden border border-(--color-border-strong)">
+        <div className="absolute inset-x-0 top-0 flex h-8 overflow-hidden border border-border-strong">
           {words.map((word, index) => {
             const end = starts[index + 1] ?? TUNING_PERCENT_MAX;
             const start = starts[index] ?? TUNING_PERCENT_MIN;
@@ -101,8 +99,9 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
             return (
               <div
                 key={`${index}-${word}`}
-                className="flex min-w-0 items-center justify-center border-r border-(--color-panel) px-1 font-mono text-[0.6rem] uppercase text-white last:border-r-0"
-                style={{ backgroundColor: COLORS[index % COLORS.length] ?? COLORS[0], width: `${end - start}%` }}
+                className="flex min-w-0 items-center justify-center border-r border-panel px-1 font-mono text-[0.6rem] uppercase text-cream-white last:border-r-0"
+                data-word-timing-segment
+                style={{ width: `${end - start}%` }}
                 title={`${word}: ${formatPercent(start)}–${formatPercent(end)}%`}
               >
                 <span className="overflow-hidden text-ellipsis whitespace-pre">{word}</span>
@@ -125,7 +124,7 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
               }
               aria-valuemin={(starts[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap}
               aria-valuenow={start}
-              className="word-timing-boundary absolute top-0 z-10 h-8 w-3 -translate-x-1/2 cursor-ew-resize bg-(--color-accent)"
+              className="word-timing-boundary absolute top-0 z-10 h-8 w-3 -translate-x-1/2 cursor-ew-resize bg-toxic-carrot"
               onKeyDown={(event) => {
                 const min = (starts[index - 1] ?? TUNING_PERCENT_MIN) + minimumGap;
                 const max =
@@ -154,7 +153,7 @@ const WordTimingControls = ({ onChange, rangeAnimation, words }: WordControlProp
             />
           );
         })}
-        <div className="absolute inset-x-0 top-10 font-mono text-[0.62rem] text-(--color-text-muted)">
+        <div className="absolute inset-x-0 top-10 font-mono text-[0.62rem] text-text-muted">
           <span className="absolute left-0">{TUNING_PERCENT_MIN}%</span>
           {starts.slice(1).map((start, index) => (
             <span key={index} className="absolute -translate-x-1/2" style={{ left: `${start}%` }}>

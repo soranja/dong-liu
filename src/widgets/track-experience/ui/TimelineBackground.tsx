@@ -24,7 +24,7 @@ export const TimelineBackground = ({ background, backgroundRefs, index, isReside
   >
     {isResident && (background?.mediaType === 'image' || background?.mediaType === 'video') && !background.src ? (
       <div
-        className="flex h-full w-full items-center justify-center bg-(--color-arterial-red) p-8 text-center font-mono text-4xl font-black uppercase text-(--color-cream-white)"
+        className="flex h-full w-full items-center justify-center bg-arterial-red p-8 text-center font-mono text-4xl font-black uppercase text-cream-white"
         data-missing-background-path
       >
         No {background.mediaType} path present

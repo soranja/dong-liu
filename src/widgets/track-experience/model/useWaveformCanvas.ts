@@ -57,7 +57,7 @@ export function useWaveformCanvas({ canvasRef, getAnalyser }: WaveformCanvasOpti
   function readWaveformColors() {
     waveformColorsRef.current = {
       backgroundColor: getCssVariable('--color-panel'),
-      color: getCssVariable('--color-accent'),
+      color: getCssVariable('--color-toxic-carrot'),
     };
   }
 
