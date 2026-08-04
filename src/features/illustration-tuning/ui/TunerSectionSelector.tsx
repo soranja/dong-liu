@@ -1,7 +1,7 @@
-import type { TimelineIllustrationKind } from "@entities/track/model/tuning";
-import type { LyricsSection } from "@entities/track/model/types";
-import { getLyricDisplayText } from "@shared/ui/illustration-animations/lib/lyricText";
-import { TEXT_ILLUSTRATION_KINDS, type TextIllustrationKind } from "@shared/ui/illustration-animations/types";
+import type { TimelineIllustrationKind } from '@entities/track/model/tuning';
+import type { LyricsSection } from '@entities/track/model/types';
+import { getLyricDisplayText } from '@shared/ui/illustration-animations/lib/lyricText';
+import { TEXT_ILLUSTRATION_KINDS, type TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
 type TunerSectionSelectorProps = {
   followActive: boolean;
@@ -15,15 +15,15 @@ type TunerSectionSelectorProps = {
 };
 
 const ILLUSTRATION_KIND_LABELS: Record<TimelineIllustrationKind, string> = {
-  "blinking-words": "Blinking words",
-  generic: "Custom",
-  "kinetic-warp": "Kinetic warp",
-  "vertical-typewriter": "Vertical typewriter",
-  "word-cloud": "Word cloud",
-  "word-train": "Word train",
+  'blinking-words': 'Blinking words',
+  generic: 'Custom',
+  'kinetic-warp': 'Kinetic warp',
+  'vertical-typewriter': 'Vertical typewriter',
+  'word-cloud': 'Word cloud',
+  'word-train': 'Word train',
 };
 const ILLUSTRATION_KIND_CONTROL_CLASS =
-  "h-7 min-w-0 flex-1 border border-(--color-border-strong) bg-(--color-panel) pl-4 font-mono text-[0.65rem] uppercase text-primary-text";
+  'h-7 min-w-0 flex-1 border border-(--color-border-strong) bg-(--color-panel) pl-4 font-mono text-[0.65rem] uppercase text-primary-text';
 
 export const TunerSectionSelector = ({
   followActive,
@@ -35,7 +35,7 @@ export const TunerSectionSelector = ({
   onPrevious,
   selectedSection,
 }: TunerSectionSelectorProps) => {
-  const canSwapIllustration = typeof selectedSection.illustrateWith === "string";
+  const canSwapIllustration = typeof selectedSection.illustrateWith === 'string';
 
   return (
     <>

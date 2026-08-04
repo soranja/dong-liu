@@ -6,12 +6,16 @@
 
 @theme inline {
   --color-panel-raised: #292929;
-  --color-primary-bg: #141414;
-  --color-primary-text: #e7e7d8;
+  --color-primary-bg: var(--color-dark-gray);
+  --color-primary-text: var(--color-cream-white);
   --font-hanyi-pagoda: 'Hanyi Pagoda', var(--font-sans);
 }
 
 :root {
+  --color-cream-white: #e7e7d8;
+  --color-dark-gray: #141414;
+  --color-toxic-carrot: #ea4125;
+  --color-arterial-red: #ae1425;
   --color-bg: var(--color-primary-bg);
   --color-text: var(--color-primary-text);
   --color-text-muted: #9d9d93;
@@ -19,9 +23,9 @@
   --color-panel: #1e1e1e;
   --color-panel-chip: #252525;
   --color-panel-hover: #333333;
-  --color-control: #e7e7d8;
+  --color-control: var(--color-cream-white);
   --color-control-hover: #d4d4c5;
-  --color-accent: #ea4125;
+  --color-accent: var(--color-toxic-carrot);
   --color-border: #000000;
   --color-border-soft: #393939;
   --color-border-strong: #505050;

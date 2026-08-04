@@ -1,5 +1,8 @@
 import { useEffect, useState, type RefObject } from 'react';
+import { resolveSectionStart, type TrackTuningAdapter } from '@entities/track/model/tuning';
+import type { LyricsSection } from '@entities/track/model/types';
 import { installPlaybackScrollSeek } from '@shared/lib/playbackScrollSeek';
+import { getSectionNavigationTime, type SectionNavigationDirection } from './sectionNavigation';
 import { useAudioScrollSync } from './useAudioScrollSync';
 import { useDelayedPlaybackResume } from './useDelayedPlaybackResume';
 import { usePlaybackKeyboard } from './usePlaybackKeyboard';
@@ -12,8 +15,10 @@ type PlaybackControllerOptions = {
   audioRef: RefObject<HTMLAudioElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isReady: boolean;
+  lyrics: readonly LyricsSection[];
   playbackRef: RefObject<HTMLElement | null>;
   timelineRef: RefObject<HTMLElement | null>;
+  tuningAdapter?: TrackTuningAdapter;
 };
 
 type SeekOptions = {
@@ -40,8 +45,10 @@ export function usePlaybackController({
   audioRef,
   canvasRef,
   isReady,
+  lyrics,
   playbackRef,
   timelineRef,
+  tuningAdapter,
 }: PlaybackControllerOptions) {
   const [duration, setDuration] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -81,7 +88,7 @@ export function usePlaybackController({
   const seekBySecondsRef = useSyncedRef(seekBySeconds);
 
   usePlaybackKeyboard({
-    onSeekStep: (step) => seekBySeconds(step),
+    onSeekSection: (direction) => seekBySection(direction),
     onTogglePlayback: () => void togglePlayback(),
     onVolumeStep: (step) => {
       setVolume((current) => Math.min(1, Math.max(0, current + step)));
@@ -256,16 +263,21 @@ export function usePlaybackController({
 
   function seekBySeconds(seconds: number, resumeDelayMs = KEYBOARD_SEEK_RESUME_DELAY_MS) {
     const audio = audioRef.current;
+    if (!audio) return;
+
+    seekToTime(audio.currentTime + seconds, resumeDelayMs);
+  }
+
+  function seekToTime(time: number, resumeDelayMs: number) {
+    const audio = audioRef.current;
     if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
 
     const shouldResumePlayback = interruptPlaybackForSeek();
-    const previousTime = audio.currentTime;
-    const nextTime = Math.min(audio.duration, Math.max(0, audio.currentTime + seconds));
+    const nextTime = Math.min(audio.duration, Math.max(0, time));
     seek((nextTime / audio.duration) * 100, {
       animatePage: false,
       continuePlaybackScroll: false,
     });
-    void scratch(previousTime, nextTime);
 
     if (nextTime >= audio.duration) {
       handleEnded();
@@ -275,7 +287,16 @@ export function usePlaybackController({
     if (shouldResumePlayback) seekResume.schedule(resumeDelayMs);
   }
 
-  function scrub(value: number) {
+  function seekBySection(direction: SectionNavigationDirection) {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
+
+    const sectionStarts = lyrics.map((section) => resolveSectionStart(section, tuningAdapter));
+    const nextTime = getSectionNavigationTime(sectionStarts, audio.currentTime, audio.duration, direction);
+    seekToTime(nextTime, KEYBOARD_SEEK_RESUME_DELAY_MS);
+  }
+
+  function scrub(value: number, shouldScratch = true) {
     const audio = audioRef.current;
     if (!audio || !audio.duration || !Number.isFinite(audio.duration) || !isReadyRef.current) return;
 
@@ -286,7 +307,7 @@ export function usePlaybackController({
       animatePage: false,
       continuePlaybackScroll: false,
     });
-    void scratch(previousTime, nextTime);
+    if (shouldScratch) void scratch(previousTime, nextTime);
 
     if (value >= 100) {
       handleEnded();

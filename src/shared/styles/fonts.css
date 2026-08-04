@@ -5,6 +5,12 @@
 }
 
 @font-face {
+  font-family: 'Most Wanted';
+  src: url('/fonts/most-wanted-rus.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Hanyi Pagoda';
   src: url('/fonts/hanyi-pagoda-web.ttf') format('truetype');
   font-style: normal;
@@ -15,4 +21,5 @@
 :root {
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-unbounded: 'Unbounded', var(--font-sans);
+  --font-most-wanted: 'Most Wanted', var(--font-sans);
 }

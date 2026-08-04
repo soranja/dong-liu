@@ -40,8 +40,10 @@ export const TrackExperience = <TCustomIllustration,>({
     audioRef,
     canvasRef,
     isReady: readiness.isReady,
+    lyrics,
     playbackRef: headerRef,
     timelineRef,
+    tuningAdapter,
   });
   const togglePlaybackRef = useRef(playback.togglePlayback);
   togglePlaybackRef.current = playback.togglePlayback;

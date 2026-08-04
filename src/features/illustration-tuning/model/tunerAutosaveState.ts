@@ -1,28 +1,38 @@
 import { formatLyricsTimestamp, parseLyricsTimestamp } from '@entities/track/lib/timestamp';
 import { getSavedTimelineIllustrationKind, type TimelineIllustrationKind } from '@entities/track/model/tuning';
-import type { IllustrationVisibility } from '@entities/track/model/types';
+import type { IllustrationVisibility, LyricsBackground } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import { getDirtyAnimation, getSavedAnimation, type DirtyAnimation, type DirtyAnimations } from './animationSelection';
 import {
   DEFAULT_SECTION_WIDTH_PERCENT,
   getSavedSectionWidthPercent as getSavedSectionWidthPercentForSection,
 } from '@entities/track/model/layout';
-import { FADE_TIMING_MAX_MS } from '@shared/config/tuning';
+import { FADE_TIMING_MAX_MS, TEXT_BACKGROUND_PADDING_MAX_PX } from '@shared/config/tuning';
+import type { LyricsColorPreset } from '@shared/config/tuning';
 import type { IllustrationTuningSession } from './session';
 
 export type DraftIllustrationKinds = Record<number, TextIllustrationKind>;
 export type DraftIllustrationVisibilities = Record<number, IllustrationVisibility>;
+export type DraftBackgrounds = Record<number, LyricsBackground | null>;
+export type DraftBackgroundShared = Record<number, boolean>;
 export type DraftContinuings = Record<number, boolean>;
 export type DraftFadeDurations = Record<number, number>;
 export type DraftOverlays = Record<number, boolean>;
 export type DraftSectionWidthPercents = Record<number, number>;
 export type DraftStartTimes = Record<number, number>;
+export type DraftTextBackgroundColors = Record<number, LyricsColorPreset | null>;
+export type DraftTextBackgroundPaddingPx = Record<number, number>;
+export type DraftTextColors = Record<number, LyricsColorPreset | null>;
 export type PendingChange = {
   animation?: DirtyAnimation;
+  background?: LyricsBackground | null;
+  backgroundShared?: boolean;
   fadeInMs?: number;
   fadeOutMs?: number;
   continuing?: boolean;
   hasAnimation?: boolean;
+  hasBackground?: boolean;
+  hasBackgroundShared?: boolean;
   hasFadeInMs?: boolean;
   hasFadeOutMs?: boolean;
   hasContinuing?: boolean;
@@ -30,15 +40,23 @@ export type PendingChange = {
   hasIllustrationVisibility?: boolean;
   hasOverlay?: boolean;
   hasSectionWidthPercent?: boolean;
+  hasTextBackgroundColor?: boolean;
+  hasTextBackgroundPaddingPx?: boolean;
+  hasTextColor?: boolean;
   illustrationKind?: TextIllustrationKind;
   illustrationVisibility?: IllustrationVisibility;
   isOverlay?: boolean;
   sectionWidthPercent?: number;
   timestamp?: number;
+  textBackgroundColor?: LyricsColorPreset | null;
+  textBackgroundPaddingPx?: number;
+  textColor?: LyricsColorPreset | null;
 };
 export type PendingChanges = Record<number, PendingChange>;
 export type Snapshot = {
   animation: DirtyAnimation;
+  background: LyricsBackground | null;
+  backgroundShared: boolean;
   continuing: boolean;
   endTime: number | null;
   fadeInMs: number;
@@ -48,6 +66,9 @@ export type Snapshot = {
   isOverlay: boolean;
   sectionWidthPercent: number;
   startTime: number;
+  textBackgroundColor: LyricsColorPreset | null;
+  textBackgroundPaddingPx: number;
+  textColor: LyricsColorPreset | null;
 };
 export type SaveStatus = 'Register failed' | 'Registering' | 'Registered' | 'Reset' | 'Unsaved changes';
 
@@ -58,10 +79,40 @@ export function clampFadeDuration(durationMs: number) {
   return Math.min(FADE_TIMING_MAX_MS, Math.max(0, Math.round(durationMs)));
 }
 
+export function clampTextBackgroundPaddingPx(paddingPx: number) {
+  return Math.min(TEXT_BACKGROUND_PADDING_MAX_PX, Math.max(0, Math.round(paddingPx)));
+}
+
 export function getSavedStartTime(session: IllustrationTuningSession, sectionId: number) {
   const timestamp = session.lyrics.find((section) => section.sectionId === sectionId)?.timestamp;
 
   return timestamp ? parseLyricsTimestamp(timestamp) : 0;
+}
+
+export function getSavedBackground(session: IllustrationTuningSession, sectionId: number) {
+  return session.lyrics.find((section) => section.sectionId === sectionId)?.background ?? null;
+}
+
+export function getSavedBackgroundShared(session: IllustrationTuningSession, sectionId: number) {
+  return Boolean(session.lyrics.find((section) => section.sectionId === sectionId)?.backgroundShared);
+}
+
+export function getSavedTextColor(session: IllustrationTuningSession, sectionId: number) {
+  return session.lyrics.find((section) => section.sectionId === sectionId)?.textColor ?? null;
+}
+
+export function getSavedTextBackgroundColor(session: IllustrationTuningSession, sectionId: number) {
+  return session.lyrics.find((section) => section.sectionId === sectionId)?.textBackgroundColor ?? null;
+}
+
+export function getSavedTextBackgroundPaddingPx(session: IllustrationTuningSession, sectionId: number) {
+  return clampTextBackgroundPaddingPx(
+    session.lyrics.find((section) => section.sectionId === sectionId)?.textBackgroundPaddingPx ?? 0,
+  );
+}
+
+export function areBackgroundsEqual(left: LyricsBackground | null, right: LyricsBackground | null) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 export function getSavedIllustrationKind(session: IllustrationTuningSession, sectionId: number) {
@@ -111,6 +162,50 @@ export function getCurrentAnimation(
   const draftAnimation = getDirtyAnimation(draftAnimations, sectionId);
 
   return draftAnimation !== undefined ? draftAnimation : getSavedAnimation(session.lyrics, sectionId);
+}
+
+export function getCurrentBackground(
+  session: IllustrationTuningSession,
+  draftBackgrounds: DraftBackgrounds,
+  sectionId: number,
+) {
+  return Object.hasOwn(draftBackgrounds, sectionId)
+    ? draftBackgrounds[sectionId]
+    : getSavedBackground(session, sectionId);
+}
+
+export function getCurrentBackgroundShared(
+  session: IllustrationTuningSession,
+  draftBackgroundShared: DraftBackgroundShared,
+  sectionId: number,
+) {
+  return draftBackgroundShared[sectionId] ?? getSavedBackgroundShared(session, sectionId);
+}
+
+export function getCurrentTextColor(
+  session: IllustrationTuningSession,
+  draftTextColors: DraftTextColors,
+  sectionId: number,
+) {
+  return Object.hasOwn(draftTextColors, sectionId)
+    ? draftTextColors[sectionId]
+    : getSavedTextColor(session, sectionId);
+}
+
+export function getCurrentTextBackgroundColor(
+  session: IllustrationTuningSession,
+  drafts: DraftTextBackgroundColors,
+  sectionId: number,
+) {
+  return Object.hasOwn(drafts, sectionId) ? drafts[sectionId] : getSavedTextBackgroundColor(session, sectionId);
+}
+
+export function getCurrentTextBackgroundPaddingPx(
+  session: IllustrationTuningSession,
+  drafts: DraftTextBackgroundPaddingPx,
+  sectionId: number,
+) {
+  return drafts[sectionId] ?? getSavedTextBackgroundPaddingPx(session, sectionId);
 }
 
 export function getCurrentContinuing(
@@ -187,6 +282,8 @@ export function createSaveBody(trackId: string, changes: Array<[string, PendingC
   return JSON.stringify({
     changes: changes.map(([sectionId, change]) => ({
       ...(change.hasAnimation ? { illustrationAnimation: change.animation } : {}),
+      ...(change.hasBackground ? { background: change.background } : {}),
+      ...(change.hasBackgroundShared ? { backgroundShared: change.backgroundShared } : {}),
       ...(change.hasContinuing ? { continuing: change.continuing } : {}),
       ...(change.hasFadeInMs ? { illustrationFadeInMs: change.fadeInMs } : {}),
       ...(change.hasFadeOutMs ? { illustrationFadeOutMs: change.fadeOutMs } : {}),
@@ -194,6 +291,11 @@ export function createSaveBody(trackId: string, changes: Array<[string, PendingC
       ...(change.hasIllustrationVisibility ? { illustrationVisibility: change.illustrationVisibility } : {}),
       ...(change.hasOverlay ? { isOverlay: change.isOverlay } : {}),
       ...(change.hasSectionWidthPercent ? { sectionWidthPercent: change.sectionWidthPercent } : {}),
+      ...(change.hasTextBackgroundColor ? { textBackgroundColor: change.textBackgroundColor } : {}),
+      ...(change.hasTextBackgroundPaddingPx
+        ? { textBackgroundPaddingPx: change.textBackgroundPaddingPx }
+        : {}),
+      ...(change.hasTextColor ? { textColor: change.textColor } : {}),
       ...(change.timestamp !== undefined ? { timestamp: formatLyricsTimestamp(change.timestamp) } : {}),
       sectionId: Number(sectionId),
     })),

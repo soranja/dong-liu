@@ -92,7 +92,7 @@ Aliases are configured in TypeScript and Vite. Oxlint prevents reverse-layer ali
 `entities/track` owns neutral contracts:
 
 - `TrackSummary`: ID, title, and route.
-- `LyricsSection<TCustomIllustration>`: lyric timing, layout, animation metadata, and serializable illustration data.
+- `LyricsSection<TCustomIllustration>`: lyric timing, layout, animation/background metadata, and serializable illustration data.
 - `TrackExperienceProps<TCustomIllustration>`: track ID, audio, lyrics, custom renderer, and optional tuning adapter.
 - `TextIllustrationKind`: derived from the shared animation registry.
 
@@ -109,7 +109,19 @@ Tuning is development-only:
 3. The track widget receives that session through its optional tuning adapter.
 4. Production renders the plain track widget without importing the tuning feature.
 
-Press `F4` after the experience is ready to open the tuner. It supports section selection, live preview, loop ranges, line timing, animation range/length, illustration selection, visibility, overlays, section width, fades, continuation, reset, and register.
+Press `F4` after the experience is ready to open the tuner. It supports section selection, live preview, loop ranges, line timing, animation range/length, illustration selection, backgrounds, visibility, overlays, section width, fades, continuation, reset, and register.
+
+Text illustrations can use a preset or authored media background. Set `backgroundShared: true` to keep that background mounted through the next lyric line (including uninterrupted looping video):
+
+```ts
+const backgroundExamples: LyricsBackground[] = [
+  { mediaType: 'solid', preset: 'toxic-carrot' },
+  { alt: 'Boxing ring', mediaType: 'image', src: '/images/ring.webp' },
+  { mediaType: 'video', poster: '/images/ring.webp', src: '/videos/ring.mp4' },
+];
+```
+
+Assign one to a section's `background` and set `backgroundShared: true` when it should continue. `IMAGE` and `VIDEO` are media markers; when their lyric object has no `src`, the timeline shows a loud missing-path placeholder. Background, `textColor`, and `textBackgroundColor` presets are `cream-white`, `dark-gray`, `toxic-carrot`, and `arterial-red`, backed by the CSS variables of the same names. `textBackgroundPaddingPx` adds 0–100px of square padding directly behind the text. With no override, the background is Dark Gray and text is Cream White. `None` removes the override, and these controls are disabled for custom illustrations.
 
 Drafts, progress subscriptions, and panel state are scoped to the track session. Drafts are kept only in memory and are discarded on refresh. No global progress events or global draft maps are used.
 

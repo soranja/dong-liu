@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { getBackgroundSectionIndex, resolveBackground } from "@entities/track/lib/background";
 import {
   resolveIllustrationVisibility,
   type TrackTuningAdapter,
 } from "@entities/track/model/tuning";
-import type { LyricsSection } from "@entities/track/model/types";
+import type { LyricsBackground, LyricsSection } from "@entities/track/model/types";
 import {
   getTimelineSectionProgress,
   getTimelineTrackState,
@@ -77,9 +78,11 @@ export function useGeneralTimeline({
   tuningAdapter,
 }: GeneralTimelineOptions) {
   const highlightedSlideRef = useRef<number | null>(null);
+  const currentBackgroundRef = useRef<number | null>(null);
   const currentSlideRef = useRef<number | null>(null);
   const revealedSlideRef = useRef<number | null>(null);
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
+  const backgroundRefs = useRef<Array<HTMLElement | null>>([]);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const trackMetricsRef = useRef({
     flowSlides: [] as TrackSlideMetric[],
@@ -109,6 +112,40 @@ export function useGeneralTimeline({
     currentSlideRef.current = nextIndex;
   }, []);
 
+  const setCurrentBackground = useCallback(
+    (nextIndex: number | null, background: LyricsBackground | undefined, shouldPlay: boolean) => {
+      if (currentBackgroundRef.current !== nextIndex) {
+        const previous =
+          currentBackgroundRef.current === null ? null : backgroundRefs.current[currentBackgroundRef.current];
+        previous?.setAttribute("data-active", "false");
+        previous?.querySelector("video")?.pause();
+
+        const next = nextIndex === null ? null : backgroundRefs.current[nextIndex];
+        next?.setAttribute("data-active", "true");
+        const nextVideo = next?.querySelector("video");
+        if (nextVideo) nextVideo.currentTime = 0;
+        currentBackgroundRef.current = nextIndex;
+      }
+
+      const element = nextIndex === null ? null : backgroundRefs.current[nextIndex];
+      if (element && background) {
+        const previousType = element.dataset.backgroundType;
+        element.dataset.backgroundType = background.mediaType;
+        element.dataset.backgroundPreset = background.mediaType === "solid" ? background.preset : "";
+        if (previousType !== background.mediaType && background.mediaType === "video") {
+          const nextVideo = element.querySelector("video");
+          if (nextVideo) nextVideo.currentTime = 0;
+        }
+      }
+
+      const video = element?.querySelector("video");
+      if (!video) return;
+      if (background?.mediaType === "video" && shouldPlay) void video.play().catch(() => undefined);
+      else video.pause();
+    },
+    [],
+  );
+
   const updateTrack = useCallback(
     (time: number) => {
       const track = trackRef.current;
@@ -123,6 +160,9 @@ export function useGeneralTimeline({
       const sectionProgress = getTimelineSectionProgress(lyrics, activeIndex, time, duration, tuningAdapter);
       const visualProgress = getTimelineVisualSectionProgress(lyrics, visualIndex, time, duration, tuningAdapter);
       const shouldPlaySyncedVideo = Boolean(audioRef.current && !audioRef.current.paused && !audioRef.current.ended);
+      const background = resolveBackground(lyrics, activeIndex, tuningAdapter);
+      const backgroundIndex = background ? getBackgroundSectionIndex(lyrics, activeIndex, tuningAdapter) : null;
+      setCurrentBackground(backgroundIndex, background, shouldPlaySyncedVideo);
       setCurrentSlide(visualIndex);
       publishTimelineProgress(lyrics, activeIndex, sectionProgress, time, duration, tuningAdapter);
       const previousRevealedSlide = revealedSlideRef.current;
@@ -158,7 +198,7 @@ export function useGeneralTimeline({
 
       highlightSlide(isHighlighted ? visualIndex : null);
     },
-    [audioRef, duration, highlightSlide, lyrics, setCurrentSlide, tuningAdapter],
+    [audioRef, duration, highlightSlide, lyrics, setCurrentBackground, setCurrentSlide, tuningAdapter],
   );
 
   useLayoutEffect(() => {
@@ -268,7 +308,8 @@ export function useGeneralTimeline({
     if (isVisible) return;
 
     slideRefs.current.forEach(pauseSyncedVideos);
+    backgroundRefs.current.forEach((background) => background?.querySelector("video")?.pause());
   }, [isVisible]);
 
-  return { slideRefs, trackRef, viewportRef };
+  return { backgroundRefs, slideRefs, trackRef, viewportRef };
 }

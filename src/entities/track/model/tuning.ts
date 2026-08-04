@@ -4,7 +4,8 @@ import { getLyricWords } from '@shared/ui/illustration-animations/lib/lyricText'
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import { parseLyricsTimestamp } from '../lib/timestamp';
 import { getSavedSectionWidthPercent } from './layout';
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from './types';
+import type { LyricsColorPreset } from '@shared/config/tuning';
+import type { IllustrationAnimation, IllustrationVisibility, LyricsBackground, LyricsSection } from './types';
 
 export type TimelineIllustrationKind = TextIllustrationKind | 'generic';
 
@@ -24,6 +25,8 @@ export type TrackTuningPanelProps = {
 };
 
 export type TrackTuningAdapter = {
+  getBackground: (section: LyricsSection) => LyricsBackground | undefined;
+  getBackgroundShared: (section: LyricsSection) => boolean;
   getIllustrationAnimation: (section: LyricsSection) => IllustrationAnimation | undefined;
   getIllustrationFadeInMs: (section: LyricsSection) => number;
   getIllustrationFadeOutMs: (section: LyricsSection) => number;
@@ -33,6 +36,9 @@ export type TrackTuningAdapter = {
   getSectionOverlay: (section: LyricsSection) => boolean;
   getSectionStart: (section: LyricsSection) => number;
   getSectionWidthPercent: (section: LyricsSection) => number;
+  getTextBackgroundColor: (section: LyricsSection) => LyricsColorPreset | undefined;
+  getTextBackgroundPaddingPx: (section: LyricsSection) => number;
+  getTextColor: (section: LyricsSection) => LyricsColorPreset | undefined;
   publishTimelineProgress: (detail: TimelineProgressDetail) => void;
   renderPanel?: (props: TrackTuningPanelProps) => ReactNode;
   subscribe: (listener: () => void) => () => void;

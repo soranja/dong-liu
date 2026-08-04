@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
+import { getBackgroundSectionIndex, resolveBackground, supportsBackground } from '@entities/track/lib/background';
 import { clampSectionWidthPercent } from '@entities/track/model/layout';
 import { ILLUSTRATION_TUNING_ENDPOINT } from '@shared/config/tuning';
-import type { IllustrationVisibility } from '@entities/track/model/types';
+import type { LyricsColorPreset } from '@shared/config/tuning';
+import type { IllustrationVisibility, LyricsBackground } from '@entities/track/model/types';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 import {
   areDirtyAnimationsEqual,
@@ -12,9 +14,13 @@ import {
 } from './animationSelection';
 import type { IllustrationTuningSession } from './session';
 import {
+  areBackgroundsEqual,
   clampFadeDuration,
+  clampTextBackgroundPaddingPx,
   clampTime,
   getCurrentAnimation,
+  getCurrentBackground,
+  getCurrentBackgroundShared,
   getCurrentContinuing,
   getCurrentFadeInMs,
   getCurrentFadeOutMs,
@@ -22,7 +28,12 @@ import {
   getCurrentIllustrationVisibility,
   getCurrentOverlay,
   getCurrentSectionWidthPercent,
+  getCurrentTextBackgroundColor,
+  getCurrentTextBackgroundPaddingPx,
+  getCurrentTextColor,
   getDraftStartTime,
+  getSavedBackground,
+  getSavedBackgroundShared,
   getSavedContinuing,
   getSavedFadeInMs,
   getSavedFadeOutMs,
@@ -31,8 +42,13 @@ import {
   getSavedOverlay,
   getSavedSectionWidthPercent,
   getSavedStartTime,
+  getSavedTextBackgroundColor,
+  getSavedTextBackgroundPaddingPx,
+  getSavedTextColor,
   LINE_TIMING_STEP_SECONDS,
   createSaveBody,
+  type DraftBackgrounds,
+  type DraftBackgroundShared,
   type DraftFadeDurations,
   type DraftContinuings,
   type DraftIllustrationKinds,
@@ -40,6 +56,9 @@ import {
   type DraftOverlays,
   type DraftSectionWidthPercents,
   type DraftStartTimes,
+  type DraftTextBackgroundColors,
+  type DraftTextBackgroundPaddingPx,
+  type DraftTextColors,
   type PendingChange,
   type PendingChanges,
   type Snapshot,
@@ -47,6 +66,8 @@ import {
 } from './tunerAutosaveState';
 
 export function useTunerAutosave(session: IllustrationTuningSession, selectedIndex: number, duration: number) {
+  const [draftBackgrounds, setDraftBackgrounds] = useState<DraftBackgrounds>({});
+  const [draftBackgroundShared, setDraftBackgroundShared] = useState<DraftBackgroundShared>({});
   const [draftAnimations, setDraftAnimations] = useState<DirtyAnimations>({});
   const [draftContinuings, setDraftContinuings] = useState<DraftContinuings>({});
   const [draftFadeInMs, setDraftFadeInMs] = useState<DraftFadeDurations>({});
@@ -56,6 +77,10 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   const [draftOverlays, setDraftOverlays] = useState<DraftOverlays>({});
   const [draftSectionWidthPercents, setDraftSectionWidthPercents] = useState<DraftSectionWidthPercents>({});
   const [draftStartTimes, setDraftStartTimes] = useState<DraftStartTimes>({});
+  const [draftTextBackgroundColors, setDraftTextBackgroundColors] = useState<DraftTextBackgroundColors>({});
+  const [draftTextBackgroundPaddingPx, setDraftTextBackgroundPaddingPx] =
+    useState<DraftTextBackgroundPaddingPx>({});
+  const [draftTextColors, setDraftTextColors] = useState<DraftTextColors>({});
   const [pendingChanges, setPendingChanges] = useState<PendingChanges>({});
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('Registered');
   const selectedSection = session.lyrics[selectedIndex];
@@ -83,6 +108,90 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
   const addPendingChange = useCallback((sectionId: number, change: PendingChange) => {
     setPendingChanges((current) => ({ ...current, [sectionId]: { ...current[sectionId], ...change } }));
   }, []);
+
+  const setBackground = useCallback(
+    (background: LyricsBackground | null) => {
+      if (
+        areBackgroundsEqual(getCurrentBackground(session, draftBackgrounds, selectedSection.sectionId), background)
+      ) {
+        return;
+      }
+
+      setDraftBackgrounds((current) => ({ ...current, [selectedSection.sectionId]: background }));
+      session.setDraftBackground(selectedSection.sectionId, background);
+      addPendingChange(selectedSection.sectionId, { background, hasBackground: true });
+      setSaveStatus('Unsaved changes');
+    },
+    [addPendingChange, draftBackgrounds, selectedSection.sectionId, session],
+  );
+
+  const setBackgroundShared = useCallback(
+    (shared: boolean) => {
+      if (getCurrentBackgroundShared(session, draftBackgroundShared, selectedSection.sectionId) === shared) return;
+
+      setDraftBackgroundShared((current) => ({ ...current, [selectedSection.sectionId]: shared }));
+      session.setDraftBackgroundShared(selectedSection.sectionId, shared);
+      addPendingChange(selectedSection.sectionId, { backgroundShared: shared, hasBackgroundShared: true });
+      setSaveStatus('Unsaved changes');
+    },
+    [addPendingChange, draftBackgroundShared, selectedSection.sectionId, session],
+  );
+
+  const setTextColor = useCallback(
+    (textColor: LyricsColorPreset | null) => {
+      if (getCurrentTextColor(session, draftTextColors, selectedSection.sectionId) === textColor) return;
+
+      setDraftTextColors((current) => ({ ...current, [selectedSection.sectionId]: textColor }));
+      session.setDraftTextColor(selectedSection.sectionId, textColor);
+      addPendingChange(selectedSection.sectionId, { hasTextColor: true, textColor });
+      setSaveStatus('Unsaved changes');
+    },
+    [addPendingChange, draftTextColors, selectedSection.sectionId, session],
+  );
+
+  const setTextBackgroundColor = useCallback(
+    (textBackgroundColor: LyricsColorPreset | null) => {
+      if (
+        getCurrentTextBackgroundColor(session, draftTextBackgroundColors, selectedSection.sectionId) ===
+        textBackgroundColor
+      ) {
+        return;
+      }
+
+      setDraftTextBackgroundColors((current) => ({
+        ...current,
+        [selectedSection.sectionId]: textBackgroundColor,
+      }));
+      session.setDraftTextBackgroundColor(selectedSection.sectionId, textBackgroundColor);
+      addPendingChange(selectedSection.sectionId, { hasTextBackgroundColor: true, textBackgroundColor });
+      setSaveStatus('Unsaved changes');
+    },
+    [addPendingChange, draftTextBackgroundColors, selectedSection.sectionId, session],
+  );
+
+  const setTextBackgroundPaddingPx = useCallback(
+    (textBackgroundPaddingPx: number) => {
+      const nextPaddingPx = clampTextBackgroundPaddingPx(textBackgroundPaddingPx);
+      if (
+        getCurrentTextBackgroundPaddingPx(session, draftTextBackgroundPaddingPx, selectedSection.sectionId) ===
+        nextPaddingPx
+      ) {
+        return;
+      }
+
+      setDraftTextBackgroundPaddingPx((current) => ({
+        ...current,
+        [selectedSection.sectionId]: nextPaddingPx,
+      }));
+      session.setDraftTextBackgroundPaddingPx(selectedSection.sectionId, nextPaddingPx);
+      addPendingChange(selectedSection.sectionId, {
+        hasTextBackgroundPaddingPx: true,
+        textBackgroundPaddingPx: nextPaddingPx,
+      });
+      setSaveStatus('Unsaved changes');
+    },
+    [addPendingChange, draftTextBackgroundPaddingPx, selectedSection.sectionId, session],
+  );
 
   const setAnimation = useCallback(
     (animation: DirtyAnimation) => {
@@ -240,6 +349,8 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
 
   const currentSnapshot: Snapshot = {
     animation: getCurrentAnimation(session, draftAnimations, selectedSection.sectionId),
+    background: getCurrentBackground(session, draftBackgrounds, selectedSection.sectionId),
+    backgroundShared: getCurrentBackgroundShared(session, draftBackgroundShared, selectedSection.sectionId),
     continuing: getCurrentContinuing(session, draftContinuings, selectedSection.sectionId),
     endTime: nextSection
       ? getDraftStartTime(session, draftStartTimes, selectedIndex + 1)
@@ -257,9 +368,22 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     isOverlay: getCurrentOverlay(session, draftOverlays, selectedSection.sectionId),
     sectionWidthPercent: getCurrentSectionWidthPercent(session, draftSectionWidthPercents, selectedSection.sectionId),
     startTime: getDraftStartTime(session, draftStartTimes, selectedIndex),
+    textBackgroundColor: getCurrentTextBackgroundColor(
+      session,
+      draftTextBackgroundColors,
+      selectedSection.sectionId,
+    ),
+    textBackgroundPaddingPx: getCurrentTextBackgroundPaddingPx(
+      session,
+      draftTextBackgroundPaddingPx,
+      selectedSection.sectionId,
+    ),
+    textColor: getCurrentTextColor(session, draftTextColors, selectedSection.sectionId),
   };
   const cachedSnapshot: Snapshot = {
     animation: getSavedAnimation(session.lyrics, selectedSection.sectionId),
+    background: getSavedBackground(session, selectedSection.sectionId),
+    backgroundShared: getSavedBackgroundShared(session, selectedSection.sectionId),
     continuing: getSavedContinuing(session, selectedSection.sectionId),
     endTime: nextSection ? getSavedStartTime(session, nextSection.sectionId) : null,
     fadeInMs: getSavedFadeInMs(session, selectedSection.sectionId),
@@ -269,9 +393,14 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     isOverlay: getSavedOverlay(session, selectedSection.sectionId),
     sectionWidthPercent: getSavedSectionWidthPercent(session, selectedSection.sectionId),
     startTime: getSavedStartTime(session, selectedSection.sectionId),
+    textBackgroundColor: getSavedTextBackgroundColor(session, selectedSection.sectionId),
+    textBackgroundPaddingPx: getSavedTextBackgroundPaddingPx(session, selectedSection.sectionId),
+    textColor: getSavedTextColor(session, selectedSection.sectionId),
   };
   const selectedUsesCachedSnapshot =
     areDirtyAnimationsEqual(currentSnapshot.animation, cachedSnapshot.animation) &&
+    areBackgroundsEqual(currentSnapshot.background, cachedSnapshot.background) &&
+    currentSnapshot.backgroundShared === cachedSnapshot.backgroundShared &&
     currentSnapshot.continuing === cachedSnapshot.continuing &&
     currentSnapshot.fadeInMs === cachedSnapshot.fadeInMs &&
     currentSnapshot.fadeOutMs === cachedSnapshot.fadeOutMs &&
@@ -280,11 +409,16 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     currentSnapshot.isOverlay === cachedSnapshot.isOverlay &&
     currentSnapshot.sectionWidthPercent === cachedSnapshot.sectionWidthPercent &&
     currentSnapshot.startTime === cachedSnapshot.startTime &&
-    currentSnapshot.endTime === cachedSnapshot.endTime;
+    currentSnapshot.endTime === cachedSnapshot.endTime &&
+    currentSnapshot.textBackgroundColor === cachedSnapshot.textBackgroundColor &&
+    currentSnapshot.textBackgroundPaddingPx === cachedSnapshot.textBackgroundPaddingPx &&
+    currentSnapshot.textColor === cachedSnapshot.textColor;
   const selectedSaveStatus =
     selectedUsesCachedSnapshot && !Object.keys(pendingChanges).length ? saveStatus : 'Unsaved changes';
 
   const resetAllDrafts = useCallback(() => {
+    setDraftBackgrounds({});
+    setDraftBackgroundShared({});
     setDraftAnimations({});
     setDraftContinuings({});
     setDraftFadeInMs({});
@@ -294,6 +428,9 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     setDraftOverlays({});
     setDraftSectionWidthPercents({});
     setDraftStartTimes({});
+    setDraftTextBackgroundColors({});
+    setDraftTextBackgroundPaddingPx({});
+    setDraftTextColors({});
     setPendingChanges({});
     session.clearDrafts();
     setSaveStatus('Reset');
@@ -304,6 +441,10 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     registerSnapshot,
     resetSnapshot: resetAllDrafts,
     saveStatus: selectedSaveStatus,
+    selectedBackground: resolveBackground(session.lyrics, selectedIndex, session) ?? null,
+    selectedBackgroundIsInherited:
+      getBackgroundSectionIndex(session.lyrics, selectedIndex, session) !== selectedIndex,
+    selectedBackgroundShared: currentSnapshot.backgroundShared,
     selectedAnimation: getEffectiveAnimation(session.lyrics, draftAnimations, selectedSection.sectionId),
     selectedContinuing: currentSnapshot.continuing,
     selectedFadeInMs: currentSnapshot.fadeInMs,
@@ -312,10 +453,16 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     selectedIllustrationVisibility: session.getIllustrationVisibility(selectedSection),
     selectedIsOverlay: currentSnapshot.isOverlay,
     selectedIsLocked: selectedIndex > 0 && session.getSectionContinuing(session.lyrics[selectedIndex - 1]),
+    selectedSupportsBackground: supportsBackground(selectedSection),
     selectedSectionWidthPercent: currentSnapshot.sectionWidthPercent,
     selectedEndTime: currentSnapshot.endTime ?? currentSnapshot.startTime,
     selectedStartTime: currentSnapshot.startTime,
+    selectedTextBackgroundColor: currentSnapshot.textBackgroundColor,
+    selectedTextBackgroundPaddingPx: currentSnapshot.textBackgroundPaddingPx,
+    selectedTextColor: currentSnapshot.textColor,
     setAnimation,
+    setBackground,
+    setBackgroundShared,
     setContinuing,
     setFadeInMs,
     setFadeOutMs,
@@ -325,5 +472,8 @@ export function useTunerAutosave(session: IllustrationTuningSession, selectedInd
     setLineStartTime: (startTime: number) => setStartTime(selectedIndex, startTime),
     setOverlay,
     setSectionWidthPercent,
+    setTextBackgroundColor,
+    setTextBackgroundPaddingPx,
+    setTextColor,
   };
 }

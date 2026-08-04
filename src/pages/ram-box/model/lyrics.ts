@@ -77,6 +77,10 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 8,
+    background: {
+      mediaType: 'video',
+      src: '/animations/backgrounds/000-shared-bg-bloody.mp4',
+    },
     sectionWidthPercent: 100,
     illustrationKind: 'blinking-words',
     illustrationVisibility: 'active-end',
@@ -100,6 +104,12 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 10,
+    textBackgroundColor: 'dark-gray',
+    textColor: 'toxic-carrot',
+    background: {
+      mediaType: 'video',
+      src: '/animations/backgrounds/000-shared-bg-naive-film.mp4',
+    },
     illustrationVisibility: 'active-end',
     illustrationKind: 'blinking-words',
     illustrationAnimation: {
@@ -245,6 +255,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 22,
+    background: { mediaType: 'solid', preset: 'cream-white' },
+    textColor: 'dark-gray',
     illustrationVisibility: 'adjacent',
     timestamp: '00:46.200',
     line: 'БОКС',
@@ -253,6 +265,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 23,
+    background: { mediaType: 'solid', preset: 'arterial-red' },
     illustrationVisibility: 'adjacent',
     timestamp: '00:46.70',
     line: 'БОКС',
@@ -261,6 +274,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 24,
+    background: { mediaType: 'solid', preset: 'cream-white' },
+    textColor: 'arterial-red',
     illustrationVisibility: 'adjacent',
     timestamp: '00:47.15',
     line: 'БОКС',
@@ -269,6 +284,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 25,
+    background: { mediaType: 'solid', preset: 'arterial-red' },
+    textColor: 'toxic-carrot',
     illustrationVisibility: 'adjacent',
     timestamp: '00:47.60',
     line: 'БОКС',
@@ -293,6 +310,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 28,
+    background: { mediaType: 'solid', preset: 'arterial-red' },
+    textColor: 'cream-white',
     illustrationVisibility: 'adjacent',
     timestamp: '00:49.850',
     line: 'БОКС',
@@ -301,6 +320,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 29,
+    textBackgroundColor: 'arterial-red',
+    textColor: 'toxic-carrot',
     illustrationVisibility: 'adjacent',
     timestamp: '00:50.250',
     line: 'БОКС',
@@ -317,6 +338,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 31,
+    background: { mediaType: 'solid', preset: 'cream-white' },
+    textColor: 'dark-gray',
     illustrationVisibility: 'adjacent',
     timestamp: '00:51.200',
     line: 'БОКС',
@@ -325,6 +348,8 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 32,
+    background: { mediaType: 'solid', preset: 'cream-white' },
+    textColor: 'toxic-carrot',
     illustrationVisibility: 'active-end',
     timestamp: '00:51.600',
     line: 'БОКС',
@@ -574,6 +599,10 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 67,
+    background: {
+      mediaType: 'video',
+      src: '/animations/backgrounds/000-shared-bg-bloody.mp4',
+    },
     illustrationVisibility: 'active-end',
     timestamp: '01:40.15',
     line: 'Затяжной, мучительный',
@@ -588,6 +617,10 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 69,
+    background: {
+      mediaType: 'video',
+      src: '/animations/backgrounds/000-shared-bg-bloody.mp4',
+    },
     timestamp: '01:42.00',
     line: 'Агрессивный, жертвенный',
     illustrateWith: 'Агрессивный, жертвенный',

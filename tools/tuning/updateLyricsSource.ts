@@ -139,6 +139,8 @@ function updateSection(
     queuePropertyEdit(sourceFile, source, section, sectionId, propertyName, value, edits);
 
   if (change.timestamp !== undefined) updateTimestamp(sourceFile, section, sectionId, change.timestamp, edits);
+  if (change.hasBackground) update('background', change.background ? JSON.stringify(change.background) : null);
+  if (change.hasBackgroundShared) update('backgroundShared', change.backgroundShared ? 'true' : null);
   if (change.hasContinuing) update('continuing', change.continuing ? 'true' : null);
   if (change.hasIllustrationKind) {
     if (!change.illustrationKind) throw new Error(`illustrationKind missing for section ${sectionId}`);
@@ -161,6 +163,16 @@ function updateSection(
       change.sectionWidthPercent === DEFAULT_SECTION_WIDTH_PERCENT ? null : String(change.sectionWidthPercent),
     );
   }
+  if (change.hasTextBackgroundColor) {
+    update(
+      'textBackgroundColor',
+      change.textBackgroundColor ? JSON.stringify(change.textBackgroundColor) : null,
+    );
+  }
+  if (change.hasTextBackgroundPaddingPx) {
+    update('textBackgroundPaddingPx', change.textBackgroundPaddingPx ? String(change.textBackgroundPaddingPx) : null);
+  }
+  if (change.hasTextColor) update('textColor', change.textColor ? JSON.stringify(change.textColor) : null);
   if (change.hasIllustrationAnimation) {
     update(
       'illustrationAnimation',

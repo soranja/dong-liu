@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { IllustrationAnimation, IllustrationVisibility } from '@shared/config/tuning';
+import type { IllustrationAnimation, IllustrationVisibility, LyricsColorPreset } from '@shared/config/tuning';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/kinds';
 
 export type { IllustrationAnimation, IllustrationVisibility } from '@shared/config/tuning';
@@ -28,6 +28,25 @@ export type LyricsMedia =
       src: string;
     };
 
+export type LyricsBackgroundMedia =
+  | {
+      alt?: string;
+      mediaType: 'image';
+      src?: string;
+    }
+  | {
+      mediaType: 'video';
+      poster?: string;
+      src?: string;
+    };
+
+export type LyricsBackground =
+  | LyricsBackgroundMedia
+  | {
+      mediaType: 'solid';
+      preset: LyricsColorPreset;
+    };
+
 export type CustomLyricsIllustration<TCustomIllustration> = {
   descriptor: TCustomIllustration;
   mediaType: 'custom';
@@ -41,6 +60,8 @@ export type LyricsIllustration<TCustomIllustration = unknown> =
 export type TextSizeLevel = 1 | 2 | 3 | 4 | 5;
 
 export type LyricsSection<TCustomIllustration = unknown> = {
+  background?: LyricsBackground;
+  backgroundShared?: boolean;
   continuing?: boolean;
   fullBleedIllustration?: boolean;
   illustrateWith: LyricsIllustration<TCustomIllustration>;
@@ -55,6 +76,9 @@ export type LyricsSection<TCustomIllustration = unknown> = {
   sectionWidthPercent?: number;
   sizeLevel?: TextSizeLevel;
   timestamp: string;
+  textBackgroundColor?: LyricsColorPreset;
+  textBackgroundPaddingPx?: number;
+  textColor?: LyricsColorPreset;
 };
 
 export type CustomIllustrationRenderer<TCustomIllustration> = (descriptor: TCustomIllustration) => ReactNode;

@@ -6,8 +6,10 @@ import {
 } from "@entities/track/model/tuning";
 import type { CustomIllustrationRenderer, LyricsSection } from "@entities/track/model/types";
 import { isContinuedSection } from "@entities/track/lib/continuing";
+import { supportsBackground } from "@entities/track/lib/background";
 import { useGeneralTimeline } from "../model/useGeneralTimeline";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
+import { TimelineBackground } from "./TimelineBackground";
 
 type GeneralTimelineProps = {
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -60,8 +62,8 @@ export const GeneralTimeline = memo(
     tuningAdapter,
   }: GeneralTimelineProps) => {
     const isVisible = !replayPromptVisible;
-    const [, setTuningVersion] = useState(0);
-    const { slideRefs, trackRef, viewportRef } = useGeneralTimeline({
+    const [tuningVersion, setTuningVersion] = useState(0);
+    const { backgroundRefs, slideRefs, trackRef, viewportRef } = useGeneralTimeline({
       audioRef,
       duration,
       isVisible,
@@ -105,12 +107,27 @@ export const GeneralTimeline = memo(
           className="pointer-events-none fixed inset-x-0 z-10 overflow-hidden"
           data-general-timeline
           data-prewarming={shouldPrewarm ? "true" : undefined}
+          data-tuning-version={tuningVersion || undefined}
           style={{ bottom: footerHeight, opacity: isVisible || shouldPrewarm ? 1 : 0, top: headerHeight }}
         >
+          <div aria-hidden="true" className="absolute inset-0" data-timeline-backgrounds>
+            {lyrics.map((section, index) =>
+              supportsBackground(section) ? (
+                <TimelineBackground
+                  key={section.sectionId}
+                  background={tuningAdapter?.getBackground(section) ?? section.background}
+                  backgroundRefs={backgroundRefs}
+                  index={index}
+                  revision={tuningVersion}
+                />
+              ) : null,
+            )}
+          </div>
+
           <div
             ref={trackRef}
             aria-hidden="true"
-            className="general-timeline-track flex h-full w-max will-change-transform"
+            className="general-timeline-track relative z-10 flex h-full w-max will-change-transform"
           >
             {sectionRows.map(({ index, isContinued, isOverlay, section, sectionWidthPercent }) =>
               isContinued || isOverlay ? null : (

@@ -13,10 +13,12 @@ type PlaybackHeaderProps = {
   progress: number;
   trailingContent?: ReactNode;
   volume: number;
-  onSeek: (value: number) => void;
+  onSeek: (value: number, shouldScratch: boolean) => void;
   onTogglePlayback: () => void;
   onVolumeChange: (value: number) => void;
 };
+
+const SEEK_DRAG_THRESHOLD_PX = 3;
 
 function getSliderStyle(value: number): CSSProperties {
   return { "--slider-progress": `${value}%` } as CSSProperties;
@@ -36,6 +38,8 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
     trailingContent,
     volume,
   } = props;
+  const seekPointerStartXRef = useRef<number | null>(null);
+  const seekWasDraggedRef = useRef(false);
   const volumeBeforeMuteRef = useRef(volume > 0 ? volume : 0.5);
 
   useEffect(() => {
@@ -72,8 +76,28 @@ export const PlaybackHeader = (props: PlaybackHeaderProps) => {
               value={progress}
               disabled={!isReady}
               style={getSliderStyle(progress)}
-              onChange={(event) => onSeek(Number(event.target.value))}
-              onPointerUp={(event) => blurControl(event.currentTarget)}
+              onChange={(event) => onSeek(Number(event.target.value), seekWasDraggedRef.current)}
+              onPointerCancel={() => {
+                seekPointerStartXRef.current = null;
+                seekWasDraggedRef.current = false;
+              }}
+              onPointerDown={(event) => {
+                seekPointerStartXRef.current = event.clientX;
+                seekWasDraggedRef.current = false;
+              }}
+              onPointerMove={(event) => {
+                if (
+                  seekPointerStartXRef.current !== null &&
+                  Math.abs(event.clientX - seekPointerStartXRef.current) >= SEEK_DRAG_THRESHOLD_PX
+                ) {
+                  seekWasDraggedRef.current = true;
+                }
+              }}
+              onPointerUp={(event) => {
+                seekPointerStartXRef.current = null;
+                seekWasDraggedRef.current = false;
+                blurControl(event.currentTarget);
+              }}
               className="wave-slider w-full"
             />
             <span>{formatTime(duration)}</span>

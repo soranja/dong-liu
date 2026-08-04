@@ -1,5 +1,14 @@
-import type { IllustrationAnimation, IllustrationVisibility } from '../../src/shared/config/tuning';
+import type {
+  IllustrationAnimation,
+  IllustrationVisibility,
+  LyricsColorPreset,
+} from '../../src/shared/config/tuning';
 import type { TextIllustrationKind } from '../../src/shared/ui/illustration-animations/kinds';
+
+export type BackgroundSetting =
+  | { mediaType: 'solid'; preset: LyricsColorPreset }
+  | { alt?: string; mediaType: 'image'; src?: string }
+  | { mediaType: 'video'; poster?: string; src?: string };
 
 export type AnimationSetting =
   | Extract<IllustrationAnimation, { variant: 'instant' }>
@@ -10,7 +19,11 @@ export type AnimationSetting =
 export type { IllustrationVisibility, TextIllustrationKind };
 
 export type AnimationChange = {
+  background: BackgroundSetting | null;
+  backgroundShared?: boolean;
   continuing?: boolean;
+  hasBackground: boolean;
+  hasBackgroundShared: boolean;
   hasContinuing: boolean;
   hasIllustrationAnimation: boolean;
   hasIllustrationFadeIn: boolean;
@@ -19,6 +32,9 @@ export type AnimationChange = {
   hasIllustrationVisibility: boolean;
   hasOverlay: boolean;
   hasSectionWidth: boolean;
+  hasTextBackgroundColor: boolean;
+  hasTextBackgroundPaddingPx: boolean;
+  hasTextColor: boolean;
   illustrationAnimation: AnimationSetting | null;
   illustrationFadeInMs?: number;
   illustrationFadeOutMs?: number;
@@ -28,6 +44,9 @@ export type AnimationChange = {
   sectionId: number;
   sectionWidthPercent?: number;
   timestamp?: string;
+  textBackgroundColor?: LyricsColorPreset | null;
+  textBackgroundPaddingPx?: number;
+  textColor?: LyricsColorPreset | null;
 };
 
 export type IllustrationAnimationTuningPluginOptions = {

@@ -1,5 +1,6 @@
 import { useIllustrationAnimationTunerPanel } from '../model/useIllustrationAnimationTunerPanel';
 import type { IllustrationTuningSession } from '../model/session';
+import { BackgroundControls } from './BackgroundControls';
 import { FadeTimingControls } from './FadeTimingControls';
 import { IllustrationAnimationControls } from './IllustrationAnimationControls';
 import { LineTimingControls } from './LineTimingControls';
@@ -87,6 +88,35 @@ export const IllustrationAnimationTuner = ({
           selectedEndTime={tunerState.selectedEndTime}
           selectedStartTime={tunerState.selectedStartTime}
         />
+
+        <fieldset
+          disabled={!tunerState.selectedSupportsBackground}
+          className="disabled:opacity-40"
+          title={
+            tunerState.selectedSupportsBackground ? undefined : 'Backgrounds are unavailable for custom animations'
+          }
+        >
+          <BackgroundControls
+            background={tunerState.selectedBackground}
+            canShare={tunerState.hasNextSection}
+            inherited={tunerState.selectedBackgroundIsInherited}
+            mediaBackground={
+              panel.selectedSection.background?.mediaType === 'image' ||
+              panel.selectedSection.background?.mediaType === 'video'
+                ? panel.selectedSection.background
+                : undefined
+            }
+            onBackgroundChange={tunerState.setBackground}
+            onSharedChange={tunerState.setBackgroundShared}
+            onTextBackgroundColorChange={tunerState.setTextBackgroundColor}
+            onTextBackgroundPaddingChange={tunerState.setTextBackgroundPaddingPx}
+            onTextColorChange={tunerState.setTextColor}
+            shared={tunerState.selectedBackgroundShared}
+            textBackgroundColor={tunerState.selectedTextBackgroundColor}
+            textBackgroundPaddingPx={tunerState.selectedTextBackgroundPaddingPx}
+            textColor={tunerState.selectedTextColor}
+          />
+        </fieldset>
 
         <fieldset disabled={tunerState.selectedIsLocked} className="space-y-3 disabled:opacity-40">
           <FadeTimingControls

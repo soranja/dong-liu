@@ -2,6 +2,7 @@ import { memo, useEffect, useState, type CSSProperties, type ReactNode, type Ref
 import { DEFAULT_SECTION_WIDTH_PERCENT } from "@entities/track/model/layout";
 import { resolveIllustrationAnimation, resolveIllustrationKind, type TrackTuningAdapter } from "@entities/track/model/tuning";
 import type { CustomIllustrationRenderer, LyricsIllustration, LyricsSection } from "@entities/track/model/types";
+import { TEXT_BACKGROUND_PADDING_MAX_PX } from "@shared/config/tuning";
 import { TextIllustration } from "@shared/ui/illustration-animations/TextIllustration";
 
 type GeneralTimelineSectionProps = {
@@ -64,8 +65,12 @@ export const GeneralTimelineSection = memo(
     const text = typeof section.illustrateWith === "string" ? section.illustrateWith : null;
     const isText = text !== null;
     const isFullBleed = Boolean(section.fullBleedIllustration);
-    const [, setRevision] = useState(0);
+    const [revision, setRevision] = useState(0);
     const illustrationKind = resolveIllustrationKind(lyrics, section, tuningAdapter);
+    const textBackgroundPaddingPx = Math.min(
+      TEXT_BACKGROUND_PADDING_MAX_PX,
+      Math.max(0, tuningAdapter?.getTextBackgroundPaddingPx(section) ?? section.textBackgroundPaddingPx ?? 0),
+    );
     const contentClassName = isFullBleed
       ? "h-full w-full overflow-hidden"
       : isText
@@ -96,14 +101,16 @@ export const GeneralTimelineSection = memo(
         data-active="false"
         data-overlay={isOverlay ? "true" : undefined}
         data-section-id={section.sectionId}
+        data-text-background-color={tuningAdapter?.getTextBackgroundColor(section) ?? section.textBackgroundColor}
+        data-text-color={tuningAdapter?.getTextColor(section) ?? section.textColor}
         data-timeline-section
         data-timestamp={section.timestamp}
+        data-tuning-version={revision || undefined}
         style={
-          isOverlay
-            ? undefined
-            : ({
-                "--timeline-section-width": `${sectionWidthPercent}vw`,
-              } as CSSProperties)
+          {
+            "--text-background-padding": `${textBackgroundPaddingPx}px`,
+            ...(isOverlay ? {} : { "--timeline-section-width": `${sectionWidthPercent}vw` }),
+          } as CSSProperties
         }
       >
         <div

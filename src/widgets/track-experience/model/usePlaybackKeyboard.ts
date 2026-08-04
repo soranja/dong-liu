@@ -2,12 +2,11 @@ import { useEffect } from "react";
 import { useSyncedRef } from "./useSyncedRef";
 
 type PlaybackKeyboardOptions = {
-  onSeekStep: (step: number) => void;
+  onSeekSection: (direction: -1 | 1) => void;
   onTogglePlayback: () => void;
   onVolumeStep: (step: number) => void;
 };
 
-const KEYBOARD_SEEK_STEP_MS = 1000;
 const KEYBOARD_VOLUME_STEP = 0.05;
 
 function blurActiveElement() {
@@ -25,8 +24,8 @@ function isTextEntryTarget(target: EventTarget | null) {
   );
 }
 
-export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep }: PlaybackKeyboardOptions) {
-  const seekStepRef = useSyncedRef(onSeekStep);
+export function usePlaybackKeyboard({ onSeekSection, onTogglePlayback, onVolumeStep }: PlaybackKeyboardOptions) {
+  const seekSectionRef = useSyncedRef(onSeekSection);
   const togglePlaybackRef = useSyncedRef(onTogglePlayback);
   const volumeStepRef = useSyncedRef(onVolumeStep);
 
@@ -55,8 +54,7 @@ export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep
         blurActiveElement();
         event.preventDefault();
         event.stopPropagation();
-        const seekStepSeconds = KEYBOARD_SEEK_STEP_MS / 1000;
-        seekStepRef.current(event.code === "ArrowRight" ? seekStepSeconds : -seekStepSeconds);
+        seekSectionRef.current(event.code === "ArrowRight" ? 1 : -1);
       }
     }
 
@@ -65,5 +63,5 @@ export function usePlaybackKeyboard({ onSeekStep, onTogglePlayback, onVolumeStep
     return () => {
       window.removeEventListener("keydown", handlePlaybackKey, { capture: true });
     };
-  }, [seekStepRef, togglePlaybackRef, volumeStepRef]);
+  }, [seekSectionRef, togglePlaybackRef, volumeStepRef]);
 }

@@ -22,6 +22,77 @@
   opacity: var(--illustration-fade-opacity, 1);
 }
 
+[data-timeline-background][data-active='true'] {
+  opacity: 1;
+}
+
+[data-timeline-background][data-background-preset='cream-white'] {
+  background-color: var(--color-cream-white);
+}
+
+[data-timeline-background][data-background-preset='dark-gray'] {
+  background-color: var(--color-dark-gray);
+}
+
+[data-timeline-background][data-background-preset='toxic-carrot'] {
+  background-color: var(--color-toxic-carrot);
+}
+
+[data-timeline-background][data-background-preset='arterial-red'] {
+  background-color: var(--color-arterial-red);
+}
+
+[data-timeline-section][data-text-color='cream-white'] {
+  --color-text: var(--color-cream-white);
+}
+
+[data-timeline-section][data-text-color='dark-gray'] {
+  --color-text: var(--color-dark-gray);
+}
+
+[data-timeline-section][data-text-color='toxic-carrot'] {
+  --color-text: var(--color-toxic-carrot);
+}
+
+[data-timeline-section][data-text-color='arterial-red'] {
+  --color-text: var(--color-arterial-red);
+}
+
+[data-timeline-section][data-text-background-color='cream-white'] {
+  --color-text-background: var(--color-cream-white);
+}
+
+[data-timeline-section][data-text-background-color='dark-gray'] {
+  --color-text-background: var(--color-dark-gray);
+}
+
+[data-timeline-section][data-text-background-color='toxic-carrot'] {
+  --color-text-background: var(--color-toxic-carrot);
+}
+
+[data-timeline-section][data-text-background-color='arterial-red'] {
+  --color-text-background: var(--color-arterial-red);
+}
+
+[data-timeline-section][data-text-background-color]
+  :is(
+    .lyrics-word-cloud__word,
+    .blinking-words-text-animation__word,
+    .kinetic-warp-text-animation__word,
+    .vertical-typewriter-text-animation__word,
+    .word-train-text-animation__phrase
+  ) {
+  padding: var(--text-background-padding, 0);
+  border-radius: 0;
+  background-color: var(--color-text-background);
+}
+
+[data-timeline-background][data-background-type='solid'] > :is(img, video),
+[data-timeline-background][data-background-type='image'] > video,
+[data-timeline-background][data-background-type='video'] > img {
+  display: none;
+}
+
 .timeline-start-prompt {
   appearance: none;
   padding: 0;

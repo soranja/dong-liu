@@ -5,7 +5,13 @@ import {
 } from '@entities/track/model/tuning';
 import { parseLyricsTimestamp } from '@entities/track/lib/timestamp';
 import { clampSectionWidthPercent, getSavedSectionWidthPercent } from '@entities/track/model/layout';
-import type { IllustrationAnimation, IllustrationVisibility, LyricsSection } from '@entities/track/model/types';
+import type {
+  IllustrationAnimation,
+  IllustrationVisibility,
+  LyricsBackground,
+  LyricsSection,
+} from '@entities/track/model/types';
+import type { LyricsColorPreset } from '@shared/config/tuning';
 import type { TextIllustrationKind } from '@shared/ui/illustration-animations/types';
 
 type DraftAnimation = IllustrationAnimation | null;
@@ -15,6 +21,8 @@ type ProgressListener = (detail: TimelineProgressDetail) => void;
 export type IllustrationTuningSession = Omit<TrackTuningAdapter, 'renderPanel'> & {
   clearDrafts: () => void;
   lyrics: readonly LyricsSection[];
+  setDraftBackground: (sectionId: number, background: LyricsBackground | null) => void;
+  setDraftBackgroundShared: (sectionId: number, shared: boolean) => void;
   setDraftIllustrationAnimation: (sectionId: number, animation: DraftAnimation) => void;
   setDraftIllustrationFadeInMs: (sectionId: number, fadeInMs: number) => void;
   setDraftIllustrationFadeOutMs: (sectionId: number, fadeOutMs: number) => void;
@@ -24,6 +32,9 @@ export type IllustrationTuningSession = Omit<TrackTuningAdapter, 'renderPanel'> 
   setDraftSectionOverlay: (sectionId: number, isOverlay: boolean) => void;
   setDraftSectionStart: (sectionId: number, startTime: number) => void;
   setDraftSectionWidthPercent: (sectionId: number, sectionWidthPercent: number) => void;
+  setDraftTextBackgroundColor: (sectionId: number, color: LyricsColorPreset | null) => void;
+  setDraftTextBackgroundPaddingPx: (sectionId: number, paddingPx: number) => void;
+  setDraftTextColor: (sectionId: number, textColor: LyricsColorPreset | null) => void;
   subscribeProgress: (listener: ProgressListener) => () => void;
   trackId: string;
 };
@@ -32,6 +43,8 @@ export function createIllustrationTuningSession(
   trackId: string,
   lyrics: readonly LyricsSection[],
 ): IllustrationTuningSession {
+  const draftBackgrounds = new Map<number, LyricsBackground | null>();
+  const draftBackgroundShared = new Map<number, boolean>();
   const draftAnimations = new Map<number, DraftAnimation>();
   const draftContinuing = new Map<number, boolean>();
   const draftFadeInMs = new Map<number, number>();
@@ -41,6 +54,9 @@ export function createIllustrationTuningSession(
   const draftSectionStarts = new Map<number, number>();
   const draftSectionWidthPercents = new Map<number, number>();
   const draftVisibilities = new Map<number, IllustrationVisibility>();
+  const draftTextBackgroundColors = new Map<number, LyricsColorPreset | null>();
+  const draftTextBackgroundPaddingPx = new Map<number, number>();
+  const draftTextColors = new Map<number, LyricsColorPreset | null>();
   const listeners = new Set<SessionListener>();
   const progressListeners = new Set<ProgressListener>();
 
@@ -54,6 +70,8 @@ export function createIllustrationTuningSession(
 
   return {
     clearDrafts() {
+      draftBackgrounds.clear();
+      draftBackgroundShared.clear();
       draftAnimations.clear();
       draftContinuing.clear();
       draftFadeInMs.clear();
@@ -63,7 +81,18 @@ export function createIllustrationTuningSession(
       draftSectionStarts.clear();
       draftSectionWidthPercents.clear();
       draftVisibilities.clear();
+      draftTextBackgroundColors.clear();
+      draftTextBackgroundPaddingPx.clear();
+      draftTextColors.clear();
       emit();
+    },
+    getBackground(section) {
+      if (!draftBackgrounds.has(section.sectionId)) return section.background;
+
+      return draftBackgrounds.get(section.sectionId) ?? undefined;
+    },
+    getBackgroundShared(section) {
+      return draftBackgroundShared.get(section.sectionId) ?? Boolean(section.backgroundShared);
     },
     getIllustrationAnimation(section) {
       if (!draftAnimations.has(section.sectionId)) return section.illustrationAnimation;
@@ -98,9 +127,28 @@ export function createIllustrationTuningSession(
     getSectionWidthPercent(section) {
       return draftSectionWidthPercents.get(section.sectionId) ?? getSavedSectionWidthPercent(section);
     },
+    getTextBackgroundColor(section) {
+      if (!draftTextBackgroundColors.has(section.sectionId)) return section.textBackgroundColor;
+
+      return draftTextBackgroundColors.get(section.sectionId) ?? undefined;
+    },
+    getTextBackgroundPaddingPx(section) {
+      return draftTextBackgroundPaddingPx.get(section.sectionId) ?? section.textBackgroundPaddingPx ?? 0;
+    },
+    getTextColor(section) {
+      if (!draftTextColors.has(section.sectionId)) return section.textColor;
+
+      return draftTextColors.get(section.sectionId) ?? undefined;
+    },
     lyrics,
     publishTimelineProgress(detail) {
       progressListeners.forEach((listener) => listener(detail));
+    },
+    setDraftBackground(sectionId, background) {
+      setDraft(draftBackgrounds, sectionId, background);
+    },
+    setDraftBackgroundShared(sectionId, shared) {
+      setDraft(draftBackgroundShared, sectionId, shared);
     },
     setDraftIllustrationAnimation(sectionId, animation) {
       setDraft(draftAnimations, sectionId, animation);
@@ -128,6 +176,15 @@ export function createIllustrationTuningSession(
     },
     setDraftSectionWidthPercent(sectionId, sectionWidthPercent) {
       setDraft(draftSectionWidthPercents, sectionId, clampSectionWidthPercent(sectionWidthPercent));
+    },
+    setDraftTextBackgroundColor(sectionId, color) {
+      setDraft(draftTextBackgroundColors, sectionId, color);
+    },
+    setDraftTextBackgroundPaddingPx(sectionId, paddingPx) {
+      setDraft(draftTextBackgroundPaddingPx, sectionId, paddingPx);
+    },
+    setDraftTextColor(sectionId, textColor) {
+      setDraft(draftTextColors, sectionId, textColor);
     },
     subscribe(listener) {
       listeners.add(listener);
