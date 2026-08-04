@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { LyricsSection } from '@entities/track/model/types';
+import { TIMELINE_WINDOW_SIZE } from './timelineWindow';
 
 const AUDIO_PROGRESS_WEIGHT = 10;
 const CLOUD_PROGRESS_WEIGHT = 35;
@@ -8,7 +9,6 @@ const PREWARM_PROGRESS_WEIGHT = 50;
 
 export function useTrackReadiness(lyrics: readonly LyricsSection[]) {
   const readyCloudIdsRef = useRef(new Set<number>());
-  const readyCloudUpdateFrameRef = useRef<number | null>(null);
   const [audioReady, setAudioReady] = useState(false);
   const [fontReady, setFontReady] = useState(false);
   const [prewarmProgress, setPrewarmProgress] = useState(0);
@@ -16,11 +16,13 @@ export function useTrackReadiness(lyrics: readonly LyricsSection[]) {
   const [timelinePrepared, setTimelinePrepared] = useState(false);
   const wordCloudCount = useMemo(
     () =>
-      lyrics.filter((section, index) => typeof section.illustrateWith === 'string' && !lyrics[index - 1]?.continuing)
+      lyrics
+        .slice(0, TIMELINE_WINDOW_SIZE)
+        .filter((section, index) => typeof section.illustrateWith === 'string' && !lyrics[index - 1]?.continuing)
         .length,
     [lyrics],
   );
-  const cloudLayoutsReady = readyCloudCount === wordCloudCount;
+  const cloudLayoutsReady = readyCloudCount >= wordCloudCount;
   const shouldPrewarm = audioReady && fontReady && cloudLayoutsReady && !timelinePrepared;
   const isReady = audioReady && fontReady && cloudLayoutsReady && timelinePrepared;
   const loadingProgress = Math.min(
@@ -37,10 +39,7 @@ export function useTrackReadiness(lyrics: readonly LyricsSection[]) {
     if (readyCloudIdsRef.current.has(sectionId)) return;
 
     readyCloudIdsRef.current.add(sectionId);
-    readyCloudUpdateFrameRef.current ??= window.requestAnimationFrame(() => {
-      readyCloudUpdateFrameRef.current = null;
-      setReadyCloudCount(readyCloudIdsRef.current.size);
-    });
+    setReadyCloudCount(readyCloudIdsRef.current.size);
   }, []);
 
   const handleTimelinePrepared = useCallback(() => {
@@ -56,7 +55,6 @@ export function useTrackReadiness(lyrics: readonly LyricsSection[]) {
 
     return () => {
       disposed = true;
-      if (readyCloudUpdateFrameRef.current !== null) cancelAnimationFrame(readyCloudUpdateFrameRef.current);
     };
   }, []);
 

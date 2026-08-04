@@ -155,7 +155,7 @@ export const RAM_BOX_LYRICS: readonly LyricsSection<RamBoxIllustrationDescriptor
   },
   {
     sectionId: 15,
-    illustrationVisibility: 'active-end',
+    illustrationVisibility: "only-active",
     timestamp: '00:39.750',
     line: 'Этот бой будет длиться пока не услышим последний гонг, — это',
     illustrateWith: 'Этот бой будет длиться пока не услышим последний гонг, — это',

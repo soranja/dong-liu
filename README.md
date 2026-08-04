@@ -100,6 +100,8 @@ Custom lyric illustrations must be serializable descriptors. A page supplies the
 
 `widgets/track-experience` owns reusable playback controls, waveform behavior, captions, layout measurement, timeline rendering, loading, replay, and route cleanup. It has no Ram Box imports.
 
+The timeline keeps every lightweight section shell mounted so layout and seeking stay stable, but mounts illustration and background content only for a moving 20-section window. Initial readiness prewarms the first window; playback retains five sections behind the active section and prepares the rest ahead.
+
 ## Illustration tuning
 
 Tuning is development-only:

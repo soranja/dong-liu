@@ -24,7 +24,7 @@ const HomeRoute = () => {
     <main className="min-h-screen bg-(--color-bg) px-16 pt-16 text-primary-text">
       <div className="mx-auto flex w-full max-w-6xl flex-col text-center">
         <header className="mb-14">
-          <h1 className="dong-liu-title mx-auto mt-4"></h1>
+          <h1 aria-label="Dong Liu" className="dong-liu-title mx-auto mt-4"></h1>
         </header>
 
         <ol aria-label="Track list">
@@ -40,7 +40,7 @@ const HomeRoute = () => {
                 to={track.route}
               >
                 <span className="font-mono text-xs text-(--color-text-muted)">
-                  {track.trackNo >= 9 ? track.trackNo : `0${track.trackNo}`}
+                  {track.trackNo >= 10 ? track.trackNo : `0${track.trackNo}`}
                 </span>
 
                 <img
@@ -58,7 +58,7 @@ const HomeRoute = () => {
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 z-10 flex items-center gap-6 px-4 py-6 text-(--color-bg) [clip-path:inset(0_100%_0_0)] transition-[clip-path] duration-500 ease-in group-hover:[clip-path:inset(0_0_0_0)] group-focus-visible:[clip-path:inset(0_0_0_0)]"
                 >
-                  <span className="font-mono text-xs">{track.trackNo >= 9 ? track.trackNo : `0${track.trackNo}`}</span>
+                  <span className="font-mono text-xs">{track.trackNo >= 10 ? track.trackNo : `0${track.trackNo}`}</span>
                   <span className="size-24 shrink-0" />
                   <span className="[font-family:var(--font-unbounded)] text-4xl font-bold uppercase">
                     {track.title}

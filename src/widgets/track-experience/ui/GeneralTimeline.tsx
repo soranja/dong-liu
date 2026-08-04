@@ -8,6 +8,7 @@ import type { CustomIllustrationRenderer, LyricsSection } from "@entities/track/
 import { isContinuedSection } from "@entities/track/lib/continuing";
 import { supportsBackground } from "@entities/track/lib/background";
 import { useGeneralTimeline } from "../model/useGeneralTimeline";
+import { isTimelineSectionResident } from "../model/timelineWindow";
 import { GeneralTimelineSection } from "./GeneralTimelineSection";
 import { TimelineBackground } from "./TimelineBackground";
 
@@ -62,12 +63,14 @@ export const GeneralTimeline = memo(
     tuningAdapter,
   }: GeneralTimelineProps) => {
     const isVisible = !replayPromptVisible;
+    const [activeSectionIndex, setActiveSectionIndex] = useState(0);
     const [tuningVersion, setTuningVersion] = useState(0);
     const { backgroundRefs, slideRefs, trackRef, viewportRef } = useGeneralTimeline({
       audioRef,
       duration,
       isVisible,
       lyrics,
+      onActiveSectionChange: setActiveSectionIndex,
       onPrewarmProgress,
       onTimelinePrepared,
       shouldPrewarm,
@@ -84,6 +87,7 @@ export const GeneralTimeline = memo(
       .filter(({ isContinued, isOverlay }) => !isContinued && !isOverlay)
       .map(({ sectionWidthPercent }) => sectionWidthPercent);
     const overlaySections = sectionRows.filter(({ isContinued, isOverlay }) => !isContinued && isOverlay);
+    const isResident = (index: number) => isTimelineSectionResident(index, activeSectionIndex, lyrics.length);
 
     useEffect(() => {
       return tuningAdapter?.subscribe(() => setTuningVersion((version) => version + 1));
@@ -118,6 +122,7 @@ export const GeneralTimeline = memo(
                   background={tuningAdapter?.getBackground(section) ?? section.background}
                   backgroundRefs={backgroundRefs}
                   index={index}
+                  isResident={isResident(index)}
                   revision={tuningVersion}
                 />
               ) : null,
@@ -134,6 +139,7 @@ export const GeneralTimeline = memo(
                 <GeneralTimelineSection
                   key={section.sectionId}
                   index={index}
+                  isResident={isResident(index)}
                   lyrics={lyrics}
                   onWordCloudReady={onWordCloudReady}
                   renderCustomIllustration={renderCustomIllustration}
@@ -151,6 +157,7 @@ export const GeneralTimeline = memo(
               key={section.sectionId}
               index={index}
               isOverlay
+              isResident={isResident(index)}
               lyrics={lyrics}
               onWordCloudReady={onWordCloudReady}
               renderCustomIllustration={renderCustomIllustration}

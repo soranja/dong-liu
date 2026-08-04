@@ -159,7 +159,13 @@ export function syncInactiveIllustrations(
   tuningAdapter?: TrackTuningAdapter,
 ) {
   slides.forEach((slide, index) => {
-    if (!slide || index === activeIndex || isContinuedSection(lyrics, index, tuningAdapter)) return;
+    if (
+      !slide ||
+      slide.dataset.resident !== 'true' ||
+      index === activeIndex ||
+      isContinuedSection(lyrics, index, tuningAdapter)
+    )
+      return;
 
     const visibility = resolveIllustrationVisibility(lyrics[index], tuningAdapter);
     slide.dataset.illustrationVisibility = visibility;

@@ -6,10 +6,11 @@ type TimelineBackgroundProps = {
   background?: LyricsBackground;
   index: number;
   backgroundRefs: RefObject<Array<HTMLElement | null>>;
+  isResident: boolean;
   revision: number;
 };
 
-export const TimelineBackground = ({ background, backgroundRefs, index, revision }: TimelineBackgroundProps) => (
+export const TimelineBackground = ({ background, backgroundRefs, index, isResident, revision }: TimelineBackgroundProps) => (
   <div
     ref={(element) => {
       backgroundRefs.current[index] = element;
@@ -21,7 +22,7 @@ export const TimelineBackground = ({ background, backgroundRefs, index, revision
     data-timeline-background
     data-tuning-version={revision || undefined}
   >
-    {(background?.mediaType === 'image' || background?.mediaType === 'video') && !background.src ? (
+    {isResident && (background?.mediaType === 'image' || background?.mediaType === 'video') && !background.src ? (
       <div
         className="flex h-full w-full items-center justify-center bg-(--color-arterial-red) p-8 text-center font-mono text-4xl font-black uppercase text-(--color-cream-white)"
         data-missing-background-path
@@ -29,10 +30,10 @@ export const TimelineBackground = ({ background, backgroundRefs, index, revision
         No {background.mediaType} path present
       </div>
     ) : null}
-    {background?.mediaType === 'image' && background.src ? (
+    {isResident && background?.mediaType === 'image' && background.src ? (
       <img alt={background.alt} className="h-full w-full object-cover" src={background.src} />
     ) : null}
-    {background?.mediaType === 'video' && background.src ? (
+    {isResident && background?.mediaType === 'video' && background.src ? (
       <video
         className="pointer-events-none h-full w-full object-cover"
         loop

@@ -24,6 +24,7 @@ type GeneralTimelineOptions = {
   duration: number;
   isVisible: boolean;
   lyrics: readonly LyricsSection[];
+  onActiveSectionChange: (index: number) => void;
   onPrewarmProgress: (progress: number) => void;
   onTimelinePrepared: () => void;
   shouldPrewarm: boolean;
@@ -72,6 +73,7 @@ export function useGeneralTimeline({
   duration,
   isVisible,
   lyrics,
+  onActiveSectionChange,
   onPrewarmProgress,
   onTimelinePrepared,
   shouldPrewarm,
@@ -110,7 +112,8 @@ export function useGeneralTimeline({
 
     slideRefs.current[nextIndex]?.setAttribute("data-current", "true");
     currentSlideRef.current = nextIndex;
-  }, []);
+    onActiveSectionChange(nextIndex);
+  }, [onActiveSectionChange]);
 
   const setCurrentBackground = useCallback(
     (nextIndex: number | null, background: LyricsBackground | undefined, shouldPlay: boolean) => {
@@ -253,7 +256,7 @@ export function useGeneralTimeline({
       if (!track || !viewport) return;
 
       const sections = slideRefs.current
-        .map((slide, index) => (slide ? { index, slide } : null))
+        .map((slide, index) => (slide?.dataset.resident === "true" ? { index, slide } : null))
         .filter((entry): entry is { index: number; slide: HTMLElement } => Boolean(entry));
       for (let index = 0; index < sections.length; index += 1) {
         if (cancelled) return;

@@ -8,6 +8,7 @@ import { TextIllustration } from "@shared/ui/illustration-animations/TextIllustr
 type GeneralTimelineSectionProps = {
   index: number;
   isOverlay?: boolean;
+  isResident: boolean;
   lyrics: readonly LyricsSection[];
   onWordCloudReady: (sectionId: number) => void;
   renderCustomIllustration: CustomIllustrationRenderer<unknown>;
@@ -54,6 +55,7 @@ export const GeneralTimelineSection = memo(
   ({
     index,
     isOverlay = false,
+    isResident,
     lyrics,
     onWordCloudReady,
     renderCustomIllustration,
@@ -100,6 +102,8 @@ export const GeneralTimelineSection = memo(
         aria-hidden="true"
         data-active="false"
         data-overlay={isOverlay ? "true" : undefined}
+        data-revealed-word-count={isResident ? undefined : "0"}
+        data-resident={isResident ? "true" : undefined}
         data-section-id={section.sectionId}
         data-text-background-color={tuningAdapter?.getTextBackgroundColor(section) ?? section.textBackgroundColor}
         data-text-color={tuningAdapter?.getTextColor(section) ?? section.textColor}
@@ -119,7 +123,7 @@ export const GeneralTimelineSection = memo(
           data-size-level={section.sizeLevel}
           data-timeline-content
         >
-          {illustrationKind !== "generic" && isText ? (
+          {isResident && illustrationKind !== "generic" && isText ? (
             <TextIllustration
               animation={resolveIllustrationAnimation(section, tuningAdapter)}
               kind={illustrationKind}
@@ -127,9 +131,9 @@ export const GeneralTimelineSection = memo(
               sectionId={section.sectionId}
               text={text}
             />
-          ) : (
+          ) : isResident ? (
             renderIllustration(section.illustrateWith, renderCustomIllustration)
-          )}
+          ) : null}
         </div>
       </section>
     );
